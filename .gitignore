@@ -4,6 +4,8 @@ build/
 !**/src/main/**
 !**/src/test/**
 
+.env
+
 ### IDEA ###
 .idea
 *.iws
