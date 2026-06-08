@@ -1,0 +1,10 @@
+kakao-auth:
+  base-url: https://kauth.kakao.com
+  client-id: ${KAKAO_CLIENT_ID}
+  login:
+    redirect-uri: ${KAKAO_LOGIN_REDIRECT_URI}
+    client-secret: ${KAKAO_LOGIN_CLIENT_SECRET}
+
+kakao-api:
+  base-url: https://kapi.kakao.com
+

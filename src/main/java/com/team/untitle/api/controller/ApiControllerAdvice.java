@@ -8,6 +8,7 @@ import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -20,6 +21,12 @@ public class ApiControllerAdvice {
             default -> log.info("[ApiException]: {}", e.getMessage(), e);
         }
         return ResponseEntity.status(e.getErrorType().getStatus()).body(ApiResponse.error(e.getErrorType()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.info("[NoResourceFoundException]: {}", e.getMessage(), e);
+        return ResponseEntity.status(ErrorType.NOT_FOUND.getStatus()).body(ApiResponse.error(ErrorType.NOT_FOUND));
     }
 
     @ExceptionHandler(Exception.class)
