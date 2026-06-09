@@ -7,6 +7,7 @@ import com.team.untitle.domain.auth.IssuedToken;
 import com.team.untitle.domain.auth.LoginResult;
 import com.team.untitle.domain.auth.LoginService;
 import com.team.untitle.domain.auth.RefreshService;
+import com.team.untitle.support.auth.ApiUser;
 import com.team.untitle.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,5 +41,13 @@ public class AuthController {
                 token.getAccessToken(),
                 token.getRefreshToken()
         ));
+    }
+
+    @PostMapping("/v1/auth/logout")
+    public ApiResponse<?> logout(
+            ApiUser apiUser
+    ) {
+        // TODO: 로그아웃 구현을 위해 refresh token table 구성 필요 (임시 보류)
+        return ApiResponse.success();
     }
 }
