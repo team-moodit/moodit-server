@@ -12,7 +12,7 @@ public class KakaoApiClient {
     public KakaoClientProfileResult getProfile(String accessToken) {
         return kakaoApi.getProfile(
                 "Bearer " + accessToken,
-                "[" + "]"
+                "[\"kakao_account.email\"]"
         ).toResult();
     }
 }

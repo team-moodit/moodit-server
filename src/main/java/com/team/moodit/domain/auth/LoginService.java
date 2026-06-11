@@ -15,7 +15,6 @@ public class LoginService {
     ) {
         SocialProfile profile = kakaoLoginHandler.getProfile(code);
         AuthUser authUser = socialLoginHandler.loginOrSignup(profile);
-        // TODO: 추후 유저 프로필 관련 정의가 나오면 UserProfile 저장 부분 추가 예정
 
         IssuedToken issuedToken = tokenManager.issue(authUser.getId(), authUser.getRole());
 

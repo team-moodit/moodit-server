@@ -12,7 +12,8 @@ public record KakaoProfileResponse(
         return KakaoClientProfileResult.of(this);
     }
 
-    record KakaoAccount(
+    public record KakaoAccount(
+            String email
             // TODO: 추후 추가 필드 필요시 사용자 정보 추가될 예정
     ) {
     }

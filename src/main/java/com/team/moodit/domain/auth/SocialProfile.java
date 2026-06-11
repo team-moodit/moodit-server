@@ -9,4 +9,5 @@ import lombok.Getter;
 public class SocialProfile {
     private SocialProviderType provider;
     private String providerUserId;
+    private String providerUserEmail;
 }
