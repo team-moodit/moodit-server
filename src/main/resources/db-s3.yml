@@ -5,8 +5,8 @@ servlet:
 
 storage:
   s3:
-    endpoint: http://14.6.152.212:9000
+    endpoint: ${S3_ENDPOINT}
     bucket: moodit-dev
-    access-key: admin
-    secret-key: qlqjstongue@74
+    access-key: ${S3_ACCESS_KEY}
+    secret-key: ${s3_SECRET_KEY}
 
