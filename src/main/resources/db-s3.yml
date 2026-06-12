@@ -1,0 +1,12 @@
+servlet:
+  multipart:
+    max-file-size: 10MB
+    max-request-size: 10MB
+
+storage:
+  s3:
+    endpoint: http://14.6.152.212:9000
+    bucket: moodit-dev
+    access-key: admin
+    secret-key: qlqjstongue@74
+

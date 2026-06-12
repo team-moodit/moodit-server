@@ -2,6 +2,7 @@ spring:
   config:
     import:
       - db-core.yml
+      - db-s3.yml
       - client-kakao.yml
 
 jwt:
