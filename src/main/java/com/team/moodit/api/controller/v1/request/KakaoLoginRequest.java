@@ -1,6 +1,6 @@
 package com.team.moodit.api.controller.v1.request;
 
 public record KakaoLoginRequest(
-        String code
+        String accessToken // 카카오 Access Token
 ) {
 }
