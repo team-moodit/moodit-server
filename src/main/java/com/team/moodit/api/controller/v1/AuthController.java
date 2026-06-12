@@ -24,7 +24,7 @@ public class AuthController {
     public ApiResponse<LoginResponse> loginWithKakao(
             @RequestBody KakaoLoginRequest request
     ) {
-        LoginResult result = loginService.loginWithKakao(request.code());
+        LoginResult result = loginService.loginWithKakao(request.accessToken());
         return ApiResponse.success(new LoginResponse(
                 result.getUserId(),
                 result.getAccessToken(),

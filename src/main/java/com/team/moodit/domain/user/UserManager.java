@@ -1,4 +1,4 @@
-package com.team.moodit.domain;
+package com.team.moodit.domain.user;
 
 import com.team.moodit.domain.auth.SocialProfile;
 import com.team.moodit.domain.enums.UserRole;

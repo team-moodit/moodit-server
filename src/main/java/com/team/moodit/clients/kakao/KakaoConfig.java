@@ -11,23 +11,8 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
 public class KakaoConfig {
-    @Value("${kakao-auth.base-url}")
-    private String kakaoAuthBaseUrl;
-
     @Value("${kakao-api.base-url}")
     private String kakaoApiBaseUrl;
-
-    @Bean
-    public KakaoAuthApi kakaoAuthApi() {
-        RestClient client = RestClient.builder()
-                .baseUrl(kakaoAuthBaseUrl)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                .build();
-
-        RestClientAdapter adapter = RestClientAdapter.create(client);
-        HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder().exchangeAdapter(adapter).build();
-        return factory.createClient(KakaoAuthApi.class);
-    }
 
     @Bean
     public KakaoApi kakaoApi() {

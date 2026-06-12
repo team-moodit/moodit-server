@@ -1,10 +1,10 @@
 package com.team.moodit.domain.auth;
 
-import com.team.moodit.domain.User;
-import com.team.moodit.domain.UserAuthIdentityFinder;
-import com.team.moodit.domain.UserManager;
-import com.team.moodit.domain.UserProfileManager;
-import com.team.moodit.domain.UserReader;
+import com.team.moodit.domain.user.User;
+import com.team.moodit.domain.user.UserAuthIdentityFinder;
+import com.team.moodit.domain.user.UserManager;
+import com.team.moodit.domain.user.UserProfileManager;
+import com.team.moodit.domain.user.UserReader;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

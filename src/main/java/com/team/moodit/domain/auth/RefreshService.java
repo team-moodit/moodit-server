@@ -1,7 +1,7 @@
 package com.team.moodit.domain.auth;
 
-import com.team.moodit.domain.User;
-import com.team.moodit.domain.UserReader;
+import com.team.moodit.domain.user.User;
+import com.team.moodit.domain.user.UserReader;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import io.jsonwebtoken.Claims;

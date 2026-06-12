@@ -1,4 +1,4 @@
-package com.team.moodit.domain;
+package com.team.moodit.domain.user;
 
 import com.team.moodit.storage.db.core.UserEntity;
 import com.team.moodit.storage.db.core.UserRepository;

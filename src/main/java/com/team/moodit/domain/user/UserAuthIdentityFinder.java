@@ -1,4 +1,4 @@
-package com.team.moodit.domain;
+package com.team.moodit.domain.user;
 
 import com.team.moodit.domain.enums.SocialProviderType;
 import com.team.moodit.storage.db.core.UserAuthIdentityEntity;
