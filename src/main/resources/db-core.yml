@@ -2,9 +2,33 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate.default_batch_fetch_size: 100
+
+---
+spring.config.activate.on-profile: local
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    show_sql: true
+
+storage:
+  datasource:
+    core:
+      driver-class-name: org.postgresql.Driver
+      jdbc-url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      username: ${DATABASE_USERNAME}
+      password: ${DATABASE_PASSWORD}
+
+---
+spring.config.activate.on-profile: dev
 
 storage:
   datasource:
