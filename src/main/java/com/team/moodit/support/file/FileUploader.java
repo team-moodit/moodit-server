@@ -1,5 +1,7 @@
 package com.team.moodit.support.file;
 
+import com.team.moodit.storage.db.core.FileEntity;
+import com.team.moodit.storage.db.core.FileRepository;
 import com.team.moodit.storage.db.s3.S3Uploader;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class FileUploader {
     private final S3Uploader s3Uploader;
+    private final FileRepository fileRepository;
 
     @Value("${storage.s3.endpoint}") private String endpoint;
     @Value("${storage.s3.bucket}") private String bucket;
@@ -24,13 +27,21 @@ public class FileUploader {
         try {
             String objectKey = uploadToS3(file);
 
-            // TODO: FileEntity 등 저장 로직 추가
+            FileEntity savedFile = fileRepository.save(
+                    new FileEntity(
+                            userId,
+                            objectKey,
+                            file.getOriginalFilename(),
+                            file.getContentType(),
+                            file.getSize()
+                    )
+            );
 
             return new UploadResult(
-                    1L,
+                    savedFile.getId(),
                     endpoint + "/" + bucket + "/" + objectKey
             );
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("[FileUploader] userId: {}, filename: {}. size: {} bytes, message: {}", userId, file.getOriginalFilename(), file.getSize(), e.getMessage(), e);
             throw new ApiException(ErrorType.FILE_UPLOADING_FAILED);
         }
