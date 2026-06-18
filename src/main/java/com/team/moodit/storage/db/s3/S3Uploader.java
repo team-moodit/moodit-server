@@ -1,7 +1,5 @@
 package com.team.moodit.storage.db.s3;
 
-import com.team.moodit.support.error.ApiException;
-import com.team.moodit.support.error.ErrorType;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
