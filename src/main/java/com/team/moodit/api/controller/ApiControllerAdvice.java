@@ -6,9 +6,10 @@ import com.team.moodit.support.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
+import tools.jackson.databind.exc.ValueInstantiationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -23,10 +24,15 @@ public class ApiControllerAdvice {
         return ResponseEntity.status(e.getErrorType().getStatus()).body(ApiResponse.error(e.getErrorType()));
     }
 
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ApiResponse<?>> handleNoResourceFoundException(NoResourceFoundException e) {
-        log.info("[NoResourceFoundException]: {}", e.getMessage(), e);
-        return ResponseEntity.status(ErrorType.NOT_FOUND.getStatus()).body(ApiResponse.error(ErrorType.NOT_FOUND));
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        if (e.getCause() instanceof ValueInstantiationException valueInstantiationException) {
+            if (valueInstantiationException.getCause() instanceof ApiException apiException) {
+                log.info("[ApiException]: {}", apiException.getMessage(), apiException);
+                return ResponseEntity.status(apiException.getErrorType().getStatus()).body(ApiResponse.error(apiException.getErrorType()));
+            }
+        }
+        return ResponseEntity.status(ErrorType.INVALID_REQUEST.getStatus()).body(ApiResponse.error(ErrorType.INVALID_REQUEST));
     }
 
     @ExceptionHandler(Exception.class)
