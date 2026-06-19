@@ -5,20 +5,20 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public enum PreferType {
-    FITNESS(
+    FITNESS( // 나와의 적합도
             Set.of(
-                    PreferDetailType.BODY_FIT,
-                    PreferDetailType.VIBE,
-                    PreferDetailType.MATCHABLE
+                    PreferDetailType.BODY_FIT, // 신체적 특징
+                    PreferDetailType.VIBE, // 추구미
+                    PreferDetailType.MATCHABLE // 코디용이성
             )
     ),
-    CONSISTENCE(Set.of()),
-    TREND(Set.of()),
-    AESTHETICS(
+    CONSISTENCE(Set.of()), // 지속성
+    TREND(Set.of()), // 트렌드
+    AESTHETICS( // 심미성
             Set.of(
-                    PreferDetailType.DESIGN,
-                    PreferDetailType.MOOD,
-                    PreferDetailType.COLOR
+                    PreferDetailType.DESIGN, // 디자인
+                    PreferDetailType.MOOD, // 분위기
+                    PreferDetailType.COLOR // 색감
             )
     );
 
