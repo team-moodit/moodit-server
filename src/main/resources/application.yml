@@ -10,5 +10,6 @@ spring:
 
 jwt:
   secret-key: ${JWT_SECRET_KEY} # Base64 인코딩돤 비밀 키
-  access-token-expire-time: 3600000 # 1시간 (밀리초 단위)
+#  access-token-expire-time: 3600000 # 1시간 (밀리초 단위)
+  access-token-expire-time: 600000 # 10분 (밀리초 단위)
   refresh-token-expire-time: 604800000 # 7일 (밀리초 단위)
