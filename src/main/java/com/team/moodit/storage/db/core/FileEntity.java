@@ -1,8 +1,11 @@
 package com.team.moodit.storage.db.core;
 
+import com.team.moodit.domain.enums.ObjectResourceType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,21 +17,13 @@ import org.hibernate.annotations.CreationTimestamp;
 @Table(name = "file")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FileEntity extends BaseIdEntity {
+public class FileEntity extends BaseNoStatusEntity {
     private Long userId;
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR")
+    private ObjectResourceType resourceType;
     private String objectKey;
     private String originalName;
     private String contentType;
-    private Long size;
-
-    public FileEntity(Long userId, String objectKey, String originalName, String contentType, Long size) {
-        this.userId = userId;
-        this.objectKey = objectKey;
-        this.originalName = originalName;
-        this.contentType = contentType;
-        this.size = size;
-    }
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    private Long byteSize;
 }
