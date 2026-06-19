@@ -7,6 +7,7 @@ import com.team.moodit.support.file.UploadResult;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +20,7 @@ public class FIleController {
     @PostMapping("/v1/files/upload")
     public ApiResponse<UploadResult> uploadFile(
             ApiUser apiUser,
-            @RequestPart ObjectResourceType resourceType,
+            @RequestParam ObjectResourceType resourceType,
             @RequestPart MultipartFile file
     ) {
         UploadResult result = fileUploader.upload(apiUser.getId(), resourceType, file);
