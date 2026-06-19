@@ -1,11 +1,10 @@
 package com.team.moodit.domain.enums;
 
 public enum PreferDetailType {
-    BODY_TYPE,
+    BODY_FIT,
     VIBE,
     MATCHABLE,
     DESIGN,
     MOOD,
-    COLOR,
-    NONE
+    COLOR
 }
