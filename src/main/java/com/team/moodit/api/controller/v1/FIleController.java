@@ -1,5 +1,6 @@
 package com.team.moodit.api.controller.v1;
 
+import com.team.moodit.domain.enums.ObjectResourceType;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.file.FileUploader;
 import com.team.moodit.support.file.UploadResult;
@@ -18,9 +19,10 @@ public class FIleController {
     @PostMapping("/v1/files/upload")
     public ApiResponse<UploadResult> uploadFile(
             ApiUser apiUser,
+            @RequestPart ObjectResourceType resourceType,
             @RequestPart MultipartFile file
     ) {
-        UploadResult result = fileUploader.upload(apiUser.getId(), file);
+        UploadResult result = fileUploader.upload(apiUser.getId(), resourceType, file);
         return ApiResponse.success(result);
     }
 }
