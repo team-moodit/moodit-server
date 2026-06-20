@@ -1,6 +1,7 @@
 package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.request.KakaoLoginRequest;
+import com.team.moodit.api.controller.v1.request.TokenRefreshRequest;
 import com.team.moodit.api.controller.v1.response.AuthTokenResponse;
 import com.team.moodit.api.controller.v1.response.LoginResponse;
 import com.team.moodit.domain.auth.IssuedToken;
@@ -34,9 +35,9 @@ public class AuthController {
 
     @PostMapping("/v1/auth/refresh")
     public ApiResponse<AuthTokenResponse> refreshToken(
-            @RequestBody String refreshToken
+            @RequestBody TokenRefreshRequest request
     ) {
-        IssuedToken token = refreshService.refresh(refreshToken);
+        IssuedToken token = refreshService.refresh(request.refreshToken());
         return ApiResponse.success(new AuthTokenResponse(
                 token.getAccessToken(),
                 token.getRefreshToken()
