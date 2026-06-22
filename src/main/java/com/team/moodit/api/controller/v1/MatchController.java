@@ -19,12 +19,12 @@ public class MatchController {
     @PostMapping("/v1/matches")
     public ApiResponse<MatchCreateResponse> createMatch(
             ApiUser apiUser,
-            @RequestBody MatchCreateRequest matchCreateRequest
+            @RequestBody MatchCreateRequest request
             ){
         MatchCreateResult matchCreateResult = matchService.createMatch(
                 apiUser.getId(),
-                matchCreateRequest.title(),
-                matchCreateRequest.images()
+                request.title(),
+                request.images()
         );
         return ApiResponse.success(new MatchCreateResponse(matchCreateResult.getMatchId()));
 

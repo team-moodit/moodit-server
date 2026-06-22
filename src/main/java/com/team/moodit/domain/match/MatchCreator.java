@@ -16,23 +16,24 @@ public class MatchCreator {
     private final MatchRepository matchRepository;
     private final MatchImageRepository matchImageRepository;
 
-    public Match createMatch(Long userId, String title, int imageCount) {
+    public Match createMatch(Long userId, String title, List<Long> imageIds) {
         MatchEntity entity = MatchEntity.builder()
                 .userId(userId)
                 .title(title)
                 .state(MatchState.ING)
-                .initialImageCount(imageCount)
+                .initialImageCount(imageIds.size())
                 .build();
 
-        return Match.from(matchRepository.save(entity));
-    }
+        MatchEntity savedMatch = matchRepository.save(entity);
 
-    public void createMatchImages(Long matchId, List<Long> fileIds) {
-        List<MatchImageEntity> entities = fileIds.stream()
-                .map(fileId -> new MatchImageEntity(matchId, fileId))
+        List<MatchImageEntity> imageEntities = imageIds.stream()
+                .map(fileId -> new MatchImageEntity(savedMatch.getId(), fileId))
                 .toList();
+        matchImageRepository.saveAll(imageEntities);
 
-        matchImageRepository.saveAll(entities);
+        return Match.from(savedMatch);
     }
 
-}
+
+    }
+

@@ -6,4 +6,7 @@ public record MatchCreateRequest(
    String title,
    List<Long> images
 ) {
+    if(title == null || title.isBlank()){
+
+    }
 }

@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,13 +11,11 @@ import java.util.List;
 public class MatchService {
     private final MatchCreator matchCreator;
 
-    public MatchCreateResult createMatch(Long userId, String title, List<Long> fileIds) {
+    @Transactional
+    public MatchCreateResult createMatch(Long userId, String title, List<Long> imageIds) {
 
 
-        Match match = matchCreator.createMatch(userId, title, fileIds.size());
-
-
-        matchCreator.createMatchImages(match.getId(), fileIds);
+        Match match = matchCreator.createMatch(userId, title, imageIds);
 
 
         return new MatchCreateResult(match.getId());
