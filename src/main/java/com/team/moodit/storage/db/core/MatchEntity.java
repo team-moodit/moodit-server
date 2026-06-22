@@ -24,7 +24,7 @@ public class MatchEntity extends BaseNoStatusEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private MatchState status;
+    private MatchState state;
 
 
     @Column(name = "initial_image_count", nullable = false)

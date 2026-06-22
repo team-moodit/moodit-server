@@ -20,7 +20,7 @@ public class Match {
                 matchEntity.getId(),
                 matchEntity.getUserId(),
                 matchEntity.getTitle(),
-                matchEntity.getStatus(),
+                matchEntity.getState(),
                 matchEntity.getInitialImageCount()
         );
     }

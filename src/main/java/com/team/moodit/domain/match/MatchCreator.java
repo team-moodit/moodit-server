@@ -20,7 +20,7 @@ public class MatchCreator {
         MatchEntity entity = MatchEntity.builder()
                 .userId(userId)
                 .title(title)
-                .status(MatchState.ING)
+                .state(MatchState.ING)
                 .initialImageCount(imageCount)
                 .build();
 
