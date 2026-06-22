@@ -30,7 +30,7 @@ public class MatchEntity extends BaseIdEntity {
 
 
     @Column(name = "initial_image_count", nullable = false)
-    private Long initialImageCount;
+    private Integer initialImageCount;
 
 
     @CreationTimestamp
