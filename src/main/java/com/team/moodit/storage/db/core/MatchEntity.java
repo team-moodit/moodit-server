@@ -1,6 +1,6 @@
 package com.team.moodit.storage.db.core;
 
-import com.team.moodit.domain.enums.MatchStatus;
+import com.team.moodit.domain.enums.MatchState;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "match")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class MatchEntity extends BaseIdEntity {
+public class MatchEntity extends BaseNoStatusEntity {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -24,18 +24,12 @@ public class MatchEntity extends BaseIdEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private MatchStatus status;
+    private MatchState status;
 
 
     @Column(name = "initial_image_count", nullable = false)
     private Integer initialImageCount;
 
-
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
 
 

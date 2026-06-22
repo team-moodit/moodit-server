@@ -1,6 +1,6 @@
 package com.team.moodit.domain.match;
 
-import com.team.moodit.domain.enums.MatchStatus;
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +11,7 @@ public class Match {
     private Long id;
     private Long userId;
     private String title;
-    private MatchStatus status;
+    private MatchState status;
     private Integer initialImageCount;
 
 

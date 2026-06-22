@@ -1,6 +1,6 @@
 package com.team.moodit.domain.match;
 
-import com.team.moodit.domain.enums.MatchStatus;
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchImageEntity;
 import com.team.moodit.storage.db.core.MatchImageRepository;
@@ -20,7 +20,7 @@ public class MatchCreator {
         MatchEntity entity = MatchEntity.builder()
                 .userId(userId)
                 .title(title)
-                .status(MatchStatus.ING)
+                .status(MatchState.ING)
                 .initialImageCount(imageCount)
                 .build();
 
