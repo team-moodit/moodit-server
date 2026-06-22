@@ -2,10 +2,7 @@ package com.team.moodit.storage.db.core;
 
 import com.team.moodit.domain.enums.MatchStatus;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
+@Builder
 @Table(name = "match")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
