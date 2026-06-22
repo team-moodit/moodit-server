@@ -2,6 +2,7 @@ package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
+import com.team.moodit.domain.match.MatchCreateResult;
 import com.team.moodit.domain.match.MatchService;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
@@ -20,7 +21,12 @@ public class MatchController {
             ApiUser apiUser,
             @RequestBody MatchCreateRequest matchCreateRequest
             ){
-
+        MatchCreateResult matchCreateResult = matchService.createMatch(
+                apiUser.getId(),
+                matchCreateRequest.title(),
+                matchCreateRequest.images()
+        );
+        return ApiResponse.success(new MatchCreateResponse(matchCreateResult.getMatchId()));
 
     }
 }
