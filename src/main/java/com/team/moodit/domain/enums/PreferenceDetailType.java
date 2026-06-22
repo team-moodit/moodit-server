@@ -1,6 +1,6 @@
 package com.team.moodit.domain.enums;
 
-public enum PreferDetailType {
+public enum PreferenceDetailType {
     BODY_FIT,
     VIBE,
     MATCHABLE,
