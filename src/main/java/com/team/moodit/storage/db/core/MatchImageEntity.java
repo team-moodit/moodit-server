@@ -1,5 +1,6 @@
 package com.team.moodit.storage.db.core;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -13,8 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MatchImageEntity extends BaseNoStatusEntity {
+
     private Long matchId;
-    private Long fileId;
+
+    @Column(name = "file_id")
+    private Long imageId;
+
 
     // TODO: 필요 시 추가 필드 추가 예정
 }

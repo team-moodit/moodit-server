@@ -11,7 +11,7 @@ public class Match {
     private Long id;
     private Long userId;
     private String title;
-    private MatchState status;
+    private MatchState state;
     private Integer initialImageCount;
 
 
