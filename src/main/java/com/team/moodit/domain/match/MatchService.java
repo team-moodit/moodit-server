@@ -10,7 +10,7 @@ import java.util.List;
 public class MatchService {
     private final MatchCreator matchCreator;
 
-    public Long createMatch(Long userId, String title, List<Long> fileIds) {
+    public MatchCreateResult createMatch(Long userId, String title, List<Long> fileIds) {
 
 
         Match match = matchCreator.createMatch(userId, title, fileIds.size());
@@ -19,7 +19,7 @@ public class MatchService {
         matchCreator.createMatchImages(match.getId(), fileIds);
 
 
-        return match.getId();
+        return new MatchCreateResult(match.getId());
     }
 
 }
