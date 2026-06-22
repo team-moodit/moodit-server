@@ -8,7 +8,7 @@ import lombok.*;
 @Getter
 @Entity
 @Builder
-@Table(name = "match")
+@Table(name = "'match'")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class MatchEntity extends BaseNoStatusEntity {
