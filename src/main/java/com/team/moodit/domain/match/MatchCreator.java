@@ -1,7 +1,12 @@
 package com.team.moodit.domain.match;
 
 import com.team.moodit.domain.enums.MatchState;
-import com.team.moodit.storage.db.core.*;
+import com.team.moodit.storage.db.core.FileEntity;
+import com.team.moodit.storage.db.core.FileRepository;
+import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchImageEntity;
+import com.team.moodit.storage.db.core.MatchImageRepository;
+import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -19,28 +24,27 @@ public class MatchCreator {
 
     @Transactional
     public Match createMatch(Long userId, String title, List<Long> imageIds) {
+        MatchEntity savedMatch = matchRepository.save(
+                new MatchEntity(
+                        userId,
+                        title,
+                        MatchState.ING,
+                        imageIds.size()
+                )
+        );
 
-
-        validateImages(userId, imageIds);
-
-
-        Match matchDomain = new Match( userId, title, MatchState.ING, imageIds.size());
-        MatchEntity savedEntity = matchRepository.save(new MatchEntity(matchDomain));
-
-
-        List<MatchImageEntity> imageEntities = imageIds.stream()
-                .map(imageId -> new MatchImageEntity(savedEntity.getId(), imageId))
-                .toList();
-        matchImageRepository.saveAll(imageEntities);
-
-
-        return savedEntity.toDomain();
-    }
-
-    private void validateImages(Long userId, List<Long> imageIds) {
         List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
-        if (imageIds.size() != uploadedImages.size()) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
+        if (imageIds.size() != uploadedImages.size()) throw new ApiException(ErrorType.INVALID_REQUEST);
+
+        matchImageRepository.saveAll(
+                uploadedImages.stream().map(it ->
+                        new MatchImageEntity(
+                                savedMatch.getId(),
+                                it.getId()
+                        )
+                ).toList()
+        );
+
+        return savedMatch.toDomain();
     }
 }
