@@ -8,7 +8,19 @@ spring:
       - db-s3.yml
       - client-kakao.yml
 
+---
+spring.config.activate.on-profile: local, dev
+
 jwt:
   secret-key: ${JWT_SECRET_KEY} # Base64 인코딩돤 비밀 키
   access-token-expire-time: 3600000 # 1시간 (밀리초 단위)
   refresh-token-expire-time: 604800000 # 7일 (밀리초 단위)
+
+
+---
+spring.config.activate.on-profile: test
+
+jwt:
+  secret-key: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+  access-token-expire-time: 3600000
+  refresh-token-expire-time: 604800000

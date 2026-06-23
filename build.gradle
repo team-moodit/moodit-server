@@ -23,6 +23,7 @@ dependencies {
     // Database
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
 
     // S3
     implementation(platform("software.amazon.awssdk:bom:2.25.66"))
