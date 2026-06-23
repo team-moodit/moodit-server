@@ -1,7 +1,6 @@
 package com.team.moodit.domain.match;
 
 import com.team.moodit.domain.enums.MatchState;
-import com.team.moodit.storage.db.core.MatchEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,14 +13,11 @@ public class Match {
     private MatchState state;
     private Integer initialImageCount;
 
-
-    public static Match from(MatchEntity matchEntity) {
-        return new Match(
-                matchEntity.getId(),
-                matchEntity.getUserId(),
-                matchEntity.getTitle(),
-                matchEntity.getState(),
-                matchEntity.getInitialImageCount()
-        );
+    public Match(Long userId, String title, MatchState state, Integer initialImageCount) {
+        this.userId = userId;
+        this.title = title;
+        this.state = state;
+        this.initialImageCount = initialImageCount;
     }
+
 }

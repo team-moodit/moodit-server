@@ -6,6 +6,7 @@ import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,31 +17,30 @@ public class MatchCreator {
     private final MatchImageRepository matchImageRepository;
     private final FileRepository fileRepository;
 
+    @Transactional
     public Match createMatch(Long userId, String title, List<Long> imageIds) {
 
-        List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
 
-        if (imageIds.size() != uploadedImages.size()) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
+        validateImages(userId, imageIds);
 
-        MatchEntity entity = MatchEntity.builder()
-                .userId(userId)
-                .title(title)
-                .state(MatchState.ING)
-                .initialImageCount(imageIds.size())
-                .build();
 
-        MatchEntity savedMatch = matchRepository.save(entity);
+        Match matchDomain = new Match( userId, title, MatchState.ING, imageIds.size());
+        MatchEntity savedEntity = matchRepository.save(new MatchEntity(matchDomain));
+
 
         List<MatchImageEntity> imageEntities = imageIds.stream()
-                .map(imageId -> new MatchImageEntity(savedMatch.getId(), imageId))
+                .map(imageId -> new MatchImageEntity(savedEntity.getId(), imageId))
                 .toList();
         matchImageRepository.saveAll(imageEntities);
 
-        return Match.from(savedMatch);
+
+        return savedEntity.toDomain();
     }
 
-
+    private void validateImages(Long userId, List<Long> imageIds) {
+        List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
+        if (imageIds.size() != uploadedImages.size()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+    }
 }
-

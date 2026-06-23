@@ -1,6 +1,6 @@
 package com.team.moodit.storage.db.core;
 
-import jakarta.persistence.Column;
+import com.team.moodit.domain.match.MatchImage;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -16,10 +16,19 @@ import lombok.NoArgsConstructor;
 public class MatchImageEntity extends BaseNoStatusEntity {
 
     private Long matchId;
-
-    @Column(name = "file_id")
     private Long imageId;
 
+    public MatchImageEntity(MatchImage matchImage) {
+        this.matchId = matchImage.getMatchId();
+        this.imageId = matchImage.getImageId();
+    }
 
-    // TODO: 필요 시 추가 필드 추가 예정
+    public MatchImage toDomain() {
+        return new MatchImage(
+                this.matchId,
+                this.imageId
+        );
+    }
+
 }
+
