@@ -17,7 +17,14 @@ public enum ErrorType {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰 입니다.", LogLevel.INFO),
 
     // File
-    FILE_UPLOADING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR);
+    FILE_UPLOADING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),
+
+    // Image
+    INVALID_IMAGE_COUNT(HttpStatus.BAD_REQUEST, "이미지는 8장에서 32장 사이여야 합니다.", LogLevel.INFO),
+
+    // Title
+    MISSING_TITLE(HttpStatus.BAD_REQUEST,"제목은 필수입니다.", LogLevel.INFO),
+    INVALID_TITLE(HttpStatus.BAD_REQUEST,"제목은 1자 이상 20자 이하입니다.", LogLevel.INFO);
 
     private final HttpStatus status;
     private final String message;
