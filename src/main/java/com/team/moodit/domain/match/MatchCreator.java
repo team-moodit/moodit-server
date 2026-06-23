@@ -23,7 +23,7 @@ public class MatchCreator {
     private final FileRepository fileRepository;
 
     @Transactional
-    public Match createMatch(Long userId, String title, List<Long> imageIds) {
+    public Long create(Long userId, String title, List<Long> imageIds) {
         MatchEntity savedMatch = matchRepository.save(
                 new MatchEntity(
                         userId,
@@ -45,6 +45,6 @@ public class MatchCreator {
                 ).toList()
         );
 
-        return savedMatch.toDomain();
+        return savedMatch.getId();
     }
 }

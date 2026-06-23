@@ -1,6 +1,6 @@
 package com.team.moodit.domain.match;
 
-import jakarta.transaction.Transactional;
+import com.team.moodit.support.auth.ApiUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,14 +11,7 @@ import java.util.List;
 public class MatchService {
     private final MatchCreator matchCreator;
 
-    @Transactional
-    public MatchCreateResult createMatch(Long userId, String title, List<Long> imageIds) {
-
-
-        Match match = matchCreator.createMatch(userId, title, imageIds);
-
-
-        return new MatchCreateResult(match.getId());
+    public Long createMatch(ApiUser apiUser, String title, List<Long> imageIds) {
+        return matchCreator.create(apiUser.getId(), title, imageIds);
     }
-
 }
