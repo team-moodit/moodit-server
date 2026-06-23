@@ -24,8 +24,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MissionOfferEntity extends BaseNoStatusEntity {
-    private long matchId;
-    private long userId;
+    private Long matchId;
+    private Long userId;
     private Long acceptedCandidateId;
 
     @Enumerated(EnumType.STRING)
@@ -39,7 +39,7 @@ public class MissionOfferEntity extends BaseNoStatusEntity {
         this.acceptedAt = LocalDateTime.now();
     }
 
-    public MissionOfferEntity(long matchId, long userId, MissionOfferState state) {
+    public MissionOfferEntity(Long matchId, Long userId, MissionOfferState state) {
         this.matchId = matchId;
         this.userId = userId;
         this.state = state;
