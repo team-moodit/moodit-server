@@ -7,6 +7,8 @@ import com.team.moodit.storage.db.core.MissionTemplateRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,7 +27,9 @@ public class MissionTemplateFinder {
                     EntityStatus.ACTIVE
             );
             case TYPE_ONLY -> missionTemplateRepository.findByPreferenceTypeAndStatus(result.getPreferenceType(), EntityStatus.ACTIVE);
-            case TIE -> missionTemplateRepository.findByPreferenceTypeInAndStatus(result.getTopRankPreferenceType(), EntityStatus.ACTIVE);
+            case TIE -> pickOneByPreferenceType(
+                    missionTemplateRepository.findByPreferenceTypeInAndStatus(result.getTopRankPreferenceType(), EntityStatus.ACTIVE)
+            );
         };
 
         if (entities.isEmpty()) {
@@ -48,5 +52,15 @@ public class MissionTemplateFinder {
                         it.getDisplayOrder()
                 )
         ).toList();
+    }
+
+    // 선호 결과가 동률이 나와 도출되지 않았을 때 선호 타입 미션 중 랜덤 하나씩 뽑아내기 위함
+    private List<MissionTemplateEntity> pickOneByPreferenceType(List<MissionTemplateEntity> entities) {
+        return entities.stream()
+                .collect(Collectors.groupingBy(MissionTemplateEntity::getPreferenceType))
+                .values()
+                .stream()
+                .map(it -> it.get(ThreadLocalRandom.current().nextInt(it.size())))
+                .toList();
     }
 }
