@@ -8,7 +8,8 @@ import java.util.List;
 
 public record MissionOfferResponse(
         List<MissionOfferItemResponse> items,
-        MissionOfferState state
+        MissionOfferState state,
+        Long userMissionId
 ) {
     public static MissionOfferResponse of(
             MissionOffer missionOffer
@@ -22,7 +23,8 @@ public record MissionOfferResponse(
                                         it.getTitle()
                                 )
                         ).toList(),
-                missionOffer.getState()
+                missionOffer.getState(),
+                null
         );
     }
 

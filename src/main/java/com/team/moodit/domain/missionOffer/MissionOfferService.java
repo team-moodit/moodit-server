@@ -4,6 +4,7 @@ import com.team.moodit.domain.match.MatchResultReader;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.mission.MissionTemplate;
 import com.team.moodit.domain.mission.MissionTemplateFinder;
+import com.team.moodit.support.auth.ApiUser;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,20 +17,24 @@ public class MissionOfferService {
     private final MissionOfferCreator missionOfferCreator;
     private final MissionOfferAcceptHandler missionOfferAcceptHandler;
 
-    public MissionOffer createOffer(Long userId, Long matchId) {
-        MatchResult matchResult = matchResultReader.getMatchResult(userId, matchId);
+    public MissionOffer createOffer(ApiUser apiUser, Long matchId) {
+        MatchResult matchResult = matchResultReader.getMatchResult(apiUser.getId(), matchId);
         List<MissionTemplate> missionTemplates = missionTemplateFinder.findOfferable(matchResult.getPreferenceResult());
 
         // 제안 미션이 한 개 -> 바로 할당
         if (missionTemplates.size() == 1) {
             return missionOfferAcceptHandler.createAcceptedOfferAndMission(
-                    userId,
+                    apiUser.getId(),
                     matchResult,
                     missionTemplates.getFirst()
             );
         }
 
         // 제안 미션이 여러 개
-        return missionOfferCreator.createSelectionOffer(userId, matchResult, missionTemplates);
+        return missionOfferCreator.createSelectionOffer(
+                apiUser.getId(),
+                matchResult,
+                missionTemplates
+        );
     }
 }

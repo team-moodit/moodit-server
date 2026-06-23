@@ -19,6 +19,7 @@ import com.team.moodit.storage.db.core.MissionOfferRepository;
 import com.team.moodit.storage.db.core.MissionTemplateEntity;
 import com.team.moodit.storage.db.core.MissionTemplateRepository;
 import com.team.moodit.storage.db.core.UserMissionRepository;
+import com.team.moodit.support.auth.ApiUser;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +85,7 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(userId, matchId);
+        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
 
         // then
         // mission offer saved
@@ -132,7 +133,7 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(userId, matchId);
+        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
 
         // then
         // mission offer saved
@@ -189,7 +190,7 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(userId, matchId);
+        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
 
         // then
         // mission offer saved
