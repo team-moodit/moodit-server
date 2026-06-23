@@ -1,5 +1,6 @@
 package com.team.moodit.api.controller.v1.request;
 
+import com.team.moodit.domain.match.NewMatch;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 
@@ -23,8 +24,12 @@ public record MatchCreateRequest(
         if (images == null || images.size() < 8 || images.size() > 32) {
             throw new ApiException(ErrorType.INVALID_IMAGE_COUNT);
         }
-
     }
 
+    public NewMatch toNewMatch() {
+        return new NewMatch(
+                this.title
+        );
+    }
 }
 

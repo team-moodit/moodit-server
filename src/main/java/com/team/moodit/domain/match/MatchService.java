@@ -11,7 +11,7 @@ import java.util.List;
 public class MatchService {
     private final MatchCreator matchCreator;
 
-    public Long createMatch(ApiUser apiUser, String title, List<Long> imageIds) {
-        return matchCreator.create(apiUser.getId(), title, imageIds);
+    public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
+        return matchCreator.create(apiUser.getId(), newMatch, imageIds);
     }
 }

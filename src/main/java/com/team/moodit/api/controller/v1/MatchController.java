@@ -22,7 +22,7 @@ public class MatchController {
     ) {
         Long successId = matchService.createMatch(
                 apiUser,
-                request.title(),
+                request.toNewMatch(),
                 request.images()
         );
         return ApiResponse.success(new MatchCreateResponse(successId));

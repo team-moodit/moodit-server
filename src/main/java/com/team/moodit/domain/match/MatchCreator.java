@@ -23,11 +23,11 @@ public class MatchCreator {
     private final FileRepository fileRepository;
 
     @Transactional
-    public Long create(Long userId, String title, List<Long> imageIds) {
+    public Long create(Long userId, NewMatch newMatch, List<Long> imageIds) {
         MatchEntity savedMatch = matchRepository.save(
                 new MatchEntity(
                         userId,
-                        title,
+                        newMatch.getTitle(),
                         MatchState.ING,
                         imageIds.size()
                 )
