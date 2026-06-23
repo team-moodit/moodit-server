@@ -19,7 +19,7 @@ public class MatchController {
     public ApiResponse<MatchCreateResponse> createMatch(
             ApiUser apiUser,
             @RequestBody MatchCreateRequest request
-    ){
+    ) {
         Long successId = matchService.createMatch(
                 apiUser,
                 request.title(),
