@@ -17,7 +17,7 @@ public class MissionOfferService {
     private final MissionOfferCreator missionOfferCreator;
     private final MissionOfferAcceptHandler missionOfferAcceptHandler;
 
-    public MissionOffer createOffer(ApiUser apiUser, Long matchId) {
+    public MissionOfferCreateResult createOffer(ApiUser apiUser, Long matchId) {
         MatchResult matchResult = matchResultReader.getMatchResult(apiUser.getId(), matchId);
         List<MissionTemplate> missionTemplates = missionTemplateFinder.findOfferable(matchResult.getPreferenceResult());
 
