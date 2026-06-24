@@ -10,8 +10,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchService {
     private final MatchCreator matchCreator;
+    private final MatchResultReader matchResultReader;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
+    }
+
+    public MatchResult getMatchResult(ApiUser apiUser, Long matchId) {
+        return matchResultReader.getMatchResult(apiUser.getId(), matchId);
     }
 }
