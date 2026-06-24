@@ -21,13 +21,14 @@ public class MissionOfferCreator {
     private final MissionOfferCandidateRepository missionOfferCandidateRepository;
 
     @Transactional
-    public MissionOffer createSelectionOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
-        return createOffer(
+    public MissionOfferCreateResult createSelectionOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
+        MissionOffer missionOffer = createOffer(
                 userId,
                 matchResult,
                 missionTemplates,
                 MissionOfferState.NEEDS_SELECTION
         );
+        return MissionOfferCreateResult.needsSelection(missionOffer);
     }
 
     @Transactional

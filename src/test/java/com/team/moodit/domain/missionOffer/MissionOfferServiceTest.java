@@ -85,7 +85,8 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOffer offer = offerResult.getMissionOffer();
 
         // then
         // mission offer saved
@@ -97,6 +98,7 @@ class MissionOfferServiceTest {
         // user mission should have single entryㅁ
         assertThat(userMissionRepository.findAll()).singleElement()
                 .satisfies(userMission -> {
+                    assertThat(userMission.getId()).isEqualTo(offerResult.getUserMissionId());
                     assertThat(userMission.getUserId()).isEqualTo(userId);
                     assertThat(userMission.getMatchId()).isEqualTo(matchId);
                     assertThat(userMission.getMissionOfferId()).isEqualTo(offer.getId());
@@ -133,7 +135,8 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOffer offer = offerResult.getMissionOffer();
 
         // then
         // mission offer saved
@@ -190,7 +193,8 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOffer offer = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOffer offer = offerResult.getMissionOffer();
 
         // then
         // mission offer saved

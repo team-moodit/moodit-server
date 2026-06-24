@@ -2,7 +2,7 @@ package com.team.moodit.api.controller.v1.response;
 
 import com.team.moodit.domain.enums.MissionOfferState;
 import com.team.moodit.domain.missionOffer.MissionCandidate;
-import com.team.moodit.domain.missionOffer.MissionOffer;
+import com.team.moodit.domain.missionOffer.MissionOfferCreateResult;
 import java.util.Comparator;
 import java.util.List;
 
@@ -12,10 +12,10 @@ public record MissionOfferResponse(
         Long userMissionId
 ) {
     public static MissionOfferResponse of(
-            MissionOffer missionOffer
+            MissionOfferCreateResult result
     ) {
         return new MissionOfferResponse(
-                missionOffer.getCandidates().stream()
+                result.getMissionOffer().getCandidates().stream()
                         .sorted(Comparator.comparing(MissionCandidate::getDisplayOrder))
                         .map(it ->
                                 new MissionOfferItemResponse(
@@ -23,8 +23,8 @@ public record MissionOfferResponse(
                                         it.getTitle()
                                 )
                         ).toList(),
-                missionOffer.getState(),
-                null
+                result.getMissionOffer().getState(),
+                result.getUserMissionId()
         );
     }
 
