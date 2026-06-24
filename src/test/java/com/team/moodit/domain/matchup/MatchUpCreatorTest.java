@@ -1,7 +1,10 @@
 package com.team.moodit.domain.matchup;
 
+import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.domain.match.MatchUpCreator;
 import com.team.moodit.storage.db.core.MatchUpEntity;
+import com.team.moodit.support.error.ApiException;
+import com.team.moodit.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -20,18 +23,18 @@ class MatchUpCreatorTest {
 
     @ParameterizedTest
     @CsvSource({
-            // 입력장수, 예선전 매치 수, 부전승 엔티티 수
-            "8,  0,  8",   // 8장: 예선 없이 8명 전원 부전승 엔티티 생성 -> 총 8개
-            "9,  1,  7",   // 9장: 예선 1경기(2명) + 부전승 7명 -> 총 8개
-            "11, 3,  5",   // 11장: 예선 3경기(6명) + 부전승 5명 -> 총 8개
-            "15, 7,  1",   // 15장: 예선 7경기(14명) + 부전승 1명 -> 총 8개
-            "16, 0,  16",  // 16장: 예선 없이 16명 전원 부전승 엔티티 생성 -> 총 16개
-            "17, 1,  15",  // 17장: 예선 1경기(2명) + 부전승 15명 -> 총 16개
-            "31, 15, 1",   // 31장: 예선 15경기(30명) + 부전승 1명 -> 총 16개
-            "32, 0,  32"   // 32장: 예선 없이 32명 전원 부전승 엔티티 생성 -> 총 32개
+            // 입력장수, 기대하는 투표 매치(경기) 수, 기대하는 부전승 수
+            "8,  4,  0",
+            "9,  1,  7",
+            "11, 3,  5",
+            "15, 7,  1",
+            "16, 8,  0",
+            "17, 1,  15",
+            "31, 15, 1",
+            "32, 16, 0"
     })
-    @DisplayName("8장부터 32장 사이의 입력에 대해 올바른 대진 및 부전승 매치업 수가 생성된다")
-    void createMatches_Success_WithinBounds(int totalImages, int expectedRealMatches, int expectedByes) {
+    @DisplayName("상태별로 투표 매치(NEED_VOTE)와 부전승(SKIPPED) 매치 수가 정확히 생성되었는지 정밀 검증한다")
+    void createMatches_Success_VerifyStates(int totalImages, int expectedMatches, int expectedByes) {
         // given
         Long matchId = 1L;
         List<Long> imageIds = LongStream.rangeClosed(1, totalImages)
@@ -41,15 +44,35 @@ class MatchUpCreatorTest {
         // when
         List<MatchUpEntity> matchUps = matchUpCreator.createMatches(matchId, imageIds);
 
-        // then
-        // 생성된 전체 매치업 엔티티 총 개수 검증 (예선전 수 + 부전승 수)
-        int expectedTotalMatches = expectedRealMatches + expectedByes;
-        assertThat(matchUps).hasSize(expectedTotalMatches);
+        // 디버깅용 확인 로그
+        System.out.println("=== [입력 이미지: " + totalImages + "장] ===");
+        System.out.println("예선해야 할 경기 수: " + expectedMatches + "회");
+        System.out.println("자동 통과(부전승) 수: " + expectedByes + "명");
+
+        // then: [리뷰어 피드백 반영] 상태별 개수 정밀 검증
+        long actualMatches = matchUps.stream()
+                .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
+                .count();
+
+        long actualByes = matchUps.stream()
+                .filter(m -> m.getState() == MatchUpState.SKIPPED)
+                .count();
+
+        // 검증 로직
+        assertThat(actualMatches)
+                .as("투표 매치(경기) 수가 일치해야 함")
+                .isEqualTo(expectedMatches);
+
+        assertThat(actualByes)
+                .as("부전승 수와 일치해야 함")
+                .isEqualTo(expectedByes);
+
+        assertThat(matchUps).hasSize(expectedMatches + expectedByes);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 7, 33, 64})
-    @DisplayName("8장 미만이거나 32장을 초과하면 예외가 발생한다")
+    @DisplayName("8장 미만/32장 초과 시 ApiException이 발생한다")
     void createMatches_Fail_OutOfBounds(int invalidSize) {
         // given
         Long matchId = 1L;
@@ -57,9 +80,21 @@ class MatchUpCreatorTest {
                 .boxed()
                 .collect(Collectors.toList());
 
-        // when & then
-        assertThatThrownBy(() -> matchUpCreator.createMatches(matchId, imageIds))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("토너먼트는 최소 8장, 최대 32장의 이미지만 참여 가능합니다.");
+        // 1. catchThrowable을 사용하여 예외를 변수에 담습니다 (타입 캐스팅 문제 해결!)
+        Throwable thrown = org.assertj.core.api.Assertions.catchThrowable(() ->
+                matchUpCreator.createMatches(matchId, imageIds));
+
+        // 2. 예외가 ApiException인지 검증
+        assertThat(thrown).isInstanceOf(ApiException.class);
+
+        // 3. 이제 안전하게 캐스팅해서 에러 타입과 메시지 확인 및 출력
+        ApiException apiException = (ApiException) thrown;
+
+        System.out.println("=== [입력 이미지: " + invalidSize + "장] ===");
+        System.out.println("발생한 에러 타입: " + apiException.getErrorType());
+        System.out.println("에러 메시지: " + apiException.getMessage());
+
+        // 4. 추가 검증: 에러 타입이 INVALID_IMAGE_COUNT인지 확인
+        assertThat(apiException.getErrorType()).isEqualTo(ErrorType.INVALID_IMAGE_COUNT);
     }
 }
