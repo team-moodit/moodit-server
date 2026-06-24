@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,6 +58,11 @@ class MissionOfferServiceTest {
     @BeforeAll
     void beforeAll() {
         saveMissionTemplates();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        userMissionRepository.deleteAll();
     }
 
     @Test
@@ -284,5 +290,51 @@ class MissionOfferServiceTest {
         aestheticsMoodTemplate = missionTemplates.get(5);
         consistenceTemplate = missionTemplates.get(6);
         trendTemplate = missionTemplates.get(7);
+    }
+
+    @Test
+    void 미션_제안_수락_시_유저_미션을_생성한다() {
+        // given
+        MissionOfferEntity offer = missionOfferRepository.save(
+                new MissionOfferEntity(
+                        1L,
+                        1L,
+                        MissionOfferState.NEEDS_SELECTION
+                )
+        );
+
+        List<MissionOfferCandidateEntity> candidates = missionOfferCandidateRepository.saveAll(List.of(
+                new MissionOfferCandidateEntity(
+                        offer.getId(),
+                        1L,
+                        "미션 제안 1",
+                        1
+                ),
+                new MissionOfferCandidateEntity(
+                        offer.getId(),
+                        2L,
+                        "미션 제안 2",
+                        2
+                ),
+                new MissionOfferCandidateEntity(
+                        offer.getId(),
+                        3L,
+                        "미션 제안 3",
+                        3
+                )
+        ));
+
+        OfferAcceptAction acceptAction = new OfferAcceptAction(offer.getId(), candidates.getFirst().getId());
+
+        // when
+        missionOfferService.acceptOffer(new ApiUser(1L), acceptAction);
+
+        // then
+        MissionOfferEntity savedOffer = missionOfferRepository.findById(offer.getId()).orElseThrow();
+
+        assertThat(userMissionRepository.findAll().size()).isEqualTo(1);
+        assertThat(savedOffer.getState()).isEqualTo(MissionOfferState.ACCEPTED);
+        assertThat(savedOffer.getAcceptedCandidateId()).isEqualTo(candidates.getFirst().getId());
+        assertThat(savedOffer.getAcceptedAt()).isBefore(LocalDateTime.now());
     }
 }
