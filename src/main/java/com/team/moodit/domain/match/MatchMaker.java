@@ -43,10 +43,13 @@ public class MatchMaker {
     }
     private int calculateTargetRound(int n) {
         int target = 1;
-        // 다음 단계(target * 2)가 n을 넘지 않을 때까지만 계속 곱함
-        while (target * 2 <= n) {
+        while (target * 2 < n) {
             target *= 2;
         }
-        return target;
+        if (target * 2 == n) {
+            return target;
+        } else {
+            return target * 2;
+        }
     }
 }
