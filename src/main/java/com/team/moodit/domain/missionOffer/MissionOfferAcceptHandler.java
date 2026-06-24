@@ -34,7 +34,8 @@ public class MissionOfferAcceptHandler {
                 candidate.getTitle()
         );
 
-        return MissionOfferCreateResult.accepted(missionOffer, userMissionId);
+        MissionOffer savedOffer = missionOfferReader.getMissionOffer(missionOffer.getId());
+        return MissionOfferCreateResult.accepted(savedOffer, userMissionId);
     }
 
     @Transactional
