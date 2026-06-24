@@ -13,43 +13,36 @@ public class MatchMaker {
     public List<MatchUpEntity> createMatches(Long matchId, List<Long> imageIds) {
         int totalImages = imageIds.size();
 
-        // 1. 타겟 라운드 찾기 (8강, 16강 등)
-        int targetRound = calculateTargetRound(totalImages); // 9~15면 8, 17~31이면 16 반환
+        // 8장 ~ 32장 제한 조건 방어 코드 추가
+        if (totalImages < 8 || totalImages > 32) {
+            throw new IllegalArgumentException("토너먼트는 최소 8장, 최대 32장의 이미지만 참여 가능합니다. (현재: " + totalImages + "장)");
+        }
 
-        // 2. 예선전 경기 수 = (시작 개수 - 타겟 라운드)
+        // [수정된 로직] n 이하의 가장 큰 2의 거듭제곱 수 반환 (8, 16, 32 중 하나가 됨)
+        int targetRound = Integer.highestOneBit(totalImages);
+
         int matchCount = totalImages - targetRound;
-
-        // 3. 예선전 참가자 수 = 경기 수 * 2
         int firstRoundPlayersCount = matchCount * 2;
 
         List<Long> shuffledIds = new ArrayList<>(imageIds);
-        Collections.shuffle(shuffledIds);//리스트(List)의 요소를 무작위(Random)로 섞을 때(shuffle)
+        Collections.shuffle(shuffledIds);
 
         List<MatchUpEntity> matchUps = new ArrayList<>();
-        // 4. 실제 대결 (상태: NEED_VOTE)
+
+        // 예선전 등록 (NEED_VOTE)
         for (int i = 0; i < firstRoundPlayersCount; i += 2) {
             matchUps.add(MatchUpEntity.of(
                     new RealMatchUp(matchId, totalImages, shuffledIds.get(i), shuffledIds.get(i + 1))
             ));
         }
-        // 5. 부전승 처리 (상태: SKIPPED)
-        // 승자(winnerId)를 자기 자신으로 바로 등록하여 다음 라운드 자동 진출 처리
+
+        // 부전승 등록 (SKIPPED)
         for (int i = firstRoundPlayersCount; i < totalImages; i++) {
             matchUps.add(MatchUpEntity.of(
                     new AutoPassMatch(matchId, totalImages, shuffledIds.get(i))
             ));
         }
+
         return matchUps;
-    }
-    private int calculateTargetRound(int n) {
-        int target = 1;
-        while (target * 2 < n) {
-            target *= 2;
-        }
-        if (target * 2 == n) {
-            return target;
-        } else {
-            return target * 2;
-        }
     }
 }
