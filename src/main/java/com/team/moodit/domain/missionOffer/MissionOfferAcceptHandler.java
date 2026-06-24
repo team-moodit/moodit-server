@@ -13,6 +13,7 @@ public class MissionOfferAcceptHandler {
     private final MissionOfferCreator missionOfferCreator;
     private final MissionOfferManager missionOfferManager;
     private final UserMissionManager userMissionManager;
+    private final MissionOfferReader missionOfferReader;
 
     @Transactional
     public MissionOfferCreateResult createAcceptedOfferAndMission(Long userId, MatchResult matchResult, MissionTemplate missionTemplate) {
@@ -34,5 +35,21 @@ public class MissionOfferAcceptHandler {
         );
 
         return MissionOfferCreateResult.accepted(missionOffer, userMissionId);
+    }
+
+    @Transactional
+    public Long accept(OfferAcceptAction action) {
+        MissionOffer missionOffer = missionOfferReader.getMissionOffer(action.getOfferId());
+        MissionCandidate candidate = missionOffer.getCandidate(action.getCandidateId());
+
+        missionOfferManager.accept(action.getOfferId(), action.getCandidateId());
+
+        return userMissionManager.create(
+                missionOffer.getUserId(),
+                missionOffer.getMatchId(),
+                missionOffer.getId(),
+                candidate.getMissionTemplateId(),
+                candidate.getTitle()
+        );
     }
 }

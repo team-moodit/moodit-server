@@ -16,6 +16,7 @@ public class MissionOfferService {
     private final MissionTemplateFinder missionTemplateFinder;
     private final MissionOfferCreator missionOfferCreator;
     private final MissionOfferAcceptHandler missionOfferAcceptHandler;
+    private final MissionOfferAcceptValidator missionOfferAcceptValidator;
 
     public MissionOfferCreateResult createOffer(ApiUser apiUser, Long matchId) {
         MatchResult matchResult = matchResultReader.getMatchResult(apiUser.getId(), matchId);
@@ -36,5 +37,10 @@ public class MissionOfferService {
                 matchResult,
                 missionTemplates
         );
+    }
+
+    public Long acceptOffer(ApiUser apiUser, OfferAcceptAction action) {
+        missionOfferAcceptValidator.validate(apiUser, action);
+        return missionOfferAcceptHandler.accept(action);
     }
 }
