@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public record MissionOfferResponse(
+        Long offerId,
         List<MissionOfferItemResponse> items,
         MissionOfferState state,
         Long userMissionId
@@ -15,6 +16,7 @@ public record MissionOfferResponse(
             MissionOfferCreateResult result
     ) {
         return new MissionOfferResponse(
+                result.getMissionOffer().getId(),
                 result.getMissionOffer().getCandidates().stream()
                         .sorted(Comparator.comparing(MissionCandidate::getDisplayOrder))
                         .map(it ->
