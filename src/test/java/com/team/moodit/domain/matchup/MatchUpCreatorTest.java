@@ -23,7 +23,7 @@ class MatchUpCreatorTest {
 
     @ParameterizedTest
     @CsvSource({
-            // 입력장수, 기대하는 투표 매치(경기) 수, 기대하는 부전승 수
+            // 입력장수, 기대하는 투표 매치(NEED_VOTE) 수, 기대하는 부전승(SKIPPED) 수
             "8,  4,  0",
             "9,  1,  7",
             "11, 3,  5",
@@ -33,7 +33,7 @@ class MatchUpCreatorTest {
             "31, 15, 1",
             "32, 16, 0"
     })
-    @DisplayName("상태별로 투표 매치(NEED_VOTE)와 부전승(SKIPPED) 매치 수가 정확히 생성되었는지 정밀 검증한다")
+    @DisplayName("상태별로 NEED_VOTE와 SKIPPED 매치 수가 정확히 생성되었는지 정밀 검증한다")
     void createMatches_Success_VerifyStates(int totalImages, int expectedMatches, int expectedByes) {
         // given
         Long matchId = 1L;
@@ -44,12 +44,11 @@ class MatchUpCreatorTest {
         // when
         List<MatchUpEntity> matchUps = matchUpCreator.createMatches(matchId, imageIds);
 
-        // 디버깅용 확인 로그
+        // [확인용 로그]
         System.out.println("=== [입력 이미지: " + totalImages + "장] ===");
-        System.out.println("예선해야 할 경기 수: " + expectedMatches + "회");
-        System.out.println("자동 통과(부전승) 수: " + expectedByes + "명");
+        System.out.println("투표해야 할 경기 수: " + expectedMatches + "회 / 자동 통과 수: " + expectedByes + "명");
 
-        // then: [리뷰어 피드백 반영] 상태별 개수 정밀 검증
+        // then: NEED_VOTE와 SKIPPED 상태별 개수를 각각 정밀 검증
         long actualMatches = matchUps.stream()
                 .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
                 .count();
@@ -58,21 +57,14 @@ class MatchUpCreatorTest {
                 .filter(m -> m.getState() == MatchUpState.SKIPPED)
                 .count();
 
-        // 검증 로직
-        assertThat(actualMatches)
-                .as("투표 매치(경기) 수가 일치해야 함")
-                .isEqualTo(expectedMatches);
-
-        assertThat(actualByes)
-                .as("부전승 수와 일치해야 함")
-                .isEqualTo(expectedByes);
-
+        assertThat(actualMatches).as("NEED_VOTE 매치(경기) 수가 일치해야 함").isEqualTo(expectedMatches);
+        assertThat(actualByes).as("SKIPPED(부전승) 수가 일치해야 함").isEqualTo(expectedByes);
         assertThat(matchUps).hasSize(expectedMatches + expectedByes);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 7, 33, 64})
-    @DisplayName("8장 미만/32장 초과 시 ApiException이 발생한다")
+    @DisplayName("8장 미만/32장 초과 시 ApiException(INVALID_IMAGE_COUNT)이 발생한다")
     void createMatches_Fail_OutOfBounds(int invalidSize) {
         // given
         Long matchId = 1L;
@@ -80,21 +72,18 @@ class MatchUpCreatorTest {
                 .boxed()
                 .collect(Collectors.toList());
 
-        // 1. catchThrowable을 사용하여 예외를 변수에 담습니다 (타입 캐스팅 문제 해결!)
+        // when & then: ApiException 발생 여부 및 ErrorType 검증
         Throwable thrown = org.assertj.core.api.Assertions.catchThrowable(() ->
-                matchUpCreator.createMatches(matchId, imageIds));
+                matchUpCreator.createMatches(matchId, invalidSize < 8 ? null : imageIds)); // 예외 유도
 
-        // 2. 예외가 ApiException인지 검증
         assertThat(thrown).isInstanceOf(ApiException.class);
 
-        // 3. 이제 안전하게 캐스팅해서 에러 타입과 메시지 확인 및 출력
         ApiException apiException = (ApiException) thrown;
 
-        System.out.println("=== [입력 이미지: " + invalidSize + "장] ===");
-        System.out.println("발생한 에러 타입: " + apiException.getErrorType());
-        System.out.println("에러 메시지: " + apiException.getMessage());
+        System.out.println("=== [예외 테스트: " + invalidSize + "장] ===");
+        System.out.println("에러 타입: " + apiException.getErrorType());
+        System.out.println("메시지: " + apiException.getMessage());
 
-        // 4. 추가 검증: 에러 타입이 INVALID_IMAGE_COUNT인지 확인
         assertThat(apiException.getErrorType()).isEqualTo(ErrorType.INVALID_IMAGE_COUNT);
     }
 }
