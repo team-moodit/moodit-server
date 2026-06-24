@@ -19,6 +19,6 @@ public class ObjectKeyGenerator {
         String date = LocalDate.now(KST).format(DATE_FORMATTER);
         String fileName = UUID.randomUUID().toString().replace("-", "");
 
-        return "%s/%s/%s.%s".formatted(resourceType.name().toLowerCase(), date, fileName, extension);
+        return "%s/%s/%s%s".formatted(resourceType.name().toLowerCase(), date, fileName, extension);
     }
 }
