@@ -1,9 +1,8 @@
 package com.team.moodit.domain.matchup;
 
-import com.team.moodit.domain.match.MatchMaker;
+import com.team.moodit.domain.match.MatchUpCreator;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -15,9 +14,9 @@ import java.util.stream.LongStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class MatchMakerTest {
+class MatchUpCreatorTest {
 
-    private final MatchMaker matchMaker = new MatchMaker();
+    private final MatchUpCreator matchUpCreator = new MatchUpCreator();
 
     @ParameterizedTest
     @CsvSource({
@@ -40,7 +39,7 @@ class MatchMakerTest {
                 .collect(Collectors.toList());
 
         // when
-        List<MatchUpEntity> matchUps = matchMaker.createMatches(matchId, imageIds);
+        List<MatchUpEntity> matchUps = matchUpCreator.createMatches(matchId, imageIds);
 
         // then
         // 생성된 전체 매치업 엔티티 총 개수 검증 (예선전 수 + 부전승 수)
@@ -59,7 +58,7 @@ class MatchMakerTest {
                 .collect(Collectors.toList());
 
         // when & then
-        assertThatThrownBy(() -> matchMaker.createMatches(matchId, imageIds))
+        assertThatThrownBy(() -> matchUpCreator.createMatches(matchId, imageIds))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("토너먼트는 최소 8장, 최대 32장의 이미지만 참여 가능합니다.");
     }

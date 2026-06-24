@@ -24,7 +24,7 @@ public class MatchCreator {
     private final MatchImageRepository matchImageRepository;
     private final FileRepository fileRepository;
     private final MatchUpRepository matchUpRepository;
-    private final MatchMaker matchMaker;
+    private final MatchUpCreator matchUpCreator;
 
     @Transactional
     public Long create(Long userId, NewMatch newMatch, List<Long> imageIds) {
@@ -48,7 +48,7 @@ public class MatchCreator {
                 ).toList()
         );
         // 4. [추가] 대진표 생성 및 저장
-        List<MatchUpEntity> matchUps = matchMaker.createMatches(savedMatch.getId(), imageIds);
+        List<MatchUpEntity> matchUps = matchUpCreator.createMatches(savedMatch.getId(), imageIds);
         matchUpRepository.saveAll(matchUps);
         return savedMatch.getId();
     }
