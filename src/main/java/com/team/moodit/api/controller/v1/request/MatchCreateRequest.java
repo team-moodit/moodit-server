@@ -24,6 +24,7 @@ public record MatchCreateRequest(
         if (images == null || images.size() < 8 || images.size() > 32) {
             throw new ApiException(ErrorType.INVALID_IMAGE_COUNT);
         }
+
     }
 
     public NewMatch toNewMatch() {
