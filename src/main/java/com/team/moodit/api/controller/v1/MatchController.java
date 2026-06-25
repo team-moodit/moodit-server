@@ -2,7 +2,9 @@ package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
+import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.domain.match.MatchService;
+import com.team.moodit.domain.match.MatchUpStart;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,18 +29,20 @@ public class MatchController {
                 request.toNewMatch(),
                 request.images()
         );
+
+
         return ApiResponse.success(new MatchCreateResponse(successId));
     }
 
     @GetMapping("/v1/matches/{matchId}/start")
     public ApiResponse<MatchStartResponse> startMatch(
             ApiUser apiUser,
-            @PathVariable Long matchId // 👈 요청은 이게 전부입니다!
+            @PathVariable Long matchId
     ) {
-        // 비즈니스 로직 호출
-        Match domainMatch = matchManager.start(matchId);
+        //  matchService.start() 호출!
+        MatchUpStart domainMatch = matchService.getMatchup(matchId);
 
-        // Response 반환
+        // MatchUpStart 도메인 객체를 반한
         return ApiResponse.success(MatchStartResponse.of(domainMatch));
     }
 }

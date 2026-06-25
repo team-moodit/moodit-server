@@ -1,6 +1,6 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.match.Match;
+import com.team.moodit.domain.match.MatchUpStart; // 📌 우리가 만든 도메인 객체로 정확히 임포트
 import java.util.List;
 
 public record MatchStartResponse(
@@ -12,7 +12,7 @@ public record MatchStartResponse(
         NextMatchUpResponse nextMatchUp,
         List<ReasonResponse> reasons
 ) {
-    public static MatchStartResponse of(Match domain) {
+    public static MatchStartResponse of(MatchUpStart domain) { //  타입을 MatchUpStart로 일치
         return new MatchStartResponse(
                 domain.getTournamentTitle(),
                 domain.getTotalRounds(),
@@ -24,13 +24,12 @@ public record MatchStartResponse(
                         new CandidateResponse(domain.getCandidateBId(), domain.getCandidateBUrl())
                 ),
                 domain.getReasons().stream()
-                        .map(r -> new ReasonResponse(r.id(), r.content()))
+                        .map(r -> new ReasonResponse(r.getId(), r.getContent()))
                         .toList()
         );
     }
 }
 
-// 📌 컴파일 에러 방지를 위해 하단에 하위 레코드들도 한 파일에 다 쑤셔 넣어둡니다.
 record NextMatchUpResponse(CandidateResponse candidateA, CandidateResponse candidateB) {}
 record CandidateResponse(Long id, String photoUri) {}
 record ReasonResponse(Long id, String content) {}

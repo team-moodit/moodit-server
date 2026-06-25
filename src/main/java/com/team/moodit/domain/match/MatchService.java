@@ -12,6 +12,7 @@ public class MatchService {
     private final MatchCreator matchCreator;
     private final MatchResultReader matchResultReader;
     private final MatchImageReader matchImageReader;
+    private final MatchUpReader matchUpReader;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
@@ -23,5 +24,9 @@ public class MatchService {
 
     public MatchImage getMatchImage(Long imageId) {
         return matchImageReader.getMatchImage(imageId);
+    }
+
+    public MatchUpStart getMatchup(Long matchId) {
+        return matchUpReader.getMatchUp(matchId);
     }
 }
