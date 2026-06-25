@@ -25,7 +25,7 @@ public class FeedbackPolicyValidator {
                 userId,
                 userMissionId
         ).ifPresent(feedback -> {
-            throw new ApiException(ErrorType.FEEDBACK_ALREADY_FEDBACK);
+            throw new ApiException(ErrorType.FEEDBACK_ALREADY_SUBMITTED);
         });
     }
 }
