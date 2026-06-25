@@ -39,10 +39,8 @@ public class MatchController {
             ApiUser apiUser,
             @PathVariable Long matchId
     ) {
-        //  matchService.start() 호출!
         MatchUpStart domainMatch = matchService.getMatchup(matchId);
 
-        // MatchUpStart 도메인 객체를 반한
         return ApiResponse.success(MatchStartResponse.of(domainMatch));
     }
 }
