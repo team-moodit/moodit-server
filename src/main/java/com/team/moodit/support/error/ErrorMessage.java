@@ -5,6 +5,7 @@ public record ErrorMessage(
         String message
 ) {
     public ErrorMessage(ErrorType errorType) {
+
         this(errorType.name(), errorType.getMessage());
     }
 }
