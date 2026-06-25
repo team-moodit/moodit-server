@@ -1,6 +1,7 @@
 package com.team.moodit.api.assembler;
 
 import com.team.moodit.api.controller.v1.response.UserMissionResponse;
+import com.team.moodit.domain.match.MatchImage;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
 import com.team.moodit.domain.userMission.UserMission;
@@ -21,7 +22,8 @@ public class UserMissionAssembler {
     public UserMissionResponse getUserMission(ApiUser apiUser, Long userMissionId) {
         UserMission userMission = userMissionService.getUserMission(apiUser, userMissionId);
         MatchResult matchResult = matchService.getMatchResult(apiUser, userMission.getMatchId());
-        File file = fileReader.getFile(matchResult.getRepresentativeImageId());
+        MatchImage matchImage = matchService.getMatchImage(matchResult.getRepresentativeMatchImageId());
+        File file = fileReader.getFile(matchImage.getFileId());
         return UserMissionResponse.of(userMission, matchResult, file);
     }
 }

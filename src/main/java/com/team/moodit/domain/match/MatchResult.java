@@ -9,7 +9,7 @@ import lombok.Getter;
 public class MatchResult {
     private Long matchId;
     private String title;
-    private Long representativeImageId;
+    private Long representativeMatchImageId;
     private int roundCount;
     private LocalDateTime completedAt;
     private MatchPreferenceResult preferenceResult;

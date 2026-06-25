@@ -18,14 +18,14 @@ public record UserMissionResponse(
     public static UserMissionResponse of(
             UserMission userMission,
             MatchResult matchResult,
-            File matchRepresentativeImage
+            File matchRepresentativeImageFile
     ) {
         return new UserMissionResponse(
                 userMission.getId(),
                 userMission.getTitle(),
                 userMission.getState(),
                 matchResult.getTitle(),
-                matchRepresentativeImage.getUrl(),
+                matchRepresentativeImageFile.getUrl(),
                 matchResult.getRoundCount(),
                 matchResult.getCompletedAt()
         );

@@ -24,7 +24,7 @@ public class MatchResultReader {
         return new MatchResult(
                 matchResult.getMatchId(),
                 matchResult.getTitle(),
-                matchResult.getRepresentativeImageId(),
+                matchResult.getRepresentativeMatchImageId(),
                 matchResult.getRoundCount(),
                 matchResult.getCompletedAt(),
                 new MatchPreferenceResult(
