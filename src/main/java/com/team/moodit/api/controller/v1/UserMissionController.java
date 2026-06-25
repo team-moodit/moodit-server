@@ -16,9 +16,9 @@ public class UserMissionController {
 
     @GetMapping("/v1/user-missions/{userMissionId}")
     public ApiResponse<UserMissionResponse> getUserMission(
-//            ApiUser apiUser,
+            ApiUser apiUser,
             @PathVariable Long userMissionId
     ) {
-        return ApiResponse.success(userMissionAssembler.getUserMission(new ApiUser(1L), userMissionId));
+        return ApiResponse.success(userMissionAssembler.getUserMission(apiUser, userMissionId));
     }
 }
