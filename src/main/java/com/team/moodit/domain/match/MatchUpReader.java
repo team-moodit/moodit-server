@@ -25,18 +25,18 @@ public class MatchUpReader {
     private final FileReader fileReader;
 
     public MatchUpStart getMatchUp(Long matchId) {
-        // 1. 대진표(MatchUp) 목록을 외래키 matchId 기준으로 '정렬하여' 가져옵니다.
+        // 1. [개선] 파라미터로 받은 matchId를 사용해 부모 매치를 바로 조회합니다. (역방향 제거)
+        MatchEntity match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+
+        // 2. 해당 매치에 속한 대진표(MatchUp) 목록을 정렬하여 가져옵니다.
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
         if (matchUps == null || matchUps.isEmpty()) {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // ORDER BY가 보장되므로 안전하게 첫 번째 대진을 가져옵니다.
+        // 정렬 조건이 보장된 첫 번째 대진 획득
         MatchUpEntity matchUp = matchUps.get(0);
-
-        // 2. 부모 MatchEntity 조회
-        MatchEntity match = matchRepository.findById(matchUp.getMatchId())
-                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         // 3. 파일 인프라 연동 및 Null 예외 방어
         File fileA = fileReader.getFile(matchUp.getCandidateAId());
