@@ -25,16 +25,16 @@ public class MatchUpReader {
     private final FileReader fileReader;
 
     public MatchUpStart getMatchUp(Long matchId) {
-        // 1. 대진표(MatchUp) 목록을 외래키 matchId 기준으로 먼저 필터링하여 가져옵니다.
+        // 1. 대진표(MatchUp) 목록을 외래키 matchId 기준으로 '정렬하여' 가져옵니다.
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
         if (matchUps == null || matchUps.isEmpty()) {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // 현재 진행해야 하는 첫 번째 대진 획득
+        // ORDER BY가 보장되므로 안전하게 첫 번째 대진을 가져옵니다.
         MatchUpEntity matchUp = matchUps.get(0);
 
-        // 2. 획득한 대진표 로우의 실제 matchId 값을 역으로 추적하여 정확하게 부모를 찾아옵니다.
+        // 2. 부모 MatchEntity 조회
         MatchEntity match = matchRepository.findById(matchUp.getMatchId())
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
@@ -46,7 +46,7 @@ public class MatchUpReader {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // 4. [수정] DB 레벨에서 딱 4개의 랜덤 데이터만 효율적으로 조회 (서버 부하 감소)
+        // 4. DB 레벨에서 딱 4개의 랜덤 데이터만 효율적으로 조회
         List<MatchVoteEntity> sampledVotes = matchVoteRepository.findRandomVotes();
         if (sampledVotes == null) {
             sampledVotes = List.of();
