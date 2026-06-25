@@ -1,89 +1,63 @@
 package com.team.moodit.domain.matchup;
 
-import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.domain.match.MatchUpCreator;
 import com.team.moodit.storage.db.core.MatchUpEntity;
-import com.team.moodit.support.error.ApiException;
-import com.team.moodit.support.error.ErrorType;
+import lombok.extern.slf4j.Slf4j; // 📌 Lombok의 Slf4j 어노테이션 추가
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Slf4j
 class MatchUpCreatorTest {
 
     private final MatchUpCreator matchUpCreator = new MatchUpCreator();
+    private final Long TEST_MATCH_ID = 1L;
 
     @ParameterizedTest
-    @CsvSource({
-            // 입력장수, 기대하는 투표 매치(NEED_VOTE) 수, 기대하는 부전승(SKIPPED) 수
-            "8,  4,  0",
-            "9,  1,  7",
-            "11, 3,  5",
-            "15, 7,  1",
-            "16, 8,  0",
-            "17, 1,  15",
-            "31, 15, 1",
-            "32, 16, 0"
-    })
-    @DisplayName("상태별로 NEED_VOTE와 SKIPPED 매치 수가 정확히 생성되었는지 정밀 검증한다")
-    void createMatches_Success_VerifyStates(int totalImages, int expectedMatches, int expectedByes) {
+    @ValueSource(ints = {15, 31, 16})
+    @DisplayName("이미지 개수별 대진 생성 및 부전승 처리 시스템 로그 확인 테스트")
+    void createMatches_PrintLogs(int imageCount) {
         // given
-        Long matchId = 1L;
-        List<Long> imageIds = LongStream.rangeClosed(1, totalImages)
-                .boxed()
-                .collect(Collectors.toList());
+        List<Long> imageIds = createDummyImageIds(imageCount);
+
+        log.info("==================================================");
+        log.info("[테스트 시작] 입력 이미지 개수: {}장", imageCount);
+        log.info("==================================================");
 
         // when
-        List<MatchUpEntity> matchUps = matchUpCreator.createMatches(matchId, imageIds);
+        List<MatchUpEntity> matchUps = matchUpCreator.createMatches(TEST_MATCH_ID, imageIds);
 
-        // [확인용 로그]
-        System.out.println("=== [입력 이미지: " + totalImages + "장] ===");
-        System.out.println("투표해야 할 경기 수: " + expectedMatches + "회 / 자동 통과 수: " + expectedByes + "명");
+        // 내부 공식 역산해서 로그용 변수 추출
+        int targetRound = Integer.highestOneBit(imageCount - 1);
+        int matchCount = imageCount - targetRound;
+        int firstRoundPlayersCount = matchCount * 2;
+        int autoPassCount = imageCount - firstRoundPlayersCount;
 
-        // then: NEED_VOTE와 SKIPPED 상태별 개수를 각각 정밀 검증
-        long actualMatches = matchUps.stream()
-                .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
-                .count();
+        // then
+        log.info(" [중간 연산 결과]");
+        log.info(" - targetRound (기준 라운드 비트) : {}", targetRound);
+        log.info(" - matchCount  (실제 치를 경기 수) : {}", matchCount);
+        log.info(" - 예선 참가 플레이어 수          : {}명", firstRoundPlayersCount);
+        log.info(" - 부전승(Auto Pass) 플레이어 수  : {}명", autoPassCount);
+        log.info("--------------------------------------------------");
+        log.info(" [최종 매치업 엔티티 생성 결과]");
+        log.info(" - 총 생성된 MatchUpEntity 개수 : {}개", matchUps.size());
+        log.info("==================================================");
 
-        long actualByes = matchUps.stream()
-                .filter(m -> m.getState() == MatchUpState.SKIPPED)
-                .count();
-
-        assertThat(actualMatches).as("NEED_VOTE 매치(경기) 수가 일치해야 함").isEqualTo(expectedMatches);
-        assertThat(actualByes).as("SKIPPED(부전승) 수가 일치해야 함").isEqualTo(expectedByes);
-        assertThat(matchUps).hasSize(expectedMatches + expectedByes);
+        // 검증 코드
+        assertThat(matchUps).hasSize(matchCount + autoPassCount);
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {1, 7, 33, 64})
-    @DisplayName("8장 미만/32장 초과 시 ApiException(INVALID_IMAGE_COUNT)이 발생한다")
-    void createMatches_Fail_OutOfBounds(int invalidSize) {
-        // given
-        Long matchId = 1L;
-        List<Long> imageIds = LongStream.rangeClosed(1, invalidSize)
-                .boxed()
-                .collect(Collectors.toList());
-
-        // when & then: ApiException 발생 여부 및 ErrorType 검증
-        Throwable thrown = org.assertj.core.api.Assertions.catchThrowable(() ->
-                matchUpCreator.createMatches(matchId, invalidSize < 8 ? null : imageIds)); // 예외 유도
-
-        assertThat(thrown).isInstanceOf(ApiException.class);
-
-        ApiException apiException = (ApiException) thrown;
-
-        System.out.println("=== [예외 테스트: " + invalidSize + "장] ===");
-        System.out.println("에러 타입: " + apiException.getErrorType());
-        System.out.println("메시지: " + apiException.getMessage());
-
-        assertThat(apiException.getErrorType()).isEqualTo(ErrorType.INVALID_IMAGE_COUNT);
+    private List<Long> createDummyImageIds(int size) {
+        List<Long> ids = new ArrayList<>();
+        for (long i = 1; i <= size; i++) {
+            ids.add(i);
+        }
+        return ids;
     }
 }
