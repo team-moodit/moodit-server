@@ -1,7 +1,7 @@
 package com.team.moodit.storage.db.core;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+
 
 import java.util.List;
 
