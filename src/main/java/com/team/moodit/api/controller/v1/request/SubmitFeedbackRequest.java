@@ -10,7 +10,9 @@ public record SubmitFeedbackRequest(
 ) {
     public SubmitFeedbackRequest {
         if (satisfactionScore == null || satisfactionScore < 1 || satisfactionScore > 5) throw new ApiException(ErrorType.INVALID_REQUEST);
-        if (satisfactionScore < 3 && dissatisfactionReason.isBlank()) throw new ApiException(ErrorType.FEEDBACK_REQUIRED_REASON);
+        if (satisfactionScore < 3) {
+            if (dissatisfactionReason == null || dissatisfactionReason.isBlank()) throw new ApiException(ErrorType.FEEDBACK_REQUIRED_REASON);
+        }
     }
 
     public NewFeedback toNewFeedback() {
