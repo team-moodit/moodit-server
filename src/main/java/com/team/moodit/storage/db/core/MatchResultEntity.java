@@ -20,18 +20,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MatchResultEntity extends BaseNoStatusEntity {
+    @Column(nullable = false)
     private Long matchId;
+    @Column(nullable = false)
     private Long userId;
+    @Column(nullable = false)
     private String title;
-    private Long representativeImageId;
+    @Column(nullable = false)
+    private Long representativeMatchImageId;
+    @Column(nullable = false)
     private int roundCount;
+    @Column(nullable = false)
     private LocalDateTime completedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "VARCHAR")
     private PreferenceResultType preferenceResultType;
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "VARCHAR")
+    @Column(columnDefinition = "VARCHAR", nullable = false)
     private PreferenceType preferenceType;
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "VARCHAR")
