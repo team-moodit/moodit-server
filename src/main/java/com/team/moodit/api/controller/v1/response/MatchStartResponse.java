@@ -1,6 +1,6 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.match.MatchUpStart; // 📌 우리가 만든 도메인 객체로 정확히 임포트
+import com.team.moodit.domain.match.MatchUpStart;
 import java.util.List;
 
 public record MatchStartResponse(
@@ -12,18 +12,23 @@ public record MatchStartResponse(
         NextMatchUpResponse nextMatchUp,
         List<ReasonResponse> reasons
 ) {
-    public static MatchStartResponse of(MatchUpStart domain) { //  타입을 MatchUpStart로 일치
+    public static MatchStartResponse of(MatchUpStart domain) {
+        //  동적 계산: 현재 진행 라운드가 총 라운드 수를 초과했거나 결승전 상태 조건을 체크
+        // (도메인이나 기획 스펙에 맞춰 > 또는 >= 로 비교 범위를 유연하게 조절 가능합니다.)
+        boolean completed = domain.getCurrentRound() > domain.getTotalRounds();
+
         return new MatchStartResponse(
                 domain.getTournamentTitle(),
                 domain.getTotalRounds(),
                 domain.getCurrentRound(),
                 domain.getRoundName(),
-                false,
+                completed,
                 new NextMatchUpResponse(
                         new CandidateResponse(domain.getCandidateAId(), domain.getCandidateAUrl()),
                         new CandidateResponse(domain.getCandidateBId(), domain.getCandidateBUrl())
                 ),
-                domain.getReasons().stream()
+
+                domain.getReasons() == null ? List.of() : domain.getReasons().stream()
                         .map(r -> new ReasonResponse(r.getId(), r.getContent()))
                         .toList()
         );
