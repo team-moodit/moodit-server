@@ -34,10 +34,10 @@ public class MatchResultEntity extends BaseNoStatusEntity {
     private LocalDateTime completedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "VARCHAR")
+    @Column(columnDefinition = "VARCHAR", nullable = false)
     private PreferenceResultType preferenceResultType;
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "VARCHAR", nullable = false)
+    @Column(columnDefinition = "VARCHAR")
     private PreferenceType preferenceType;
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "VARCHAR")
