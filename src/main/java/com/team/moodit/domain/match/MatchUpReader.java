@@ -12,10 +12,7 @@ import com.team.moodit.support.file.FileReader;
 import com.team.moodit.support.file.File;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -26,8 +23,6 @@ public class MatchUpReader {
     private final MatchUpRepository matchUpRepository;
     private final MatchVoteRepository matchVoteRepository;
     private final FileReader fileReader;
-
-
 
     public MatchUpStart getMatchUp(Long matchId) {
         // 1. 대진표(MatchUp) 목록을 외래키 matchId 기준으로 먼저 필터링하여 가져옵니다.
@@ -51,16 +46,10 @@ public class MatchUpReader {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // 4. match_vote 4개 셔플 및 안전 샘플링
-        List<MatchVoteEntity> allVotes = matchVoteRepository.findAll();
-        List<MatchVoteEntity> sampledVotes;
-
-        if (allVotes == null || allVotes.isEmpty()) {
+        // 4. [수정] DB 레벨에서 딱 4개의 랜덤 데이터만 효율적으로 조회 (서버 부하 감소)
+        List<MatchVoteEntity> sampledVotes = matchVoteRepository.findRandomVotes();
+        if (sampledVotes == null) {
             sampledVotes = List.of();
-        } else {
-            List<MatchVoteEntity> shuffleTarget = new ArrayList<>(allVotes);
-            Collections.shuffle(shuffleTarget);
-            sampledVotes = shuffleTarget.stream().limit(4).toList();
         }
 
         // 5. 총 이미지 수 기반 강수 연산
