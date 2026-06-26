@@ -50,6 +50,33 @@ public class MatchUpCreator {
     }
 
     /**
+     *  [새로 추가된 치트키 메서드]
+     * 토너먼트 진행 중 상위 라운드(4강, 결승)로 진출한 승자들을 2명씩 짝지어 다음 대진표를 만듭니다.
+     */
+    public List<MatchUpEntity> createNextRoundMatches(Long matchId, List<Long> winnerImageIds) {
+        if (winnerImageIds == null || winnerImageIds.isEmpty() || winnerImageIds.size() % 2 != 0) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        // 다음 라운드 스펙 (예: 4명이 진출했으면 4강 라운드)
+        int nextRoundNumber = winnerImageIds.size();
+
+        List<Long> shuffledIds = new ArrayList<>(winnerImageIds);
+        Collections.shuffle(shuffledIds);
+
+        List<MatchUpEntity> nextMatchUps = new ArrayList<>();
+
+        // 승자들을 2명씩 짝지어서 RealMatchUp 대진 생성
+        for (int i = 0; i < shuffledIds.size(); i += 2) {
+            nextMatchUps.add(MatchUpEntity.of(
+                    new RealMatchUp(matchId, nextRoundNumber, shuffledIds.get(i), shuffledIds.get(i + 1))
+            ));
+        }
+
+        return nextMatchUps;
+    }
+
+    /**
      *  [품질 개선] 15장, 31장 등의 입력에서 발생하던 IndexOutOfBoundsException 버그 해결
      * n보다 작은 '가장 큰 2의 거듭제곱' 단계를 구하여 부전승 대진을 완성하기 위한 핵심 연산입니다.
      */
