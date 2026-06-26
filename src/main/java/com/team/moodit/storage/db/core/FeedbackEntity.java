@@ -22,11 +22,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FeedbackEntity extends BaseIdEntity {
-    @Column(nullable = false)
     private Long userMissionId;
-    @Column(nullable = false)
     private Long userId;
-    @Column(nullable = false)
     private double satisfactionScore;
     private String dissatisfactionReason;
 
