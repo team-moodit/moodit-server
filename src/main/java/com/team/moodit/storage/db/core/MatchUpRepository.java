@@ -14,6 +14,6 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity,Long> {
     List<MatchUpEntity> findByMatchId(@Param("matchId") Long matchId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select m from MatchUpEntity m where m.matchId = :matchId")
+    @Query("SELECT m FROM MatchUpEntity m WHERE m.matchId = :matchId ORDER BY m.roundNumber ASC, m.id ASC")
     List<MatchUpEntity> findByMatchIdWithLock(@Param("matchId") Long matchId);
 }
