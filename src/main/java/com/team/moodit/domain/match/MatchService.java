@@ -13,13 +13,22 @@ public class MatchService {
     private final MatchResultReader matchResultReader;
     private final MatchImageReader matchImageReader;
     private final MatchUpReader matchUpReader;
+    private final MatchResultFinder matchResultFinder;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
     }
 
+    public List<MatchResult> findMatchResults(List<Long> matchIds) {
+        return matchResultFinder.find(matchIds);
+    }
+
     public MatchResult getMatchResult(ApiUser apiUser, Long matchId) {
         return matchResultReader.getMatchResult(apiUser.getId(), matchId);
+    }
+
+    public List<MatchImage> getMatchImages(List<Long> imageIds) {
+        return matchImageReader.getMatchImages(imageIds);
     }
 
     public MatchImage getMatchImage(Long imageId) {

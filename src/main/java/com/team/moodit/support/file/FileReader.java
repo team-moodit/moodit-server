@@ -4,6 +4,7 @@ import com.team.moodit.storage.db.core.FileEntity;
 import com.team.moodit.storage.db.core.FileRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,5 +23,16 @@ public class FileReader {
                 fileUrlResolver.resolve(entity.getObjectKey()),
                 entity.getResourceType()
         );
+    }
+
+    public List<File> getFiles(List<Long> fileIds) {
+        return fileRepository.findAllById(fileIds).stream()
+                .map(it ->
+                        new File(
+                                it.getId(),
+                                fileUrlResolver.resolve(it.getObjectKey()),
+                                it.getResourceType()
+                        )
+                ).toList();
     }
 }

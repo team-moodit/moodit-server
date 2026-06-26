@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MatchPreferenceResultRepository extends JpaRepository<MatchPreferenceResultEntity, Long> {
     List<MatchPreferenceResultEntity> findByMatchResultId(Long matchResultId);
+    List<MatchPreferenceResultEntity> findByMatchResultIdIn(List<Long> matchResultIds);
 }

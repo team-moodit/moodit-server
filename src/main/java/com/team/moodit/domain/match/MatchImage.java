@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MatchImage {
+    private Long id;
     private Long matchId;
     private Long fileId;
 }
