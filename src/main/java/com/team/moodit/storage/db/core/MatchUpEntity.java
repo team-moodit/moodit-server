@@ -67,7 +67,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
     /**
      * [요구사항 5, 6, 7번] 득표수 반영 및 승자 확정 처리
      */
-    public void updateWinner(Long selectedPhotoId, Long reasonId) {
+    public void updateWinner(Long selectedPhotoId) {
         this.winnerId = selectedPhotoId;
         this.state = MatchUpState.COMPLETED; // 📌 상태를 완료(또는 프로젝트 컨벤션에 맞는 완료 상태)로 변경!
     }

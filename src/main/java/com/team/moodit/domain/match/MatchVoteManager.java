@@ -38,7 +38,7 @@ public class MatchVoteManager {
         currentMatchUp.validateCandidate(command.getPhotoId());
 
         // 4. 승자 확정 및 엔티티 상태 변경
-        currentMatchUp.updateWinner(command.getPhotoId(), command.getReasonId());
+        currentMatchUp.updateWinner(command.getPhotoId());
 
         // 📌 [PostgreSQL & 영속성 동기화 최적화]
         // 현재 경기 투표 상태를 디비에 즉시 완전히 반영하여 확정 짓습니다.
