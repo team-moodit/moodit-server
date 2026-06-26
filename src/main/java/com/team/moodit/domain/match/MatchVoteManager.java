@@ -22,8 +22,8 @@ public class MatchVoteManager {
     @Transactional
     public VoteSaveResponse processVote(Long matchId, VoteCommand command) {
 
-        // 1. 해당 매치의 모든 대진표 데이터 조회
-        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
+        //  [수정 완료] 데이터 조회 시점에 비관적 락을 걸어 동시성 요청을 한 줄로 세운다.
+        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdWithLock(matchId);
         if (matchUps == null || matchUps.isEmpty()) {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
