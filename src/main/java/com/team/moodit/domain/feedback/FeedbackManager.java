@@ -16,7 +16,7 @@ public class FeedbackManager {
                         userMissionId,
                         userId,
                         newFeedback.getSatisfactionScore(),
-                        newFeedback.getDissatisfactionReason()
+                        String.join(", ", newFeedback.getDissatisfactionReasons())
                 )
         ).getId();
     }

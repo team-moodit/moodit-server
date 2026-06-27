@@ -1,5 +1,6 @@
 package com.team.moodit.domain.feedback;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -7,5 +8,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class NewFeedback {
     private double satisfactionScore;
-    private String dissatisfactionReason;
+    private List<String> dissatisfactionReasons;
 }
