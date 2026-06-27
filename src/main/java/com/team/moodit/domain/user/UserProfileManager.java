@@ -15,7 +15,8 @@ public class UserProfileManager {
         return userProfileRepository.save(
                 new UserProfileEntity(
                         userId,
-                        profile.getProviderUserEmail()
+                        profile.getProviderUserEmail(),
+                        profile.getProviderUserName()
                 )
         ).getId();
     }

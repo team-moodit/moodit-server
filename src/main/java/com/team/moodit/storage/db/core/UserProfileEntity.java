@@ -15,5 +15,5 @@ import lombok.NoArgsConstructor;
 public class UserProfileEntity extends BaseNoStatusEntity {
     private Long userId;
     private String email;
-    // TODO: 추후 이름 필드 추가
+    private String nickname;
 }

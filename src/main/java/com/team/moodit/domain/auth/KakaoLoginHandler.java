@@ -17,7 +17,8 @@ public class KakaoLoginHandler {
         return new SocialProfile(
                 SocialProviderType.KAKAO,
                 kakaoProfile.id(),
-                kakaoProfile.email()
+                kakaoProfile.email(),
+                kakaoProfile.name()
         );
     }
 }
