@@ -22,7 +22,11 @@ public class MissionOfferManager {
 
     public MissionOfferCreateResult getOrCreate(Long userId, MatchResult matchResult) {
         return missionOfferReader
-                .findCreateResultByUserIdAndMatchResultId(userId, matchResult.getId())
+                .findCreateResultByUserIdAndMatchResultId(
+                        userId,
+                        matchResult.getId(),
+                        matchResult.getPreferenceResult().getResultType()
+                )
                 .orElseGet(() -> createOrRead(userId, matchResult));
     }
 
@@ -36,7 +40,11 @@ public class MissionOfferManager {
                     matchResult.getId()
             );
             return missionOfferReader
-                    .findCreateResultByUserIdAndMatchResultId(userId, matchResult.getId())
+                    .findCreateResultByUserIdAndMatchResultId(
+                            userId,
+                            matchResult.getId(),
+                            matchResult.getPreferenceResult().getResultType()
+                    )
                     .orElseThrow(() -> e);
         }
     }
@@ -76,6 +84,9 @@ public class MissionOfferManager {
                 missionTemplates
         );
 
-        return MissionOfferCreateResult.selection(missionOffer);
+        return MissionOfferCreateResult.selection(
+                missionOffer,
+                matchResult.getPreferenceResult().getResultType()
+        );
     }
 }

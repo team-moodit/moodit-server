@@ -1,5 +1,6 @@
 package com.team.moodit.domain.missionOffer;
 
+import com.team.moodit.domain.enums.PreferenceResultType;
 import com.team.moodit.storage.db.core.MissionOfferCandidateEntity;
 import com.team.moodit.storage.db.core.MissionOfferCandidateRepository;
 import com.team.moodit.storage.db.core.MissionOfferEntity;
@@ -20,7 +21,11 @@ public class MissionOfferReader {
     private final MissionOfferCandidateRepository missionOfferCandidateRepository;
     private final UserMissionRepository userMissionRepository;
 
-    public Optional<MissionOfferCreateResult> findCreateResultByUserIdAndMatchResultId(Long userId, Long matchResultId) {
+    public Optional<MissionOfferCreateResult> findCreateResultByUserIdAndMatchResultId(
+            Long userId,
+            Long matchResultId,
+            PreferenceResultType preferenceResultType
+    ) {
         return missionOfferRepository.findByUserIdAndMatchResultId(userId, matchResultId)
                 .map(offerEntity -> {
                     MissionOffer offer = toMissionOffer(offerEntity);
@@ -30,7 +35,7 @@ public class MissionOfferReader {
                             .map(UserMissionEntity::getId)
                             .orElse(null);
 
-                    return MissionOfferCreateResult.of(offer, assignedMissionId);
+                    return MissionOfferCreateResult.of(offer, preferenceResultType, assignedMissionId);
                 });
     }
 
