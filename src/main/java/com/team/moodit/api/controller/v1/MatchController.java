@@ -4,8 +4,10 @@ import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
+import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
 import com.team.moodit.domain.match.MatchService;
+import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
 import com.team.moodit.domain.match.MatchVoteManager;
 import com.team.moodit.support.auth.ApiUser;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MatchController {
     private final MatchService matchService;
     private final MatchVoteManager matchVoteManager;
+    private final MatchUpFinder matchUpFinder;
 
     @PostMapping("/v1/matches")
     public ApiResponse<MatchCreateResponse> createMatch(
@@ -57,6 +60,15 @@ public class MatchController {
         // 웹 DTO를 순수한 도메인 Command 메시지로 변환하여 오염 없는 진입을 보장합니다.
         VoteSaveResponse response = matchVoteManager.processVote(matchId, request.toCommand());
 
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping("/v1/matches/{matchId}/next-matchup")
+    public ApiResponse<MatchUpFlowResponse> getNextMatchUp(
+                                                            ApiUser apiUser,
+                                                            @PathVariable Long matchId
+    ) {
+        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(matchId);
         return ApiResponse.success(response);
     }
 }

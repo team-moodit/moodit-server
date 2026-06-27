@@ -33,7 +33,7 @@ public record MatchStartResponse(
     }
 
 
-    private record NextMatchUpResponse(CandidateResponse candidateA, CandidateResponse candidateB) {}
-    private record CandidateResponse(Long id, String photoUri) {}
-    private record ReasonResponse(Long id, String content) {}
+    public record NextMatchUpResponse(CandidateResponse candidateA, CandidateResponse candidateB) {}
+    public record CandidateResponse(Long id, String photoUri) {}
+    public record ReasonResponse(Long id, String content) {}
 }
