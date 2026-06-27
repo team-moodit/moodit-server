@@ -18,4 +18,6 @@ public class MatchVoteEntity extends BaseIdEntity {
     private String preference; // 예: "CONSISTENCE", "FITNESS"
 
     private String preferenceDetail; // 예: null, "VIBE", "MATCHABLE" (null 허용)
+
+
 }
