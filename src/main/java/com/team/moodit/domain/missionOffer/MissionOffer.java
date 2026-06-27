@@ -11,7 +11,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class MissionOffer {
     private Long id;
-    private Long matchId;
+    private Long matchResultId;
     private Long userId;
     private List<MissionCandidate> candidates;
     private MissionOfferState state;

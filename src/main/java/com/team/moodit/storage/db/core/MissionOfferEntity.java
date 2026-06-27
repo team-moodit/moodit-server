@@ -18,13 +18,13 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "mission_offer",
         indexes = {
-                @Index(name = "udx_mission_offer_match_id_user_id", columnList = "matchId, userId", unique = true)
+                @Index(name = "udx_mission_offer_match_result_id_user_id", columnList = "matchResultId, userId", unique = true)
         }
 )
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MissionOfferEntity extends BaseNoStatusEntity {
-    private Long matchId;
+    private Long matchResultId;
     private Long userId;
     private Long acceptedCandidateId;
 
@@ -39,8 +39,8 @@ public class MissionOfferEntity extends BaseNoStatusEntity {
         this.acceptedAt = LocalDateTime.now();
     }
 
-    public MissionOfferEntity(Long matchId, Long userId, MissionOfferState state) {
-        this.matchId = matchId;
+    public MissionOfferEntity(Long matchResultId, Long userId, MissionOfferState state) {
+        this.matchResultId = matchResultId;
         this.userId = userId;
         this.state = state;
     }

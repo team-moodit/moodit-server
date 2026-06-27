@@ -18,7 +18,7 @@ public enum ErrorType {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰 입니다.", LogLevel.INFO),
 
     // Match Result
-    NOT_FOUND_MATCH_RESULT(HttpStatus.NOT_FOUND, "매치 결과를 찾을 수 없습니다.", LogLevel.INFO),
+    MATCH_RESULT_NOT_FOUND(HttpStatus.NOT_FOUND, "매치 결과를 찾을 수 없습니다.", LogLevel.INFO),
 
     // File
     FILE_UPLOADING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", LogLevel.ERROR),

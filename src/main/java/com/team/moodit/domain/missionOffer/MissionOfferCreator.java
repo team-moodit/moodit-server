@@ -21,23 +21,30 @@ public class MissionOfferCreator {
     private final MissionOfferCandidateRepository missionOfferCandidateRepository;
 
     @Transactional
-    public MissionOfferCreateResult createSelectionOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
-        MissionOffer missionOffer = createOffer(
+    public MissionOffer createSelectionOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
+        if (missionTemplates.size() < 2) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        return createOffer(
                 userId,
                 matchResult,
                 missionTemplates,
                 MissionOfferState.NEEDS_SELECTION
         );
-        return MissionOfferCreateResult.needsSelection(missionOffer);
     }
 
     @Transactional
-    public MissionOffer createReadyToAcceptOffer(Long userId, MatchResult matchResult, MissionTemplate missionTemplate) {
+    public MissionOffer createSingleCandidateOffer(
+            Long userId,
+            MatchResult matchResult,
+            MissionTemplate missionTemplate
+    ) {
         return createOffer(
                 userId,
                 matchResult,
                 List.of(missionTemplate),
-                MissionOfferState.READY_TO_ACCEPT
+                MissionOfferState.NEEDS_SELECTION
         );
     }
 
@@ -47,36 +54,38 @@ public class MissionOfferCreator {
             List<MissionTemplate> missionTemplates,
             MissionOfferState state
     ) {
-        boolean isExists = missionOfferRepository.existsByMatchIdAndUserId(matchResult.getMatchId(), userId);
-        if (isExists) throw new ApiException(ErrorType.ALREADY_PROCESSED);
+        if (missionTemplates.isEmpty()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
 
         MissionOfferEntity offer = missionOfferRepository.save(
-                new MissionOfferEntity(matchResult.getMatchId(), userId, state)
+                new MissionOfferEntity(matchResult.getId(), userId, state)
         );
 
-        List<MissionOfferCandidateEntity> candidates = missionTemplates.stream().map(it ->
-                new MissionOfferCandidateEntity(
-                        offer.getId(),
-                        it.getId(),
-                        it.getTitle(),
-                        it.getDisplayOrder()
-                )
-        ).toList();
-        missionOfferCandidateRepository.saveAll(candidates);
+        List<MissionOfferCandidateEntity> savedCandidates = missionOfferCandidateRepository.saveAll(
+                missionTemplates.stream()
+                        .map(it -> new MissionOfferCandidateEntity(
+                                offer.getId(),
+                                it.getId(),
+                                it.getTitle(),
+                                it.getDisplayOrder()
+                        ))
+                        .toList()
+        );
 
         return new MissionOffer(
                 offer.getId(),
-                offer.getMatchId(),
+                offer.getMatchResultId(),
                 offer.getUserId(),
-                candidates.stream().map(it ->
-                        new MissionCandidate(
+                savedCandidates.stream()
+                        .map(it -> new MissionCandidate(
                                 it.getId(),
                                 it.getOfferId(),
                                 it.getMissionTemplateId(),
                                 it.getTitle(),
                                 it.getDisplayOrder()
-                        )
-                ).toList(),
+                        ))
+                        .toList(),
                 offer.getState()
         );
     }

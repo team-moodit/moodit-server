@@ -5,6 +5,8 @@ import com.team.moodit.storage.db.core.MatchPreferenceResultEntity;
 import com.team.moodit.storage.db.core.MatchPreferenceResultRepository;
 import com.team.moodit.storage.db.core.MatchResultEntity;
 import com.team.moodit.storage.db.core.MatchResultRepository;
+import com.team.moodit.support.error.ApiException;
+import com.team.moodit.support.error.ErrorType;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,6 +28,7 @@ public class MatchResultFinder {
         return matchResults.stream()
                 .map(it ->
                         new MatchResult(
+                                it.getId(),
                                 it.getMatchId(),
                                 it.getTitle(),
                                 it.getRepresentativeMatchImageId(),
@@ -45,5 +48,49 @@ public class MatchResultFinder {
                                 )
                         )
                 ).toList();
+    }
+
+    public MatchResult findOwnedByUser(Long userId, Long matchResultId) {
+        MatchResultEntity matchResult = matchResultRepository.findById(matchResultId)
+                .orElseThrow(() -> new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND));
+        if (!matchResult.getUserId().equals(userId)) {
+            throw new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND);
+        }
+
+        List<MatchPreferenceResultEntity> matchPreferenceResults = matchPreferenceResultRepository.findByMatchResultId(matchResult.getId());
+        if (matchPreferenceResults.isEmpty()) {
+            throw new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND);
+        }
+
+        return new MatchResult(
+                matchResult.getId(),
+                matchResult.getMatchId(),
+                matchResult.getTitle(),
+                matchResult.getRepresentativeMatchImageId(),
+                matchResult.getRoundCount(),
+                matchResult.getCompletedAt(),
+                new MatchPreferenceResult(
+                        matchResult.getPreferenceResultType(),
+                        matchResult.getPreferenceType(),
+                        matchResult.getPreferenceDetailType(),
+                        matchPreferenceResults.stream().map(it ->
+                                new PreferenceTypeScore(
+                                        it.getPreferenceType(),
+                                        it.getSelectedCount(),
+                                        it.getRank()
+                                )
+                        ).toList()
+                )
+        );
+    }
+
+    public Long findOwnedMatchId(Long userId, Long matchResultId) {
+        MatchResultEntity matchResult = matchResultRepository.findById(matchResultId)
+                .orElseThrow(() -> new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND));
+        if (!matchResult.getUserId().equals(userId)) {
+            throw new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND);
+        }
+
+        return matchResult.getMatchId();
     }
 }
