@@ -91,7 +91,7 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.getOrCreateOffer(new ApiUser(userId), matchResult.getId());
         MissionOffer offer = offerResult.getMissionOffer();
 
         // then
@@ -104,7 +104,7 @@ class MissionOfferServiceTest {
         // user mission should have single entryㅁ
         assertThat(userMissionRepository.findAll()).singleElement()
                 .satisfies(userMission -> {
-                    assertThat(userMission.getId()).isEqualTo(offerResult.getUserMissionId());
+                    assertThat(userMission.getId()).isEqualTo(offerResult.getAssignedMissionId());
                     assertThat(userMission.getUserId()).isEqualTo(userId);
                     assertThat(userMission.getMatchId()).isEqualTo(matchId);
                     assertThat(userMission.getMissionOfferId()).isEqualTo(offer.getId());
@@ -141,13 +141,13 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.getOrCreateOffer(new ApiUser(userId), matchResult.getId());
         MissionOffer offer = offerResult.getMissionOffer();
 
         // then
         // mission offer saved
         MissionOfferEntity savedOffer = missionOfferRepository.findById(offer.getId()).orElseThrow();
-        assertThat(savedOffer.getMatchId()).isEqualTo(matchResult.getMatchId());
+        assertThat(savedOffer.getMatchResultId()).isEqualTo(matchResult.getId());
         assertThat(savedOffer.getUserId()).isEqualTo(userId);
         assertThat(savedOffer.getState()).isEqualTo(MissionOfferState.NEEDS_SELECTION);
         assertThat(savedOffer.getAcceptedCandidateId()).isNull();
@@ -199,13 +199,13 @@ class MissionOfferServiceTest {
         ));
 
         // when
-        MissionOfferCreateResult offerResult = missionOfferService.createOffer(new ApiUser(userId), matchId);
+        MissionOfferCreateResult offerResult = missionOfferService.getOrCreateOffer(new ApiUser(userId), matchResult.getId());
         MissionOffer offer = offerResult.getMissionOffer();
 
         // then
         // mission offer saved
         MissionOfferEntity savedOffer = missionOfferRepository.findById(offer.getId()).orElseThrow();
-        assertThat(savedOffer.getMatchId()).isEqualTo(matchResult.getMatchId());
+        assertThat(savedOffer.getMatchResultId()).isEqualTo(matchResult.getId());
         assertThat(savedOffer.getUserId()).isEqualTo(userId);
         assertThat(savedOffer.getState()).isEqualTo(MissionOfferState.NEEDS_SELECTION);
         assertThat(savedOffer.getAcceptedCandidateId()).isNull();
@@ -295,10 +295,24 @@ class MissionOfferServiceTest {
     @Test
     void 미션_제안_수락_시_유저_미션을_생성한다() {
         // given
+        Long userId = 1L;
+        Long matchId = 103L;
+        MatchResultEntity matchResult = matchResultRepository.save(new MatchResultEntity(
+                matchId,
+                userId,
+                "후보와 비슷한 색감으로 하루 코디해보기",
+                1L,
+                16,
+                LocalDateTime.of(2026, 6, 23, 12, 0),
+                PreferenceResultType.TYPE_ONLY,
+                PreferenceType.AESTHETICS,
+                null
+        ));
+
         MissionOfferEntity offer = missionOfferRepository.save(
                 new MissionOfferEntity(
-                        1L,
-                        1L,
+                        matchResult.getId(),
+                        userId,
                         MissionOfferState.NEEDS_SELECTION
                 )
         );
@@ -327,12 +341,13 @@ class MissionOfferServiceTest {
         OfferAcceptAction acceptAction = new OfferAcceptAction(offer.getId(), candidates.getFirst().getId());
 
         // when
-        missionOfferService.acceptOffer(new ApiUser(1L), acceptAction);
+        missionOfferService.acceptOffer(new ApiUser(userId), acceptAction);
 
         // then
         MissionOfferEntity savedOffer = missionOfferRepository.findById(offer.getId()).orElseThrow();
 
-        assertThat(userMissionRepository.findAll().size()).isEqualTo(1);
+        assertThat(userMissionRepository.findAll()).singleElement()
+                .satisfies(userMission -> assertThat(userMission.getMatchId()).isEqualTo(matchId));
         assertThat(savedOffer.getState()).isEqualTo(MissionOfferState.ACCEPTED);
         assertThat(savedOffer.getAcceptedCandidateId()).isEqualTo(candidates.getFirst().getId());
         assertThat(savedOffer.getAcceptedAt()).isBefore(LocalDateTime.now());

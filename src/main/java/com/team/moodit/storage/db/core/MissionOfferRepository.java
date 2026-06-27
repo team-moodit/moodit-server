@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MissionOfferRepository extends JpaRepository<MissionOfferEntity, Long> {
     Optional<MissionOfferEntity> findByIdAndState(Long id, MissionOfferState state);
 
-    boolean existsByMatchIdAndUserId(Long matchId, Long userId);
+    Optional<MissionOfferEntity> findByUserIdAndMatchResultId(Long userid, Long matchResultId);
 }

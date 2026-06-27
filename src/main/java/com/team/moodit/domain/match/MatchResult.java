@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MatchResult {
+    private Long id;
     private Long matchId;
     private String title;
     private Long representativeMatchImageId;

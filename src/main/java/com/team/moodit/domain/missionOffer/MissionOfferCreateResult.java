@@ -1,20 +1,26 @@
 package com.team.moodit.domain.missionOffer;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class MissionOfferCreateResult {
     private MissionOffer missionOffer;
-    private Long userMissionId;
+    private Long assignedMissionId;
 
-    public static MissionOfferCreateResult needsSelection(MissionOffer missionOffer) {
+    public static MissionOfferCreateResult selection(MissionOffer missionOffer) {
         return new MissionOfferCreateResult(missionOffer, null);
     }
 
-    public static MissionOfferCreateResult accepted(MissionOffer missionOffer, Long userMissionId) {
-        return new MissionOfferCreateResult(missionOffer, userMissionId);
+    public static MissionOfferCreateResult assigned(MissionOffer missionOffer, Long assignedMissionId) {
+        return new MissionOfferCreateResult(missionOffer, assignedMissionId);
+    }
+
+    public static MissionOfferCreateResult of(MissionOffer missionOffer, Long assignedMissionId) {
+        if (assignedMissionId == null) {
+            return selection(missionOffer);
+        }
+        return assigned(missionOffer, assignedMissionId);
     }
 }

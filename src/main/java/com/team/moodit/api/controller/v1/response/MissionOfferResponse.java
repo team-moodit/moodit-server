@@ -10,7 +10,7 @@ public record MissionOfferResponse(
         Long offerId,
         List<MissionOfferItemResponse> items,
         MissionOfferState state,
-        Long userMissionId
+        Long assignedMissionId
 ) {
     public static MissionOfferResponse of(
             MissionOfferCreateResult result
@@ -26,7 +26,7 @@ public record MissionOfferResponse(
                                 )
                         ).toList(),
                 result.getMissionOffer().getState(),
-                result.getUserMissionId()
+                result.getAssignedMissionId()
         );
     }
 

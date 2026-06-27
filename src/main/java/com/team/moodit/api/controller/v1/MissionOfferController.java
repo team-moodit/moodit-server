@@ -19,11 +19,11 @@ public class MissionOfferController {
     private final MissionOfferService missionOfferService;
 
     @PostMapping("/v1/mission-offers")
-    public ApiResponse<MissionOfferResponse> createMissionOffer(
+    public ApiResponse<MissionOfferResponse> getMissionOffer(
             ApiUser apiUser,
             @RequestBody CreateMissionOfferRequest request
     ) {
-        MissionOfferCreateResult result = missionOfferService.createOffer(apiUser, request.matchId());
+        MissionOfferCreateResult result = missionOfferService.getOrCreateOffer(apiUser, request.matchResultId());
         return ApiResponse.success(MissionOfferResponse.of(result));
     }
 

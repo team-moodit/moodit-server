@@ -29,5 +29,10 @@ public class MissionOfferAcceptValidator {
 
         List<MissionOfferCandidateEntity> candidates = missionOfferCandidateRepository.findByOfferId(offer.getId());
         if (candidates.isEmpty()) throw new ApiException(ErrorType.NOT_FOUND);
+        boolean hasCandidate = candidates.stream()
+                .anyMatch(it -> Objects.equals(it.getId(), action.getCandidateId()));
+        if (!hasCandidate) {
+            throw new ApiException(ErrorType.NOT_FOUND);
+        }
     }
 }

@@ -18,10 +18,11 @@ public class MatchResultReader {
     private final MatchPreferenceResultRepository matchPreferenceResultRepository;
 
     public MatchResult getMatchResult(Long userId, Long matchId) {
-        MatchResultEntity matchResult = matchResultRepository.findByUserIdAndMatchId(userId, matchId).orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND_MATCH_RESULT));
+        MatchResultEntity matchResult = matchResultRepository.findByUserIdAndMatchId(userId, matchId).orElseThrow(() -> new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND));
         List<MatchPreferenceResultEntity> preferenceResults = matchPreferenceResultRepository.findByMatchResultId(matchResult.getId());
 
         return new MatchResult(
+                matchResult.getId(),
                 matchResult.getMatchId(),
                 matchResult.getTitle(),
                 matchResult.getRepresentativeMatchImageId(),
