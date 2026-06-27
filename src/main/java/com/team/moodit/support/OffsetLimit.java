@@ -2,6 +2,8 @@ package com.team.moodit.support;
 
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 public record OffsetLimit(
         Integer offset,
@@ -16,5 +18,9 @@ public record OffsetLimit(
 
         if (offset < 0) throw new ApiException(ErrorType.INVALID_REQUEST);
         if (limit < 1) throw new ApiException(ErrorType.INVALID_REQUEST);
+    }
+
+    public Pageable toPageable() {
+        return PageRequest.of(offset / limit, limit);
     }
 }

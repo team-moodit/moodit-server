@@ -5,6 +5,8 @@ import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.userMission.UserMission;
 import com.team.moodit.support.file.File;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public record UserMissionResponse(
         Long userMissionId,
@@ -15,15 +17,29 @@ public record UserMissionResponse(
         int roundCount,
         LocalDateTime matchCompletedAt
 ) {
+    public static List<UserMissionResponse> of(
+            List<UserMission> missions,
+            Map<Long, MatchResult> matchResultMap,
+            Map<Long, File> matchRepresentativeImageFileMap
+    ) {
+        return missions.stream().map(it ->
+                of(
+                        it,
+                        matchResultMap.get(it.getMatchId()),
+                        matchRepresentativeImageFileMap.get(matchResultMap.get(it.getMatchId()).getRepresentativeMatchImageId())
+                )
+        ).toList();
+    }
+
     public static UserMissionResponse of(
-            UserMission userMission,
+            UserMission missions,
             MatchResult matchResult,
             File matchRepresentativeImageFile
     ) {
         return new UserMissionResponse(
-                userMission.getId(),
-                userMission.getTitle(),
-                userMission.getState(),
+                missions.getId(),
+                missions.getTitle(),
+                missions.getState(),
                 matchResult.getTitle(),
                 matchRepresentativeImageFile.getUrl(),
                 matchResult.getRoundCount(),
