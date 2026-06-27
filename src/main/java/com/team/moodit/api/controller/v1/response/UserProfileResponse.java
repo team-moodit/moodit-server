@@ -11,7 +11,7 @@ public record UserProfileResponse(
     ) {
         return new UserProfileResponse(
                 userProfile.getId(),
-                userProfile.getNickname()
+                "이름카카오심사중아직없음~"
         );
     }
 }
