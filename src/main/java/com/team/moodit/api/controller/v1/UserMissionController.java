@@ -28,13 +28,13 @@ public class UserMissionController {
     @GetMapping("/v1/user-missions")
     public ApiResponse<PageResponse<UserMissionResponse>> getUserMissions(
             ApiUser apiUser,
-            @RequestParam UserMissionState state,
+            @RequestParam UserMissionListType type,
             @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) Integer limit
     ) {
         Page<UserMissionResponse> responses = userMissionAssembler.getUserMissions(
                 apiUser,
-                state,
+                type,
                 new OffsetLimit(offset, limit)
         );
         return ApiResponse.success(PageResponse.of(responses));

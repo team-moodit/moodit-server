@@ -1,7 +1,8 @@
 package com.team.moodit.api.assembler;
 
+import com.team.moodit.api.controller.v1.UserMissionListType;
 import com.team.moodit.api.controller.v1.response.UserMissionResponse;
-import com.team.moodit.domain.enums.UserMissionState;
+import com.team.moodit.domain.feedback.FeedbackService;
 import com.team.moodit.domain.match.MatchImage;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
@@ -25,9 +26,10 @@ public class UserMissionAssembler {
     private final UserMissionService userMissionService;
     private final MatchService matchService;
     private final FileReader fileReader;
+    private final FeedbackService feedbackService;
 
-    public Page<UserMissionResponse> getUserMissions(ApiUser apiUser, UserMissionState state, OffsetLimit offsetLimit) {
-        Page<UserMission> missions = userMissionService.getUserMissions(apiUser, state, offsetLimit);
+    public Page<UserMissionResponse> getUserMissions(ApiUser apiUser, UserMissionListType type, OffsetLimit offsetLimit) {
+        Page<UserMission> missions = userMissionService.getUserMissions(apiUser, type, offsetLimit);
         List<MatchResult> matchResults = matchService.findMatchResults(missions.content().stream().map(UserMission::getMatchId).distinct().toList());
         List<MatchImage> matchImages = matchService.getMatchImages(matchResults.stream().map(MatchResult::getRepresentativeMatchImageId).toList());
 
@@ -39,11 +41,14 @@ public class UserMissionAssembler {
                 matchImage -> fileMap.get(matchImage.getFileId())
         ));
 
+        Map<Long, Double> scoreMap = feedbackService.scores(missions.content().stream().map(UserMission::getId).toList());
+
         return new Page<>(
                 UserMissionResponse.of(
                         missions.content(),
                         matchResultMap,
-                        matchImageFileMap
+                        matchImageFileMap,
+                        scoreMap
                 ),
                 missions.totalCount(),
                 missions.hasNext()
@@ -54,7 +59,8 @@ public class UserMissionAssembler {
         UserMission userMission = userMissionService.getUserMission(apiUser, userMissionId);
         MatchResult matchResult = matchService.getMatchResult(apiUser, userMission.getMatchId());
         MatchImage matchImage = matchService.getMatchImage(matchResult.getRepresentativeMatchImageId());
+        Map<Long, Double> scoreMap = feedbackService.scores(List.of(userMissionId));
         File file = fileReader.getFile(matchImage.getFileId());
-        return UserMissionResponse.of(userMission, matchResult, file);
+        return UserMissionResponse.of(userMission, matchResult, file, scoreMap.get(userMissionId));
     }
 }

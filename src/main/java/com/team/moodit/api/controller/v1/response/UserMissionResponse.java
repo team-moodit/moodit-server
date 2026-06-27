@@ -12,21 +12,26 @@ public record UserMissionResponse(
         Long userMissionId,
         String missionTitle,
         UserMissionState missionState,
+        LocalDateTime missionCompletedAt,
         String matchTitle,
         String matchRepresentativeImageUrl, // 매치 대표 이미지
-        int roundCount,
-        LocalDateTime matchCompletedAt
+        int matchRoundCount,
+        LocalDateTime matchCompletedAt,
+        Double satisfactionScore
+
 ) {
     public static List<UserMissionResponse> of(
             List<UserMission> missions,
             Map<Long, MatchResult> matchResultMap,
-            Map<Long, File> matchRepresentativeImageFileMap
+            Map<Long, File> matchRepresentativeImageFileMap,
+            Map<Long, Double> satisfactionScoreMap
     ) {
         return missions.stream().map(it ->
                 of(
                         it,
                         matchResultMap.get(it.getMatchId()),
-                        matchRepresentativeImageFileMap.get(matchResultMap.get(it.getMatchId()).getRepresentativeMatchImageId())
+                        matchRepresentativeImageFileMap.get(matchResultMap.get(it.getMatchId()).getRepresentativeMatchImageId()),
+                        satisfactionScoreMap.get(it.getId())
                 )
         ).toList();
     }
@@ -34,16 +39,19 @@ public record UserMissionResponse(
     public static UserMissionResponse of(
             UserMission missions,
             MatchResult matchResult,
-            File matchRepresentativeImageFile
+            File matchRepresentativeImageFile,
+            Double satisfactionScore
     ) {
         return new UserMissionResponse(
                 missions.getId(),
                 missions.getTitle(),
                 missions.getState(),
+                missions.getCompletedAt(),
                 matchResult.getTitle(),
                 matchRepresentativeImageFile.getUrl(),
                 matchResult.getRoundCount(),
-                matchResult.getCompletedAt()
+                matchResult.getCompletedAt(),
+                satisfactionScore
         );
     }
 }
