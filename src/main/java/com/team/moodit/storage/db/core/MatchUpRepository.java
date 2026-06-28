@@ -1,7 +1,9 @@
 package com.team.moodit.storage.db.core;
 
 import com.team.moodit.domain.enums.MatchUpState;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,4 +21,12 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity, Long> {
 
     // 3. 상태별 경기 카운트
     int countByMatchIdAndState(Long matchId, MatchUpState state);
+
+    /**
+     *  [추가된 동시성 제어 쿼리]
+     * 라운드 종료 판정 및 대진표 중복 생성(Phantom Read)을 방지하기 위한 비관적 쓰기 락 조회입니다.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM MatchUpEntity m WHERE m.matchId = :matchId")
+    List<MatchUpEntity> findByMatchIdWithLock(@Param("matchId") Long matchId);
 }

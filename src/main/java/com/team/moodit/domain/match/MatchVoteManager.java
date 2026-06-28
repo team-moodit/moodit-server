@@ -20,43 +20,39 @@ public class MatchVoteManager {
     private final MatchUpCreator matchUpCreator;
 
     /**
-     * 투표 처리 (낙관적 락 적용)
+     * 투표 처리 (개별 경기는 엔티티의 @Version 낙관적 락으로 동시성 제어)
      */
     @Transactional
     public VoteSaveResponse processVote(Long matchId, VoteCommand command) {
-        // 1. 특정 경기 ID로 조회 (낙관적 락이 버전 체크 수행)
         MatchUpEntity currentMatchUp = matchUpRepository.findById(command.getMatchUpId())
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
-        // 2. 검증: 요청받은 경기가 해당 토너먼트 소속이 맞는지 확인
         if (!currentMatchUp.getMatchId().equals(matchId)) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        // 3. 비즈니스 검증 및 승자 확정
         currentMatchUp.validateCandidate(command.getPhotoId());
         currentMatchUp.updateWinner(command.getPhotoId());
 
-        // 투표 기록 저장
         matchChoiceCreator.createChoice(
                 currentMatchUp.getId(),
                 command.getPhotoId(),
                 command.getReasonId()
         );
 
-        // 여기서 버전 체크 발생 (동시 투표 시 충돌 시점에 Exception 발생)
+        // 현재 경기에 대한 낙관적 락 버전을 즉시 올리고 플러시
         matchUpRepository.saveAndFlush(currentMatchUp);
 
-        // 4. 라운드 전환 로직은 트랜잭션을 분리하여 수행
+        // 라운드 전환 로직 수행 (비관적 락으로 줄 세우기 진입)
         return handleRoundTransition(matchId, currentMatchUp.getRoundNumber());
     }
 
     /**
-     * 라운드 전환 및 다음 경기 계산 (읽기/쓰기 복합 작업)
+     * 라운드 전환 및 다음 경기 계산 (비관적 쓰기 락을 통한 대진표 중복 생성 방지)
      */
-    @Transactional
     public VoteSaveResponse handleRoundTransition(Long matchId, int currentRound) {
-        List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchId(matchId);
+        //  일반 조회를 '비관적 쓰기 락'이 걸린 조회 쿼리로 교체!
+        List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchIdWithLock(matchId);
 
         List<MatchUpEntity> actualMatchesInRound = freshMatchUps.stream()
                 .filter(m -> m.getRoundNumber() == currentRound)
@@ -64,10 +60,8 @@ public class MatchVoteManager {
                 .toList();
 
         if (actualMatchesInRound.isEmpty()) {
-            // 이미 라운드가 종료되었거나 데이터 정합성이 깨진 경우를 대비
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
-
 
         int currentRoundOrder = (int) actualMatchesInRound.stream()
                 .filter(MatchUpEntity::isVoted)
@@ -80,17 +74,30 @@ public class MatchVoteManager {
         boolean isTournamentFinished = false;
 
         if (isRoundCompleted) {
-            List<Long> winnersImageIds = freshMatchUps.stream()
-                    .filter(m -> m.getRoundNumber() == currentRound)
-                    .map(MatchUpEntity::getWinnerId)
-                    .filter(id -> id != null && id != 0L)
-                    .toList();
+            //  Double-Checked Locking: 다른 쓰레드가 찰나의 차이로 이미 다음 라운드를 생성했는지 락 내부에서 재검증
+            boolean isNextRoundAlreadyCreated = freshMatchUps.stream()
+                    .anyMatch(m -> m.getRoundNumber() == currentRound + 1);
 
-            if (winnersImageIds.size() == 1) {
-                isTournamentFinished = true;
+            if (isNextRoundAlreadyCreated) {
+                // 이미 생성되어 있다면 새로 만들지 않고, 해당 라운드의 첫 번째 경기 ID를 반환
+                nextMatchId = freshMatchUps.stream()
+                        .filter(m -> m.getRoundNumber() == currentRound + 1)
+                        .findFirst()
+                        .map(MatchUpEntity::getId)
+                        .orElse(null);
             } else {
-                List<MatchUpEntity> nextRoundMatches = matchUpCreator.createNextRoundMatches(matchId, currentRound, winnersImageIds);
-                nextMatchId = matchUpRepository.saveAll(nextRoundMatches).get(0).getId();
+                List<Long> winnersImageIds = freshMatchUps.stream()
+                        .filter(m -> m.getRoundNumber() == currentRound)
+                        .map(MatchUpEntity::getWinnerId)
+                        .filter(id -> id != null && id != 0L)
+                        .toList();
+
+                if (winnersImageIds.size() == 1) {
+                    isTournamentFinished = true;
+                } else {
+                    List<MatchUpEntity> nextRoundMatches = matchUpCreator.createNextRoundMatches(matchId, currentRound, winnersImageIds);
+                    nextMatchId = matchUpRepository.saveAll(nextRoundMatches).get(0).getId();
+                }
             }
         } else {
             nextMatchId = actualMatchesInRound.stream()
