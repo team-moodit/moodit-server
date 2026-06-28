@@ -30,17 +30,20 @@ public class MatchUpCreator {
 
         List<MatchUpEntity> matchUps = new ArrayList<>();
 
+        // 💡 예선전 라운드 넘버는 항상 첫 번째 라운드이므로 '1'로 고정하여 통일성 확보
+        int firstRoundNumber = 1;
+
         // 예선전 대결 매치업 등록 (NEED_VOTE)
         for (int i = 0; i < firstRoundPlayersCount; i += 2) {
             matchUps.add(MatchUpEntity.of(
-                    new RealMatchUp(matchId, totalImages, shuffledIds.get(i), shuffledIds.get(i + 1))
+                    new RealMatchUp(matchId, firstRoundNumber, shuffledIds.get(i), shuffledIds.get(i + 1))
             ));
         }
 
         // 부전승 자동 진출 등록 (SKIPPED)
         for (int i = firstRoundPlayersCount; i < totalImages; i++) {
             matchUps.add(MatchUpEntity.of(
-                    new AutoPassMatch(matchId, totalImages, shuffledIds.get(i))
+                    new AutoPassMatch(matchId, firstRoundNumber, shuffledIds.get(i))
             ));
         }
 
@@ -56,7 +59,6 @@ public class MatchUpCreator {
             List<MatchVoteEntity> consistences = new ArrayList<>();
             List<MatchVoteEntity> trends = new ArrayList<>();
 
-            //  DB 문자열 매칭 안정성을 위해 trim() 및 대문자 안전 변환 적용
             for (MatchVoteEntity t : allTemplates) {
                 String pref = t.getPreference() != null ? t.getPreference().trim().toUpperCase() : "";
                 String detail = t.getPreferenceDetail() != null ? t.getPreferenceDetail().trim().toUpperCase() : "";
@@ -71,7 +73,6 @@ public class MatchUpCreator {
                 else if ("AESTHETICS".equals(pref) && "MOOD".equals(detail)) moods.add(t);
             }
 
-            //  [핵심 방어코드] 특정 풀이 비어있을 경우 전체 풀을 백업으로 활용하여 IndexOutOfBounds 방지
             if (bodyFits.isEmpty()) bodyFits.addAll(allTemplates);
             if (colors.isEmpty()) colors.addAll(allTemplates);
             if (vibes.isEmpty()) vibes.addAll(allTemplates);
@@ -81,7 +82,6 @@ public class MatchUpCreator {
             if (consistences.isEmpty()) consistences.addAll(allTemplates);
             if (trends.isEmpty()) trends.addAll(allTemplates);
 
-            //  [보정 반영] 결승전이 아닌 일반 라운드만 순차적으로 카운트할 축(Index) 선언
             int normalRoundIdx = 1;
 
             for (int round = 1; round <= totalMatchRounds; round++) {
@@ -108,24 +108,20 @@ public class MatchUpCreator {
                     Collections.shuffle(aestheticsPool);
                     r2 = aestheticsPool.get(0);
                 } else {
-                    // round 대신 normalRoundIdx를 기준으로 3주기 패턴 분배
                     int patternIdx = normalRoundIdx % 3;
 
                     if (patternIdx == 1) {
-                        // 1번째 칼럼 세트: 신체적특징(분홍색) + 색감(연두색) 수직 정렬 매칭
                         r1 = bodyFits.get(0);
                         r2 = colors.get(0);
                     } else if (patternIdx == 2) {
-                        // 2번째 칼럼 세트: 추구미 + 디자인
                         r1 = vibes.get(0);
                         r2 = designs.get(0);
                     } else {
-                        // 3번째 칼럼 세트: 코디용이성 + 분위기
                         r1 = matchables.get(0);
                         r2 = moods.get(0);
                     }
 
-                    normalRoundIdx++; // 일반 라운드 카운트 증가
+                    normalRoundIdx++;
                 }
 
                 if (r1 != null) voteCandidates.add(new MatchVoteCandidateEntity(matchId, round, r1.getId(), r1.getContent(), r1.getPreference(), r1.getPreferenceDetail()));
@@ -138,20 +134,21 @@ public class MatchUpCreator {
         return new MatchUpCreateResult(matchUps, voteCandidates);
     }
 
-    public List<MatchUpEntity> createNextRoundMatches(Long matchId, List<Long> winnerImageIds) {
+    // 💡 변경: 현재 라운드 번호를 명시적으로 받아 다음 라운드 번호 지정 및 셔플 제거
+    public List<MatchUpEntity> createNextRoundMatches(Long matchId, int currentRound, List<Long> winnerImageIds) {
         if (winnerImageIds == null || winnerImageIds.isEmpty() || winnerImageIds.size() % 2 != 0) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        int nextRoundNumber = winnerImageIds.size();
-        List<Long> shuffledIds = new ArrayList<>(winnerImageIds);
-        Collections.shuffle(shuffledIds);
+        // 라운드 번호 매칭 규칙 통일 (1라운드 예선 -> 2라운드 8강 -> 3라운드 4강 ...)
+        int nextRoundNumber = currentRound + 1;
 
         List<MatchUpEntity> nextMatchUps = new ArrayList<>();
 
-        for (int i = 0; i < shuffledIds.size(); i += 2) {
+        // 대진 셔플을 제거하여 예선 순서대로 공정하고 정합성 있게 다음 대진을 구성
+        for (int i = 0; i < winnerImageIds.size(); i += 2) {
             nextMatchUps.add(MatchUpEntity.of(
-                    new RealMatchUp(matchId, nextRoundNumber, shuffledIds.get(i), shuffledIds.get(i + 1))
+                    new RealMatchUp(matchId, nextRoundNumber, winnerImageIds.get(i), winnerImageIds.get(i + 1))
             ));
         }
 

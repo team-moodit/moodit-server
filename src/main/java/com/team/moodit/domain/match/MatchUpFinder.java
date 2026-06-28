@@ -6,7 +6,7 @@ import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchEntity;
-import com.team.moodit.storage.db.core.MatchVoteRepository;
+import com.team.moodit.storage.db.core.MatchVoteCandidateRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import com.team.moodit.support.file.FileReader;
@@ -21,8 +21,8 @@ public class MatchUpFinder {
 
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
-    private final MatchVoteRepository matchVoteRepository;
-    private final FileReader fileReader; // 추가
+    private final MatchVoteCandidateRepository matchVoteCandidateRepository;
+    private final FileReader fileReader;
 
     @Transactional(readOnly = true)
     public MatchUpFlowResponse findNextMatchUp(Long matchId) {
@@ -48,32 +48,81 @@ public class MatchUpFinder {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        // 5. 현재 라운드 매치 인덱스 계산 (예: 4경기 중 2번째 경기)
+        // =========================================================================
+        // 5. [핵심 변경] 보기(Reasons) 매핑용 글로벌 경기 인덱스 계산 (Global Match Index)
+        // =========================================================================
+        // 전체 대진표 중에서 부전승이 아닌 '진짜 유저가 손으로 치러야 하는 경기들'만 필터링
+        List<MatchUpEntity> allActualMatches = matchUps.stream()
+                .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
+                .toList();
+
+        // 토너먼트 전체를 통틀어 이미 투표 완료된 총 경기 수 카운트
+        long totalCompletedCount = allActualMatches.stream()
+                .filter(MatchUpEntity::isVoted)
+                .count();
+
+        // 💡 현재 경기가 토너먼트 전체에서 '몇 번째 진짜 경기'인지 계산하여 보기 테이블의 round_number와 매칭
+        int currentMatchIndex = (int) totalCompletedCount + 1;
+
+
+        // =========================================================================
+        // 6. [타이틀 보정] 라운드 번호와 진짜 경기 수를 조합해 완벽하게 타이틀 판별
+        // =========================================================================
+        // 현재 유저가 진행 중인 '해당 라운드'의 경기들만 필터링
         List<MatchUpEntity> sameRoundMatchUps = matchUps.stream()
                 .filter(m -> m.getRoundNumber() == nextTarget.getRoundNumber())
                 .toList();
 
-        int totalMatchUpInRound = sameRoundMatchUps.size();
-        long completedCount = sameRoundMatchUps.stream().filter(MatchUpEntity::isVoted).count();
-        int currentMatchIndex = (int) completedCount + 1;
+        // 해당 라운드 내에서 부전승을 제외한 진짜 경기들만 필터링
+        List<MatchUpEntity> actualMatchesInRound = sameRoundMatchUps.stream()
+                .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
+                .toList();
 
-        // 6. MatchVote 테이블에서 이유 보기 목록 조회
-        List<MatchStartResponse.ReasonResponse> reasons = matchVoteRepository.findAll().stream()
+        int totalMatchUpInRound = actualMatchesInRound.size(); // 이번 라운드에 유저가 치러야 할 총 경기 수
+        long completedCountInRound = actualMatchesInRound.stream().filter(MatchUpEntity::isVoted).count();
+        int displayMatchIndex = (int) completedCountInRound + 1; // 화면에 보여줄 경기 인덱스 (예: 1 / 4 경기)
+
+        String roundTitle;
+        int targetRoundNumber = nextTarget.getRoundNumber(); // 💡 1, 2, 3... 순차 증가하는 라운드 번호
+
+        if (targetRoundNumber == 1) {
+            // 💡 [최우선 가드] 1라운드는 진짜 경기 수가 몇 개든 묻고 따지지도 않고 무조건 "예선전"입니다.
+            roundTitle = "예선전";
+        } else if (totalMatchUpInRound == 1) {
+            // 💡 2라운드 이상이면서 진짜 남은 경기가 1개라면 대망의 "결승전"입니다.
+            roundTitle = "결승전";
+        } else if (totalMatchUpInRound == 2) {
+            roundTitle = "준결승전";
+        } else if (totalMatchUpInRound == 4) {
+            roundTitle = "8강전"; // 🎯 이제 2라운드에 진짜 경기 4개인 상태이므로 이곳에 정확히 걸립니다!
+        } else if (totalMatchUpInRound == 8) {
+            roundTitle = "16강전";
+        } else if (totalMatchUpInRound == 16) {
+            roundTitle = "32강전";
+        } else {
+            roundTitle = "본선";
+        }
+
+        // =========================================================================
+        // 7.  보정된 currentMatchIndex(글로벌 경기 번호)를 사용하여 정확한 보기 데이터 조회
+        // =========================================================================
+        List<MatchStartResponse.ReasonResponse> reasons = matchVoteCandidateRepository
+                .findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, currentMatchIndex).stream()
                 .map(v -> new MatchStartResponse.ReasonResponse(
                         v.getId(),
                         v.getContent()
                 ))
                 .toList();
 
-        // 7. candidate_id = file_id 이므로 FileReader로 URL 조회
+        // 8. candidate_id = file_id 이므로 FileReader로 URL 조회
         String candidateAUrl = fileReader.getFile(nextTarget.getCandidateAId()).getUrl();
         String candidateBUrl = fileReader.getFile(nextTarget.getCandidateBId()).getUrl();
 
-        // 8. 최종 결과 반환
+        // 9. 최종 결과 반환 (displayMatchIndex를 넘겨주어 화면에 현재 라운드 기준 진행도가 나오게 함)
         return new MatchUpFlowResponse(
                 match.getTitle(),
-                nextTarget.getRoundNumber() + "강전",
-                currentMatchIndex,
+                roundTitle,
+                displayMatchIndex,
                 totalMatchUpInRound,
                 false,
                 new MatchStartResponse.NextMatchUpResponse(
