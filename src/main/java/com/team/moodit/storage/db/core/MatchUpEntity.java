@@ -10,7 +10,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +20,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name="`match_up`")
+@Table(name = "match_up", indexes = {
+        @Index(name = "idx_match_id", columnList = "matchId"),         // 토너먼트 전체 조회 시 성능 향상
+        @Index(name = "idx_match_id_round", columnList = "matchId, roundNumber") // 특정 라운드 경기 조회 시 최적화
+})
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MatchUpEntity extends BaseNoStatusEntity {
@@ -31,6 +36,8 @@ public class MatchUpEntity extends BaseNoStatusEntity {
 
     @Enumerated(EnumType.STRING)
     private MatchUpState state;
+    @Version
+    private Long version;
 
     // 1. 실제 대결용 private 생성자
     private MatchUpEntity(Long matchId, int roundNumber, Long candidateAId, Long candidateBId) {
