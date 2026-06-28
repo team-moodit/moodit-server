@@ -49,7 +49,7 @@ public class MatchUpFinder {
         }
 
         // =========================================================================
-        // 5. 🎯 [핵심 변경] 보기(Reasons) 매핑용 글로벌 경기 인덱스 계산 (Global Match Index)
+        // 5. [핵심 변경] 보기(Reasons) 매핑용 글로벌 경기 인덱스 계산 (Global Match Index)
         // =========================================================================
         // 전체 대진표 중에서 부전승이 아닌 '진짜 유저가 손으로 치러야 하는 경기들'만 필터링
         List<MatchUpEntity> allActualMatches = matchUps.stream()
