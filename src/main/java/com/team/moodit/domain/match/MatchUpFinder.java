@@ -66,7 +66,7 @@ public class MatchUpFinder {
 
 
         // =========================================================================
-        // 6. 화면 노출용 경기 인덱스 및 라운드 타이틀 세팅 (Local Match Index)
+        // 6. [타이틀 보정] 라운드 번호와 진짜 경기 수를 조합해 완벽하게 타이틀 판별
         // =========================================================================
         // 현재 유저가 진행 중인 '해당 라운드'의 경기들만 필터링
         List<MatchUpEntity> sameRoundMatchUps = matchUps.stream()
@@ -80,24 +80,27 @@ public class MatchUpFinder {
 
         int totalMatchUpInRound = actualMatchesInRound.size(); // 이번 라운드에 유저가 치러야 할 총 경기 수
         long completedCountInRound = actualMatchesInRound.stream().filter(MatchUpEntity::isVoted).count();
-        int displayMatchIndex = (int) completedCountInRound + 1; // 화면에 보여줄 경기 인덱스 (예: 1 / 8 경기)
+        int displayMatchIndex = (int) completedCountInRound + 1; // 화면에 보여줄 경기 인덱스 (예: 1 / 4 경기)
 
         String roundTitle;
-        int rawRound = nextTarget.getRoundNumber(); // DB에 저장된 원래 라운드 숫자 (9, 11, 16 등)
+        int targetRoundNumber = nextTarget.getRoundNumber(); // 💡 1, 2, 3... 순차 증가하는 라운드 번호
 
-        if (totalMatchUpInRound == 1 && rawRound == 2) {
+        if (targetRoundNumber == 1) {
+            // 💡 [최우선 가드] 1라운드는 진짜 경기 수가 몇 개든 묻고 따지지도 않고 무조건 "예선전"입니다.
+            roundTitle = "예선전";
+        } else if (totalMatchUpInRound == 1) {
+            // 💡 2라운드 이상이면서 진짜 남은 경기가 1개라면 대망의 "결승전"입니다.
             roundTitle = "결승전";
-        } else if (totalMatchUpInRound == 2 && rawRound == 4) {
-            roundTitle = "4강전";
-        } else if (totalMatchUpInRound == 4 && rawRound == 8) {
-            roundTitle = "8강전";
-        } else if (totalMatchUpInRound == 8 && rawRound == 16) {
+        } else if (totalMatchUpInRound == 2) {
+            roundTitle = "준결승전";
+        } else if (totalMatchUpInRound == 4) {
+            roundTitle = "8강전"; // 🎯 이제 2라운드에 진짜 경기 4개인 상태이므로 이곳에 정확히 걸립니다!
+        } else if (totalMatchUpInRound == 8) {
             roundTitle = "16강전";
-        } else if (totalMatchUpInRound == 16 && rawRound == 32) {
+        } else if (totalMatchUpInRound == 16) {
             roundTitle = "32강전";
         } else {
-            // 9~15장, 17~31장 등 부전승 찌꺼기가 끼어 경기 수가 딱 떨어지지 않는 모든 라운드는 "예선전"으로 통합
-            roundTitle = "예선전";
+            roundTitle = "본선";
         }
 
         // =========================================================================

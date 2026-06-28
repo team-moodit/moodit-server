@@ -64,7 +64,7 @@ public class MatchUpReader {
         // =========================================================================
         long totalCompletedCount = matchUps.stream()
                 .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
-                .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted()) // 투표 완료된 상태 체크
+                .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted())
                 .count();
 
         int currentRound = (int) totalCompletedCount + 1; // 보기 매핑용 인덱스
@@ -81,7 +81,7 @@ public class MatchUpReader {
         int totalRounds = totalImages - 1;
 
         // =========================================================================
-        // [타이틀 보정] 현재 진행 중인 라운드의 '진짜 경기 수'를 동적으로 파악하여 타이틀 세팅
+        //  [타이틀 보정] 라운드 번호와 진짜 경기 수를 조합해 완벽하게 타이틀 판별
         // =========================================================================
         int targetRoundNumber = matchUp.getRoundNumber(); // 1, 2, 3... 순차 증가된 라운드 번호
 
@@ -93,8 +93,11 @@ public class MatchUpReader {
         int totalMatchUpInRound = actualMatchesInRound.size(); // 이번 라운드의 진짜 경기 수
         String roundName;
 
-        if (totalMatchUpInRound == 1 && targetRoundNumber > 1) {
-            // 💡 예선전(1라운드)인데 진짜 경기가 1개뿐인 특수 케이스(13장 등)를 방어하기 위해 targetRoundNumber > 1 조건 추가
+        if (targetRoundNumber == 1) {
+            //  [최우선 가드] 1라운드는 진짜 경기 수가 몇 개 남았든 무조건 "예선전"으로 분류합니다.
+            roundName = "예선전";
+        } else if (totalMatchUpInRound == 1) {
+            //  2라운드 이상이면서 진짜 경기가 딱 1개 남은 순간이 진짜 "결승전"입니다.
             roundName = "결승전";
         } else if (totalMatchUpInRound == 2) {
             roundName = "준결승전"; // 4강전
@@ -105,7 +108,7 @@ public class MatchUpReader {
         } else if (totalMatchUpInRound == 16) {
             roundName = "32강전";
         } else {
-            roundName = "예선전"; // 규격에 안 맞는 찌꺼기 라운드는 전부 예선전 처리
+            roundName = "본선";
         }
 
         boolean isTournamentCompleted = false;
