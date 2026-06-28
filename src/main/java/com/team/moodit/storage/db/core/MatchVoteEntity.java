@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "match_vote") // 📌 DB에 생성된 실제 테이블명 매핑
+@Table(name = "match_vote") // DB에 생성된 실제 테이블명 매핑
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자 규칙 적용
 public class MatchVoteEntity extends BaseIdEntity {
@@ -18,4 +18,6 @@ public class MatchVoteEntity extends BaseIdEntity {
     private String preference; // 예: "CONSISTENCE", "FITNESS"
 
     private String preferenceDetail; // 예: null, "VIBE", "MATCHABLE" (null 허용)
+
+
 }

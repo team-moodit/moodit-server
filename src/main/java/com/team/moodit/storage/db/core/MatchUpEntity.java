@@ -69,7 +69,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
      */
     public void updateWinner(Long selectedPhotoId) {
         this.winnerId = selectedPhotoId;
-        this.state = MatchUpState.COMPLETED; // 📌 상태를 완료(또는 프로젝트 컨벤션에 맞는 완료 상태)로 변경!
+        this.state = MatchUpState.COMPLETED; // 상태를 완료(또는 프로젝트 컨벤션에 맞는 완료 상태)로 변경!
     }
 
     /**
@@ -79,7 +79,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
      * [요구사항 2, 3번 검증] 선택한 이미지가 현재 대진의 후보가 맞는지 검증
      */
     public void validateCandidate(Long selectedPhotoId) {
-        // 📌 공백이나 상태값 버그에 휘둘리지 않도록, winnerId가 진짜 채워져 있는지만 정석대로 검사합니다!
+        //  공백이나 상태값 버그에 휘둘리지 않도록, winnerId가 진짜 채워져 있는지만 정석대로 검사합니다!
         if (this.winnerId != null) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
@@ -94,7 +94,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
      * Manager의 .filter(m -> !m.isVoted()) 가 작동할 수 있도록 상태 확인 메서드 제공
      */
     public boolean isVoted() {
-        // 📌 승자 ID(winnerId)가 존재하면 무조건 투표가 끝난 경기입니다.
+        // 승자 ID(winnerId)가 존재하면 무조건 투표가 끝난 경기입니다.
         return this.winnerId != null;
     }
 

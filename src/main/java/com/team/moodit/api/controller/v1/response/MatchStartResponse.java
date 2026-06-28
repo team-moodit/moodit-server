@@ -26,14 +26,17 @@ public record MatchStartResponse(
                         new CandidateResponse(domain.getCandidateAId(), domain.getCandidateAUrl()),
                         new CandidateResponse(domain.getCandidateBId(), domain.getCandidateBUrl())
                 ),
+                //  domain.getReasons()가 List<MatchVoteCandidateEntity>를 반환하므로 r은 Candidate 엔티티입니다.
                 domain.getReasons() == null ? List.of() : domain.getReasons().stream()
-                        .map(r -> new ReasonResponse(r.getId(), r.getContent()))
+                        .map(r -> new ReasonResponse(
+                                r.getVoteId(), // 💡 MatchVoteCandidateEntity에 정의된 원본 투표 ID(voteId)를 추출!
+                                r.getContent()  // 저장된 사유 텍스트
+                        ))
                         .toList()
         );
     }
 
-
-    private record NextMatchUpResponse(CandidateResponse candidateA, CandidateResponse candidateB) {}
-    private record CandidateResponse(Long id, String photoUri) {}
-    private record ReasonResponse(Long id, String content) {}
+    public record NextMatchUpResponse(CandidateResponse candidateA, CandidateResponse candidateB) {}
+    public record CandidateResponse(Long id, String photoUri) {}
+    public record ReasonResponse(Long id, String content) {}
 }
