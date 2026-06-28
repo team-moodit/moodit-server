@@ -31,6 +31,8 @@ public class MatchUpEntity extends BaseNoStatusEntity {
 
     @Enumerated(EnumType.STRING)
     private MatchUpState state;
+    @jakarta.persistence.Version // 이 어노테이션이 핵심입니다!
+    private Long version;
 
     // 1. 실제 대결용 private 생성자
     private MatchUpEntity(Long matchId, int roundNumber, Long candidateAId, Long candidateBId) {

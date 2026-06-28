@@ -3,6 +3,7 @@ package com.team.moodit.api.controller.v1;
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
+import com.team.moodit.api.controller.v1.response.MatchResultResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
@@ -71,6 +72,20 @@ public class MatchController {
         MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(matchId);
         return ApiResponse.success(response);
     }
+
+    /*
+    @GetMapping("/v1/matches/{matchId}/completed")
+    public ApiResponse<MatchResultResponse> getMatchResult(
+            ApiUser apiUser,
+            @PathVariable Long matchId
+    ) {
+        // 내부적으로 이 matchId가 실제 'COMPLETED' 상태인지 검증하고,
+        // 결과가 없다면 도메인 분석(Decision Tree)을 수행 후 저장/반환합니다.
+        MatchResultResponse response = matchResultFinder.findCompletedResult(matchId);
+        return ApiResponse.success(response);
+    }
+    */
+
 
 
 }
