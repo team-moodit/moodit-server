@@ -63,6 +63,12 @@ public class MatchVoteManager {
                 .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
                 .toList();
 
+        if (actualMatchesInRound.isEmpty()) {
+            // 이미 라운드가 종료되었거나 데이터 정합성이 깨진 경우를 대비
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+
         int currentRoundOrder = (int) actualMatchesInRound.stream()
                 .filter(MatchUpEntity::isVoted)
                 .count();
