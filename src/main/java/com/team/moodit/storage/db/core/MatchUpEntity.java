@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MatchUpEntity extends BaseNoStatusEntity {
+
     @Column(nullable = false)
     private Long matchId;
     private int roundNumber;
@@ -36,6 +37,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
 
     @Enumerated(EnumType.STRING)
     private MatchUpState state;
+
     @Version
     private Long version;
 
@@ -57,7 +59,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
         this.state = MatchUpState.SKIPPED;
     }
 
-    // 3. of 메서드는 이 내부 생성자들을 호출하도록 변경
+    // 3. 정적 팩토리 메서드
     public static MatchUpEntity of(MatchUp matchUp) {
         if (matchUp instanceof RealMatchUp real) {
             return new MatchUpEntity(real.getMatchId(), real.getRoundNumber(), real.getCandidateAId(), real.getCandidateBId());
@@ -68,26 +70,20 @@ public class MatchUpEntity extends BaseNoStatusEntity {
         throw new ApiException(ErrorType.INVALID_MATCH_UP_TYPE);
     }
 
-
-
-
     /**
-     * [요구사항 5, 6, 7번] 득표수 반영 및 승자 확정 처리
+     * 득표수 반영 및 승자 확정 처리
      */
     public void updateWinner(Long selectedPhotoId) {
         this.winnerId = selectedPhotoId;
-        this.state = MatchUpState.COMPLETED; // 상태를 완료(또는 프로젝트 컨벤션에 맞는 완료 상태)로 변경!
+        this.state = MatchUpState.COMPLETED;
     }
 
     /**
-     * Manager의 .filter(m -> !m.isVoted()) 가 작동할 수 있도록 상태 확인 메서드 제공
-     */
-    /**
-     * [요구사항 2, 3번 검증] 선택한 이미지가 현재 대진의 후보가 맞는지 검증
+     * 선택한 이미지가 현재 대진의 후보가 맞는지 검증 (중복 투표 및 부전승 투표 차단)
      */
     public void validateCandidate(Long selectedPhotoId) {
-        //  공백이나 상태값 버그에 휘둘리지 않도록, winnerId가 진짜 채워져 있는지만 정석대로 검사합니다!
-        if (this.winnerId != null) {
+        // 부전승 경기이거나 이미 투표가 완료된 경기는 투표 불가
+        if (this.state == MatchUpState.SKIPPED || this.winnerId != null) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
@@ -98,14 +94,10 @@ public class MatchUpEntity extends BaseNoStatusEntity {
     }
 
     /**
-     * Manager의 .filter(m -> !m.isVoted()) 가 작동할 수 있도록 상태 확인 메서드 제공
+     * 해당 경기가 이미 투표 완료되었는지 여부 반환
      */
     public boolean isVoted() {
-        // 승자 ID(winnerId)가 존재하면 무조건 투표가 끝난 경기입니다.
-        return this.winnerId != null;
+        // 승자 ID(winnerId)가 존재하거나 상태가 COMPLETED/SKIPPED이면 투표가 끝난 경기입니다.
+        return this.winnerId != null || this.state == MatchUpState.COMPLETED;
     }
-
-
-
-
 }
