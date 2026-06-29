@@ -22,35 +22,38 @@ public class MatchUpWinnerResultManager {
     private final MatchPreferenceResultRepository preferenceResultRepository;
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
-    private final MatchResultAnalyzer analyzer; //  DI: 이제 인스턴스 메서드로 분석
+    private final MatchResultAnalyzer analyzer;
 
     @Transactional
     public MatchResult getOrCreateMatchUpWinnerResult(Long matchId, Long userId) {
-        // 1. 비관적 락을 적용한 멱등성 검사 (기존 find 대체)
+        // 1. 비관적 락을 적용한 멱등성 검사
         return matchResultRepository.findByUserIdAndMatchIdForUpdate(userId, matchId)
                 .map(res -> toMatchResultDomain(res, preferenceResultRepository.findByMatchResultId(res.getId())))
                 .orElseGet(() -> createMatchResult(matchId, userId));
     }
 
     private MatchResult createMatchResult(Long matchId, Long userId) {
+        // 2. 투표 원천 데이터 로드
         List<MatchVoteCandidateEntity> votedCandidates = matchUpRepository.findVotedLabelsByMatchId(matchId);
         if (votedCandidates.isEmpty()) throw new ApiException(ErrorType.INVALID_REQUEST);
 
         MatchEntity match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.INVALID_MATCH_NOT_FOUND));
 
-        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdWithLock(matchId);
+        // 3. 결승전 대진표에서 최종 우승 사진 ID 추출
+        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
         Long winnerPhotoId = matchUps.stream()
                 .filter(MatchUpEntity::isVoted)
                 .max(Comparator.comparingInt(MatchUpEntity::getRoundNumber))
                 .map(MatchUpEntity::getWinnerId)
                 .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST));
 
-        // 🎯 분석 엔진 호출 (인스턴스 메서드)
+        // 4. 선호도 분석 엔진 호출
         MatchPreferenceAnalysis analysis = analyzer.analyze(votedCandidates);
 
-        int totalMatchCount = match.getInitialImageCount() - 1; // 변수명 의미 명확화
+        int totalMatchCount = match.getInitialImageCount() - 1;
 
+        // 5. 결과 엔티티 저장
         MatchResultEntity resultEntity = matchResultRepository.save(new MatchResultEntity(
                 match.getId(),
                 userId,
@@ -59,21 +62,22 @@ public class MatchUpWinnerResultManager {
                 totalMatchCount,
                 LocalDateTime.now(),
                 analysis.getResultType(),
-                analysis.getMainPref() != null ? PreferenceType.valueOf(analysis.getMainPref()) : null,
-                analysis.getDetailPref() != null ? PreferenceDetailType.valueOf(analysis.getDetailPref()) : null
+                safeToPreferenceType(analysis.getMainPref()),        // valueOf() → 안전 변환
+                safeToPreferenceDetailType(analysis.getDetailPref()) // valueOf() → 안전 변환
         ));
 
-        //  saveAll() 최적화: 랭킹 엔티티 리스트를 한 번에 저장
+        // 6. 랭킹 엔티티 리스트 한 번에 저장 (saveAll 최적화)
         List<MatchPreferenceResultEntity> preferenceEntities = analysis.getRanks().stream()
                 .map(rank -> new MatchPreferenceResultEntity(
                         resultEntity.getId(),
-                        PreferenceType.valueOf(rank.getLabel()),
+                        safeToPreferenceType(rank.getLabel()),        // valueOf() → 안전 변환
                         rank.getRank(),
                         rank.getCount()
                 ))
                 .toList();
         preferenceResultRepository.saveAll(preferenceEntities);
 
+        // 7. 도메인 객체로 조립하여 반환
         return toMatchResultDomain(resultEntity, preferenceEntities);
     }
 
@@ -94,5 +98,23 @@ public class MatchUpWinnerResultManager {
                         ).toList()
                 )
         );
+    }
+
+    //  안전 변환 헬퍼
+
+    private PreferenceType safeToPreferenceType(String value) {
+        if (value == null) return null;
+        for (PreferenceType type : PreferenceType.values()) {
+            if (type.name().equals(value)) return type;
+        }
+        throw new ApiException(ErrorType.INVALID_REQUEST);
+    }
+
+    private PreferenceDetailType safeToPreferenceDetailType(String value) {
+        if (value == null) return null;
+        for (PreferenceDetailType type : PreferenceDetailType.values()) {
+            if (type.name().equals(value)) return type;
+        }
+        throw new ApiException(ErrorType.INVALID_REQUEST);
     }
 }

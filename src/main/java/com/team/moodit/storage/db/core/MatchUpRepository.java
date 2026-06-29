@@ -26,9 +26,9 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity, Long> {
      * [추가된 동시성 제어 쿼리]
      * 라운드 종료 판정 및 대진표 중복 생성(Phantom Read)을 방지하기 위한 비관적 쓰기 락 조회입니다.
      */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+
     @Query("SELECT m FROM MatchUpEntity m WHERE m.matchId = :matchId")
-    List<MatchUpEntity> findByMatchIdWithLock(@Param("matchId") Long matchId);
+    List<MatchUpEntity> findByMatchId(@Param("matchId") Long matchId);
 
     @Query("SELECT mc FROM MatchVoteCandidateEntity mc WHERE mc.matchId = :matchId")
     List<MatchVoteCandidateEntity> findVotedLabelsByMatchId(@Param("matchId") Long matchId);

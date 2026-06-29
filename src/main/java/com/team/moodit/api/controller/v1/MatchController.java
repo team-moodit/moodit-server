@@ -11,7 +11,6 @@ import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
 import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
-import com.team.moodit.domain.match.MatchUpWinner;
 import com.team.moodit.domain.match.MatchUpWinnerResultManager;
 import com.team.moodit.domain.match.MatchVoteManager;
 import com.team.moodit.support.auth.ApiUser;
@@ -77,7 +76,7 @@ public class MatchController {
         return ApiResponse.success(response);
     }
 
-    @GetMapping("/v1/matches/{matchId}/completed") // 신규 🚀
+    @GetMapping("/v1/matches/{matchId}/completed")
     public ApiResponse<MatchUpWinnerResponse> getMatchUpWinner(
             ApiUser apiUser,
             @PathVariable Long matchId
