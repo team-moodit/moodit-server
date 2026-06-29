@@ -24,7 +24,7 @@ public class FeedbackFinder {
         );
 
         return results.stream().collect(Collectors.toMap(
-                BaseIdEntity::getId,
+                FeedbackEntity::getUserMissionId,
                 FeedbackEntity::getSatisfactionScore
         ));
     }
