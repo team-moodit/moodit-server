@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import tools.jackson.databind.exc.ValueInstantiationException;
@@ -32,6 +33,12 @@ public class ApiControllerAdvice {
                 return ResponseEntity.status(apiException.getErrorType().getStatus()).body(ApiResponse.error(apiException.getErrorType()));
             }
         }
+        return ResponseEntity.status(ErrorType.INVALID_REQUEST.getStatus()).body(ApiResponse.error(ErrorType.INVALID_REQUEST));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<?>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.info("[HttpRequestMethodNotSupportedException]: {}]", e.getMessage(), e);
         return ResponseEntity.status(ErrorType.INVALID_REQUEST.getStatus()).body(ApiResponse.error(ErrorType.INVALID_REQUEST));
     }
 
