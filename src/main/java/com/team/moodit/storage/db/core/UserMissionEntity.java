@@ -35,6 +35,11 @@ public class UserMissionEntity extends BaseNoStatusEntity {
     private UserMissionState state;
     private LocalDateTime completedAt;
 
+    public void completed() {
+        this.state = UserMissionState.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
     public UserMissionEntity(Long userId, Long matchId, Long missionOfferId, Long missionTemplateId, String title, UserMissionState state) {
         this.userId = userId;
         this.matchId = matchId;

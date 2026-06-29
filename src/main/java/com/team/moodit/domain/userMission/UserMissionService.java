@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserMissionService {
     private final UserMissionReader userMissionReader;
+    private final UserMissionManager userMissionManager;
 
     public Page<UserMission> getUserMissions(ApiUser apiUser, UserMissionListType type, OffsetLimit offsetLimit) {
         return userMissionReader.getUserMissions(apiUser.getId(), type, offsetLimit);
@@ -18,5 +19,9 @@ public class UserMissionService {
 
     public UserMission getUserMission(ApiUser apiUser, Long userMissionId) {
         return userMissionReader.getUserMission(apiUser.getId(), userMissionId);
+    }
+
+    public Long completeUserMission(ApiUser apiUser, Long userMissionId) {
+        return userMissionManager.complete(apiUser.getId(), userMissionId);
     }
 }
