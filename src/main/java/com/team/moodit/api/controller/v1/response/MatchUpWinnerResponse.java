@@ -1,6 +1,5 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.match.MatchUpWinner;
 import com.team.moodit.domain.match.MatchResult;
 
 public record MatchUpWinnerResponse(
@@ -11,16 +10,6 @@ public record MatchUpWinnerResponse(
         String detailPreference
 ) {
     // 1. 기존 MatchUpWinner용 생성자
-    public MatchUpWinnerResponse(MatchUpWinner domain) {
-        this(
-                domain.getMatchUpWinnerId(),
-                domain.getWinnerPhotoId(),
-                domain.getPreferenceResultType().name(),
-                domain.getMainPreference(),
-                domain.getDetailPreference()
-        );
-    }
-
     //
     public MatchUpWinnerResponse(MatchResult domain) {
         this(
