@@ -3,8 +3,8 @@ package com.team.moodit.api.controller.v1;
 import com.team.moodit.api.assembler.UserMissionAssembler;
 import com.team.moodit.api.controller.v1.request.SubmitFeedbackRequest;
 import com.team.moodit.api.controller.v1.response.UserMissionResponse;
-import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.domain.feedback.FeedbackService;
+import com.team.moodit.domain.userMission.UserMissionService;
 import com.team.moodit.support.OffsetLimit;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.auth.ApiUser;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserMissionController {
     private final UserMissionAssembler userMissionAssembler;
     private final FeedbackService feedbackService;
+    private final UserMissionService userMissionService;
 
     @GetMapping("/v1/user-missions")
     public ApiResponse<PageResponse<UserMissionResponse>> getUserMissions(
@@ -46,6 +47,15 @@ public class UserMissionController {
             @PathVariable Long userMissionId
     ) {
         return ApiResponse.success(userMissionAssembler.getUserMission(apiUser, userMissionId));
+    }
+
+    @PostMapping("/v1/user-missions/{userMissionId}/complete")
+    public ApiResponse<DefaultIdResponse> completeUserMission(
+            ApiUser apiUser,
+            @PathVariable Long userMissionId
+    ) {
+        Long successId = userMissionService.completeUserMission(apiUser, userMissionId);
+        return ApiResponse.success(new DefaultIdResponse(successId));
     }
 
     @PostMapping("/v1/user-missions/{userMissionId}/feedback")

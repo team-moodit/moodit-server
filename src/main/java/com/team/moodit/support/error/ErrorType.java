@@ -26,6 +26,9 @@ public enum ErrorType {
     // Image
     INVALID_IMAGE_COUNT(HttpStatus.BAD_REQUEST, "이미지는 8장에서 32장 사이여야 합니다.", LogLevel.INFO),
 
+    // UserMission
+    USER_MISSION_INVALID_STATE(HttpStatus.BAD_REQUEST, "미션 상태가 올바르지 않습니다.", LogLevel.INFO),
+
     // Feedback
     FEEDBACK_REQUIRED_REASON(HttpStatus.BAD_REQUEST, "만족도가 3점 미만일 때 불만족 사유는 필수입니다.", LogLevel.INFO),
     FEEDBACK_HAS_NOT_MISSION(HttpStatus.BAD_REQUEST, "피드백 제출 가능한 미션이 없습니다.", LogLevel.INFO),
