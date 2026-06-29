@@ -39,7 +39,7 @@ public class MatchCreator {
     private final MatchVoteRepository matchVoteRepository;
     private final MatchVoteCandidateRepository matchVoteCandidateRepository;
 
-    // 🚀 15초/22초 통신 병목을 통째로 박멸하는 JDBC 템플릿
+    //  15초/22초 통신 병목을 통째로 박멸하는 JDBC 템플릿
     private final JdbcTemplate jdbcTemplate;
 
     @Transactional
@@ -55,16 +55,8 @@ public class MatchCreator {
         List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
         if (imageIds.size() != uploadedImages.size()) throw new ApiException(ErrorType.INVALID_REQUEST);
 
-        // ❌ 기존 방식 (배포 서버에서 11번 따로 왕복하며 20초 지연 유발하던 진짜 주범)
-        /*
-        matchImageRepository.saveAll(
-                uploadedImages.stream().map(it ->
-                        new MatchImageEntity(savedMatch.getId(), it.getId())
-                ).toList()
-        );
-        */
 
-        // 🚀 [변경] 이미지 매핑 11개도 단 1번의 쿼리로 묶어서 전송! (20초 지연 소멸)
+        //  [변경] 이미지 매핑 11개도 단 1번의 쿼리로 묶어서 전송! (20초 지연 소멸)
         bulkInsertMatchImages(savedMatch.getId(), uploadedImages);
 
         // 1. DB에 기본 양식(기본 템플릿)으로 미리 박아둔 질문 목록 전부 SELECT
@@ -73,7 +65,7 @@ public class MatchCreator {
         // 2. 대진표 생성 및 피그마 규칙 질문 조립 동시 실행 (기획 의도 100% 반영 시점)
         MatchUpCreateResult result = matchUpCreator.createMatches(savedMatch.getId(), imageIds, allTemplates);
 
-        // 🚀 [변경] 기획대로 조립이 완전히 완료된 리스트를 한 바구니에 담아 단 1번씩만 슛!
+        //  [변경] 기획대로 조립이 완전히 완료된 리스트를 한 바구니에 담아 단 1번씩만 슛!
         bulkInsertMatchUps(result.getMatchUps());
         bulkInsertVoteCandidates(result.getVoteCandidates());
 
@@ -81,7 +73,7 @@ public class MatchCreator {
     }
 
     /**
-     * 🚀 [추가] 이미지 매핑 데이터 일괄 벌크 인서트 (배포 서버 22초 저격용 숨겨진 열쇠)
+     * [추가] 이미지 매핑 데이터 일괄 벌크 인서트 (배포 서버 22초 저격용 숨겨진 열쇠)
      */
     private void bulkInsertMatchImages(Long matchId, List<FileEntity> uploadedImages) {
         if (uploadedImages.isEmpty()) return;
@@ -134,13 +126,14 @@ public class MatchCreator {
     }
 
     /**
-     * 대진표 데이터 일괄 벌크 인서트
+     * 대진표 데이터 일괄 벌크 인서트 (부전승 SKIPPED 및 winner_id 반영 수정)
      */
     private void bulkInsertMatchUps(List<MatchUpEntity> matchUps) {
         if (matchUps.isEmpty()) return;
 
-        String sql = "INSERT INTO match_up (match_id, round_number, candidateaid, candidatebid, state, created_at, updated_at, version) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, 0)";
+        // 1. 쿼리에 winner_id 컬럼을 추가하고, state도 ?로 동적 처리하도록 변경합니다.
+        String sql = "INSERT INTO match_up (match_id, round_number, candidateaid, candidatebid, state, winner_id, created_at, updated_at, version) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -151,9 +144,19 @@ public class MatchCreator {
 
                 ps.setObject(3, m.getCandidateAId());
                 ps.setObject(4, m.getCandidateBId());
-                ps.setString(5, "NEED_VOTE");
-                ps.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+
+                // 2. 하드코딩 대신 엔티티의 진짜 상태(NEED_VOTE 또는 SKIPPED)를 주입합니다.
+                ps.setString(5, m.getState() != null ? m.getState().name() : "NEED_VOTE");
+
+                // 3. 부전승 엔티티에 세팅된 winnerId를 추출하여 쿼리에 바인딩합니다. (없으면 null 처리)
+                if (m.getWinnerId() != null) {
+                    ps.setLong(6, m.getWinnerId());
+                } else {
+                    ps.setNull(6, java.sql.Types.BIGINT);
+                }
+
                 ps.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
             }
 
             @Override
@@ -162,4 +165,5 @@ public class MatchCreator {
             }
         });
     }
+
 }
