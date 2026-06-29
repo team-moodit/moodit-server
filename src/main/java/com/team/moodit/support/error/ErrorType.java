@@ -41,8 +41,8 @@ public enum ErrorType {
     //MatchUp
     INVALID_MATCH_UP_CANDIDATE(HttpStatus.BAD_REQUEST,"대결 참가자가 존재하지 않습니다.",LogLevel.INFO),
     INVALID_MATCH_UP_SAME_CANDIDATE(HttpStatus.BAD_REQUEST,"동일한 참가자가 대결할 수 없습니다.",LogLevel.INFO),
-    INVALID_MATCH_UP_TYPE(HttpStatus.INTERNAL_SERVER_ERROR, "지원하지 않는 매치업 타입입니다.", LogLevel.ERROR);
-
+    INVALID_MATCH_UP_TYPE(HttpStatus.INTERNAL_SERVER_ERROR, "지원하지 않는 매치업 타입입니다.", LogLevel.INFO),
+    INVALID_MATCH_NOT_FOUND(HttpStatus.BAD_REQUEST,"해당 matchId로 매치 정보를 찾을 수 없습니다.",LogLevel.INFO);
     private final HttpStatus status;
     private final String message;
     private final LogLevel logLevel;
