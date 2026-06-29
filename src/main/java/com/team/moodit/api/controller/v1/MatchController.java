@@ -16,6 +16,7 @@ import com.team.moodit.domain.match.MatchVoteManager;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,7 +63,7 @@ public class MatchController {
             @RequestBody VoteSaveRequest request
     ) {
         // 웹 DTO를 순수한 도메인 Command 메시지로 변환하여 오염 없는 진입을 보장합니다.
-        VoteSaveResponse response = matchVoteManager.processVote(matchId, request.toCommand());
+        VoteSaveResponse response = matchVoteManager.processVote(matchId, apiUser.getId(), request.toCommand());
 
         return ApiResponse.success(response);
     }
@@ -72,7 +73,7 @@ public class MatchController {
             ApiUser apiUser,
             @PathVariable Long matchId
     ) {
-        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(matchId);
+        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(apiUser.getId(),matchId);
         return ApiResponse.success(response);
     }
 
@@ -90,3 +91,5 @@ public class MatchController {
     }
 
 }
+
+

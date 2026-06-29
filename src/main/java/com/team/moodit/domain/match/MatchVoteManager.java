@@ -23,7 +23,7 @@ public class MatchVoteManager {
      * 투표 처리 (개별 경기는 엔티티의 @Version 낙관적 락으로 동시성 제어)
      */
     @Transactional
-    public VoteSaveResponse processVote(Long matchId, VoteCommand command) {
+    public VoteSaveResponse processVote(Long matchId,Long userId, VoteCommand command) {
         MatchUpEntity currentMatchUp = matchUpRepository.findById(command.getMatchUpId())
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
@@ -51,7 +51,7 @@ public class MatchVoteManager {
      * 라운드 전환 및 다음 경기 계산 (비관적 쓰기 락을 통한 대진표 중복 생성 방지)
      */
     public VoteSaveResponse handleRoundTransition(Long matchId, int currentRound) {
-        //  일반 조회를 '비관적 쓰기 락'이 걸린 조회 쿼리로 교체!
+
         List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchId(matchId);
 
         List<MatchUpEntity> actualMatchesInRound = freshMatchUps.stream()

@@ -29,11 +29,9 @@ public class MatchUpReader {
 
     @Transactional(readOnly = true)
     public MatchUpStart getMatchUp(Long matchId) {
-        // 1. 부모 매치 조회
         MatchEntity match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
-        // 2. 현재 투표 진행 중인 매치업(NEED_VOTE) 획득
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
         if (matchUps == null || matchUps.isEmpty()) {
             throw new ApiException(ErrorType.NOT_FOUND);
@@ -43,14 +41,12 @@ public class MatchUpReader {
                 .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
                 .findFirst();
 
-        // 더 이상 진행할 투표가 없다면 최종 종료 처리
         if (currentMatchUpOpt.isEmpty()) {
             return MatchUpStart.createCompleted(match.getTitle());
         }
 
         MatchUpEntity matchUp = currentMatchUpOpt.get();
 
-        // 3. 파일 인프라 연동
         File fileA = fileReader.getFile(matchUp.getCandidateAId());
         File fileB = fileReader.getFile(matchUp.getCandidateBId());
 
@@ -58,48 +54,46 @@ public class MatchUpReader {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // =========================================================================
-        //  [정합성 보정] 유저가 '진짜 투표 완료한 총 경기 수'를 기준으로 글로벌 인덱스 계산
-        // =========================================================================
         long totalCompletedCount = matchUps.stream()
                 .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
                 .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted())
                 .count();
 
-        int currentRound = (int) totalCompletedCount + 1; // 보기 매핑용 인덱스
+        int globalMatchIndex = (int) totalCompletedCount + 1;
 
-        // 4. Creator가 해당 순서에 저장해 둔 사유 4개 조회
         List<MatchVoteCandidateEntity> sampledVotes = matchVoteCandidateRepository
-                .findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, currentRound);
+                .findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, globalMatchIndex);
         if (sampledVotes == null) {
             sampledVotes = List.of();
         }
 
-        // 5. 총 라운드 수 공식
-        int totalImages = match.getInitialImageCount();
-        int totalRounds = totalImages - 1;
-
-        // =========================================================================
-        //  [타이틀 보정] 라운드 번호와 진짜 경기 수를 조합해 완벽하게 타이틀 판별
-        // =========================================================================
-        int targetRoundNumber = matchUp.getRoundNumber(); // 1, 2, 3... 순차 증가된 라운드 번호
+        int targetRoundNumber = matchUp.getRoundNumber();
 
         List<MatchUpEntity> actualMatchesInRound = matchUps.stream()
                 .filter(m -> m.getRoundNumber() == targetRoundNumber)
                 .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
                 .toList();
 
-        int totalMatchUpInRound = actualMatchesInRound.size(); // 이번 라운드의 진짜 경기 수
+        int totalMatchUpInRound = actualMatchesInRound.size();
+
+        long completedCountInRound = actualMatchesInRound.stream()
+                .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted())
+                .count();
+        int displayMatchIndex = (int) completedCountInRound + 1;
+
+
+        int totalImages = match.getInitialImageCount();
+        boolean isPerfectBracket = (totalImages == 4 || totalImages == 8 || totalImages == 16 || totalImages == 32);
+
         String roundName;
 
-        if (targetRoundNumber == 1) {
-            //  [최우선 가드] 1라운드는 진짜 경기 수가 몇 개 남았든 무조건 "예선전"으로 분류합니다.
+
+        if (targetRoundNumber == 1 && !isPerfectBracket) {
             roundName = "예선전";
         } else if (totalMatchUpInRound == 1) {
-            //  2라운드 이상이면서 진짜 경기가 딱 1개 남은 순간이 진짜 "결승전"입니다.
             roundName = "결승전";
         } else if (totalMatchUpInRound == 2) {
-            roundName = "준결승전"; // 4강전
+            roundName = "준결승전";
         } else if (totalMatchUpInRound == 4) {
             roundName = "8강전";
         } else if (totalMatchUpInRound == 8) {
@@ -115,8 +109,8 @@ public class MatchUpReader {
         return new MatchUpStart(
                 matchUp.getId(),
                 match.getTitle(),
-                totalRounds,
-                currentRound,
+                totalMatchUpInRound,
+                displayMatchIndex,
                 roundName,
                 isTournamentCompleted,
                 fileA.getId(),
