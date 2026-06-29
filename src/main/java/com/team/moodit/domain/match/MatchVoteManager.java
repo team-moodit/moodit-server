@@ -52,7 +52,7 @@ public class MatchVoteManager {
      */
     public VoteSaveResponse handleRoundTransition(Long matchId, int currentRound) {
         //  일반 조회를 '비관적 쓰기 락'이 걸린 조회 쿼리로 교체!
-        List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchIdWithLock(matchId);
+        List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchId(matchId);
 
         List<MatchUpEntity> actualMatchesInRound = freshMatchUps.stream()
                 .filter(m -> m.getRoundNumber() == currentRound)

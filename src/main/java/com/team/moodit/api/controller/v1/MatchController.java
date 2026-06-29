@@ -5,10 +5,13 @@ import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
+import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
 import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
+import com.team.moodit.domain.match.MatchUpWinnerResultManager;
 import com.team.moodit.domain.match.MatchVoteManager;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
@@ -25,6 +28,7 @@ public class MatchController {
     private final MatchService matchService;
     private final MatchVoteManager matchVoteManager;
     private final MatchUpFinder matchUpFinder;
+    private final MatchUpWinnerResultManager matchUpWinnerResultManager;
 
     @PostMapping("/v1/matches")
     public ApiResponse<MatchCreateResponse> createMatch(
@@ -37,9 +41,9 @@ public class MatchController {
                 request.images()
         );
 
-
         return ApiResponse.success(new MatchCreateResponse(successId));
     }
+
 
     @GetMapping("/v1/matches/{matchId}/start")
     public ApiResponse<MatchStartResponse> startMatch(
@@ -65,14 +69,24 @@ public class MatchController {
 
     @GetMapping("/v1/matches/{matchId}/next-matchup")
     public ApiResponse<MatchUpFlowResponse> getNextMatchUp(
-                                                            ApiUser apiUser,
-                                                            @PathVariable Long matchId
+            ApiUser apiUser,
+            @PathVariable Long matchId
     ) {
         MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(matchId);
         return ApiResponse.success(response);
     }
 
+    @GetMapping("/v1/matches/{matchId}/completed")
+    public ApiResponse<MatchUpWinnerResponse> getMatchUpWinner(
+            ApiUser apiUser,
+            @PathVariable Long matchId
+    ) {
+        // 1. 우리가 고쳐놓은 매니저를 호출해서 읽기/쓰기가 통합된 MatchResult 도메인을 획득합니다.
+        MatchResult winnerDomain = matchUpWinnerResultManager.getOrCreateMatchUpWinnerResult(matchId, apiUser.getId());
 
+        // 2. 방금 DTO에 새로 추가한 생성자(MatchResult를 인자로 받는) 덕분에 바로 꽂아 넣을 수 있습니다!
+        return ApiResponse.success(new MatchUpWinnerResponse(winnerDomain));
 
+    }
 
 }

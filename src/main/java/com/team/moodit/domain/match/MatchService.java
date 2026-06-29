@@ -14,6 +14,7 @@ public class MatchService {
     private final MatchImageReader matchImageReader;
     private final MatchUpReader matchUpReader;
     private final MatchResultFinder matchResultFinder;
+    private final MatchUpWinnerResultManager matchUpWinnerResultManager;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
@@ -37,5 +38,9 @@ public class MatchService {
 
     public MatchUpStart getMatchup(Long matchId) {
         return matchUpReader.getMatchUp(matchId);
+    }
+
+    public MatchResult getOrCreateWinnerResult(ApiUser apiUser, Long matchId) {
+        return matchUpWinnerResultManager.getOrCreateMatchUpWinnerResult(matchId, apiUser.getId());
     }
 }
