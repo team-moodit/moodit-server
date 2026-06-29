@@ -4,15 +4,14 @@ import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.storage.db.core.FileEntity;
 import com.team.moodit.storage.db.core.FileRepository;
 import com.team.moodit.storage.db.core.MatchEntity;
-import com.team.moodit.storage.db.core.MatchImageEntity;
 import com.team.moodit.storage.db.core.MatchImageRepository;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
-import com.team.moodit.storage.db.core.MatchVoteEntity;
-import com.team.moodit.storage.db.core.MatchVoteRepository;
 import com.team.moodit.storage.db.core.MatchVoteCandidateEntity;
 import com.team.moodit.storage.db.core.MatchVoteCandidateRepository;
+import com.team.moodit.storage.db.core.MatchVoteEntity;
+import com.team.moodit.storage.db.core.MatchVoteRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -39,19 +38,12 @@ public class MatchCreator {
     private final MatchVoteRepository matchVoteRepository;
     private final MatchVoteCandidateRepository matchVoteCandidateRepository;
 
-    //  15초/22초 통신 병목을 통째로 박멸하는 JDBC 템플릿
+    // JDBC 벌크 인서트로 N+1 쿼리를 단일 쿼리로 최적화.
     private final JdbcTemplate jdbcTemplate;
 
     @Transactional
     public Long create(Long userId, NewMatch newMatch, List<Long> imageIds) {
-        MatchEntity savedMatch = matchRepository.save(
-                new MatchEntity(
-                        userId,
-                        newMatch.getTitle(),
-                        MatchState.ING,
-                        imageIds.size()
-                )
-        );
+        MatchEntity savedMatch = matchRepository.save(new MatchEntity(userId, newMatch.getTitle(), MatchState.ING, imageIds.size()));
         List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
         if (imageIds.size() != uploadedImages.size()) throw new ApiException(ErrorType.INVALID_REQUEST);
 
@@ -102,8 +94,7 @@ public class MatchCreator {
     private void bulkInsertVoteCandidates(List<MatchVoteCandidateEntity> candidates) {
         if (candidates.isEmpty()) return;
 
-        String sql = "INSERT INTO match_vote_candidate (match_id, round_number, vote_id, content, preference, preference_detail, created_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO match_vote_candidate (match_id, round_number, vote_id, content, preference, preference_detail, created_at) " + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -132,8 +123,7 @@ public class MatchCreator {
         if (matchUps.isEmpty()) return;
 
         // 1. 쿼리에 winner_id 컬럼을 추가하고, state도 ?로 동적 처리하도록 변경합니다.
-        String sql = "INSERT INTO match_up (match_id, round_number, candidateaid, candidatebid, state, winner_id, created_at, updated_at, version) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
+        String sql = "INSERT INTO match_up (match_id, round_number, candidateaid, candidatebid, state, winner_id, created_at, updated_at, version) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)";
 
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -155,8 +145,9 @@ public class MatchCreator {
                     ps.setNull(6, java.sql.Types.BIGINT);
                 }
 
-                ps.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
-                ps.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+                Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+                ps.setTimestamp(7, now);
+                ps.setTimestamp(8, now);
             }
 
             @Override
