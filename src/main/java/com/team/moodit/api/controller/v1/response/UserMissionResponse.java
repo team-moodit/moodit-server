@@ -15,6 +15,7 @@ public record UserMissionResponse(
         LocalDateTime missionCompletedAt,
         String matchTitle,
         String matchRepresentativeImageUrl, // 매치 대표 이미지
+        String matchPreferenceType,
         int matchRoundCount,
         LocalDateTime matchCompletedAt,
         Double satisfactionScore
@@ -49,6 +50,9 @@ public record UserMissionResponse(
                 missions.getCompletedAt(),
                 matchResult.getTitle(),
                 matchRepresentativeImageFile.getUrl(),
+                matchResult.getPreferenceResult().getPreferenceType() != null
+                        ? matchResult.getPreferenceResult().getPreferenceType().getTitle()
+                        : null,
                 matchResult.getRoundCount(),
                 matchResult.getCompletedAt(),
                 satisfactionScore
