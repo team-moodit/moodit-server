@@ -31,7 +31,7 @@ public class MatchUpCreator {
         List<Long> shuffledIds = new ArrayList<>(imageIds);
         Collections.shuffle(shuffledIds);
 
-        List<MatchUpEntity> matchUps = new ArrayList<>();
+        List<MatchUpEntity> matchUps = new ArrayList<>(totalImages); // 🚀 Capacity 지정으로 배열 재할당 방지
         int firstRoundNumber = 1;
 
         for (int i = 0; i < firstRoundPlayersCount; i += 2) {
@@ -46,7 +46,9 @@ public class MatchUpCreator {
             ));
         }
 
-        List<MatchVoteCandidateEntity> voteCandidates = new ArrayList<>();
+        // 예상 질문 후보군 크기만큼 ArrayList 초기 용량 미리 확보 (메모리 최적화)
+        // 판당 최대 4개의 질문이 생성되므로 예측 가능
+        List<MatchVoteCandidateEntity> voteCandidates = new ArrayList<>(totalMatchRounds * 4);
 
         List<MatchVoteEntity> bodyFits = new ArrayList<>();
         List<MatchVoteEntity> colors = new ArrayList<>();
@@ -71,6 +73,7 @@ public class MatchUpCreator {
             else if ("AESTHETICS".equals(pref) && "MOOD".equals(detail)) moods.add(t);
         }
 
+        // 방어벽 작동
         if (bodyFits.isEmpty()) bodyFits.addAll(allTemplates);
         if (colors.isEmpty()) colors.addAll(allTemplates);
         if (vibes.isEmpty()) vibes.addAll(allTemplates);
@@ -80,56 +83,71 @@ public class MatchUpCreator {
         if (consistences.isEmpty()) consistences.addAll(allTemplates);
         if (trends.isEmpty()) trends.addAll(allTemplates);
 
+        // [최적화] shuffle은 루프 밖에서 딱 한 번만 수행!
+        // 한 번 무작위로 섞인 리스트를 인덱스 순환으로 타기 때문에 무작위성은 완벽하게 유지됩니다.
         Collections.shuffle(bodyFits);     Collections.shuffle(colors);
         Collections.shuffle(vibes);        Collections.shuffle(designs);
         Collections.shuffle(matchables);   Collections.shuffle(moods);
         Collections.shuffle(consistences); Collections.shuffle(trends);
 
-        //  각 카테고리별로 데이터를 순차적으로 소모하기 위한 전용 포인터 인덱스 정의
         int bodyFitIdx = 0;   int colorIdx = 0;
         int vibeIdx = 0;      int designIdx = 0;
         int matchableIdx = 0; int moodIdx = 0;
         int consistenceIdx = 0; int trendIdx = 0;
 
         int normalRoundIdx = 1;
+        MatchVoteEntity defaultBackup = allTemplates.get(0);
 
         for (int round = 1; round <= totalMatchRounds; round++) {
             MatchVoteEntity r1 = null;
             MatchVoteEntity r2 = null;
 
-            //  전용 포인터를 사용하고 사용 후 증가(Idx++) 시키는 방식으로 매핑 정확도 정합성 확보
-            MatchVoteEntity r3 = !consistences.isEmpty() ? consistences.get(consistenceIdx++ % consistences.size()) : null;
-            MatchVoteEntity r4 = !trends.isEmpty() ? trends.get(trendIdx++ % trends.size()) : null;
+            MatchVoteEntity r3 = !consistences.isEmpty() ? consistences.get(consistenceIdx++ % consistences.size()) : defaultBackup;
+            MatchVoteEntity r4 = !trends.isEmpty() ? trends.get(trendIdx++ % trends.size()) : defaultBackup;
 
             boolean isFinalRound = (round == totalMatchRounds);
 
             if (isFinalRound) {
-                r1 = !bodyFits.isEmpty() ? bodyFits.get(bodyFitIdx % bodyFits.size()) : (!vibes.isEmpty() ? vibes.get(vibeIdx % vibes.size()) : matchables.get(matchableIdx % matchables.size()));
-                r2 = !colors.isEmpty() ? colors.get(colorIdx % colors.size()) : (!designs.isEmpty() ? designs.get(designIdx % designs.size()) : moods.get(moodIdx % moods.size()));
+                r1 = !bodyFits.isEmpty() ? bodyFits.get(bodyFitIdx % bodyFits.size()) : defaultBackup;
+                r2 = !colors.isEmpty() ? colors.get(colorIdx % colors.size()) : defaultBackup;
             } else {
                 int patternIdx = normalRoundIdx % 3;
 
                 if (patternIdx == 1) {
-                    r1 = !bodyFits.isEmpty() ? bodyFits.get(bodyFitIdx++ % bodyFits.size()) : null;
-                    r2 = !colors.isEmpty() ? colors.get(colorIdx++ % colors.size()) : null;
+                    r1 = !bodyFits.isEmpty() ? bodyFits.get(bodyFitIdx++ % bodyFits.size()) : defaultBackup;
+                    r2 = !colors.isEmpty() ? colors.get(colorIdx++ % colors.size()) : defaultBackup;
                 } else if (patternIdx == 2) {
-                    r1 = !vibes.isEmpty() ? vibes.get(vibeIdx++ % vibes.size()) : null;
-                    r2 = !designs.isEmpty() ? designs.get(designIdx++ % designs.size()) : null;
+                    r1 = !vibes.isEmpty() ? vibes.get(vibeIdx++ % vibes.size()) : defaultBackup;
+                    r2 = !designs.isEmpty() ? designs.get(designIdx++ % designs.size()) : defaultBackup;
                 } else {
-                    r1 = !matchables.isEmpty() ? matchables.get(matchableIdx++ % matchables.size()) : null;
-                    r2 = !moods.isEmpty() ? moods.get(moodIdx++ % moods.size()) : null;
+                    r1 = !matchables.isEmpty() ? matchables.get(matchableIdx++ % matchables.size()) : defaultBackup;
+                    r2 = !moods.isEmpty() ? moods.get(moodIdx++ % moods.size()) : defaultBackup;
                 }
-
                 normalRoundIdx++;
             }
 
-            if (r1 != null) voteCandidates.add(new MatchVoteCandidateEntity(matchId, round, r1.getId(), r1.getContent(), r1.getPreference(), r1.getPreferenceDetail()));
-            if (r2 != null) voteCandidates.add(new MatchVoteCandidateEntity(matchId, round, r2.getId(), r2.getContent(), r2.getPreference(), r2.getPreferenceDetail()));
-            if (r3 != null) voteCandidates.add(new MatchVoteCandidateEntity(matchId, round, r3.getId(), r3.getContent(), r3.getPreference(), r3.getPreferenceDetail()));
-            if (r4 != null) voteCandidates.add(new MatchVoteCandidateEntity(matchId, round, r4.getId(), r4.getContent(), r4.getPreference(), r4.getPreferenceDetail()));
+            //  가독성과 안전성을 한 번에 잡는 엔티티 리스트 적재
+            addCandidateIfNotNull(voteCandidates, matchId, round, r1);
+            addCandidateIfNotNull(voteCandidates, matchId, round, r2);
+            addCandidateIfNotNull(voteCandidates, matchId, round, r3);
+            addCandidateIfNotNull(voteCandidates, matchId, round, r4);
         }
 
         return new MatchUpCreateResult(matchUps, voteCandidates);
+    }
+
+    //  반복되는 null 방어 및 엔티티 생성을 묶어낸 private 내부 메서드
+    private void addCandidateIfNotNull(List<MatchVoteCandidateEntity> list, Long matchId, int round, MatchVoteEntity template) {
+        if (template == null) return;
+        String detail = template.getPreferenceDetail() != null ? template.getPreferenceDetail() : "";
+        list.add(new MatchVoteCandidateEntity(
+                matchId,
+                round,
+                template.getId(),
+                template.getContent(),
+                template.getPreference(),
+                detail
+        ));
     }
 
     public List<MatchUpEntity> createNextRoundMatches(Long matchId, int currentRound, List<Long> winnerImageIds) {
@@ -138,7 +156,7 @@ public class MatchUpCreator {
         }
 
         int nextRoundNumber = currentRound + 1;
-        List<MatchUpEntity> nextMatchUps = new ArrayList<>();
+        List<MatchUpEntity> nextMatchUps = new ArrayList<>(winnerImageIds.size() / 2);
 
         for (int i = 0; i < winnerImageIds.size(); i += 2) {
             nextMatchUps.add(MatchUpEntity.of(
