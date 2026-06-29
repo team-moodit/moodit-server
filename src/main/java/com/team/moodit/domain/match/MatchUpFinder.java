@@ -94,7 +94,7 @@ public class MatchUpFinder {
         } else if (totalMatchUpInRound == 2) {
             roundTitle = "준결승전";
         } else if (totalMatchUpInRound == 4) {
-            roundTitle = "8강전"; // 🎯 이제 2라운드에 진짜 경기 4개인 상태이므로 이곳에 정확히 걸립니다!
+            roundTitle = "8강전"; //  이제 2라운드에 진짜 경기 4개인 상태이므로 이곳에 정확히 걸립니다!
         } else if (totalMatchUpInRound == 8) {
             roundTitle = "16강전";
         } else if (totalMatchUpInRound == 16) {
