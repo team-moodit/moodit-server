@@ -126,6 +126,7 @@ public class MatchUpFinder {
                 totalMatchUpInRound,
                 false,
                 new MatchStartResponse.NextMatchUpResponse(
+                        nextTarget.getId(),
                         new MatchStartResponse.CandidateResponse(nextTarget.getCandidateAId(), candidateAUrl),
                         new MatchStartResponse.CandidateResponse(nextTarget.getCandidateBId(), candidateBUrl)
                 ),

@@ -1,6 +1,5 @@
 package com.team.moodit.domain.match;
 
-import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchRepository;
@@ -10,8 +9,8 @@ import com.team.moodit.storage.db.core.MatchVoteCandidateEntity;
 import com.team.moodit.storage.db.core.MatchVoteCandidateRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
-import com.team.moodit.support.file.FileReader;
 import com.team.moodit.support.file.File;
+import com.team.moodit.support.file.FileReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,6 +113,7 @@ public class MatchUpReader {
         boolean isTournamentCompleted = false;
 
         return new MatchUpStart(
+                matchUp.getId(),
                 match.getTitle(),
                 totalRounds,
                 currentRound,
