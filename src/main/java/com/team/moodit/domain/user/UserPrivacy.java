@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class UserProfile {
+public class UserPrivacy {
     private Long id;
     private Long userId;
+    private String name;
     private String email;
-    private String nickname;
 }

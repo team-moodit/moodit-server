@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserProfileReader userProfileReader;
+    private final UserPrivacyReader userPrivacyReader;
 
-    public UserProfile getProfile(Long userId) {
-        return userProfileReader.getUserProfile(userId);
+    public UserPrivacy getUserPrivacy(Long userId) {
+        return userPrivacyReader.getUserPrivacy(userId);
     }
 }

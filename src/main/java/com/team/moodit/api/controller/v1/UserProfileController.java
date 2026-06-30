@@ -1,7 +1,6 @@
 package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.response.UserProfileResponse;
-import com.team.moodit.domain.user.UserProfile;
 import com.team.moodit.domain.user.UserService;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
