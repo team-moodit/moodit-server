@@ -112,20 +112,28 @@ public class MatchUpFinder {
             );
         }
 
-        // 동적 대진표(부전승 포함) 대응을 위한 실제 DB 기반 최대 라운드 연산
-        int maxRoundNumber = matchUps.stream()
-                .mapToInt(MatchUpEntity::getRoundNumber)
-                .max()
-                .orElse(1);
+        // 플러시 락 및 동시성 충돌을 방지하기 위해 스트림 추가 조회 대신 인메모리 반복 연산 활용
+        int maxRoundNumber = 1;
+        if (!matchUps.isEmpty()) {
+            for (MatchUpEntity m : matchUps) {
+                if (m.getRoundNumber() > maxRoundNumber) {
+                    maxRoundNumber = m.getRoundNumber();
+                }
+            }
+        }
 
         int queryRoundNumber = isTournamentCompleted ? maxRoundNumber : nextTarget.getRoundNumber();
 
-        // 토너먼트 종료 시점에는 결승전을 포함한 전체 라운드 표(사유 데이터)를 취합하고, 진행 중일 때는 해당 라운드 데이터만 조회
+        // 토너먼트 종료 시점에는 결승전 및 이전 라운드 사유 데이터를 전체 취합하고, 진행 중일 때는 해당 라운드만 조회
         List<MatchVoteCandidateEntity> sourceList;
         if (isTournamentCompleted) {
             sourceList = matchVoteCandidateRepository.findAllByMatchId(matchId);
         } else {
             sourceList = matchVoteCandidateRepository.findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, queryRoundNumber);
+        }
+
+        if (sourceList == null) {
+            sourceList = List.of();
         }
 
         List<MatchStartResponse.ReasonResponse> reasons = sourceList.stream()

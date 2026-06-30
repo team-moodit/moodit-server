@@ -22,6 +22,7 @@ public class MatchUpWinnerResultManager {
     private final MatchPreferenceResultRepository preferenceResultRepository;
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
+    private final MatchChoiceRepository matchChoiceRepository; // 🚀 [수정] 실제 투표지 조회를 위해 주입 변경
     private final MatchResultAnalyzer analyzer;
 
     @Transactional
@@ -33,9 +34,11 @@ public class MatchUpWinnerResultManager {
     }
 
     private MatchResult createMatchResult(Long matchId, Long userId) {
-        // 2. 투표 원천 데이터 로드
-        List<MatchVoteCandidateEntity> votedCandidates = matchUpRepository.findVotedLabelsByMatchId(matchId);
-        if (votedCandidates.isEmpty()) throw new ApiException(ErrorType.INVALID_REQUEST);
+        // 2. [버그 해결 핵심] 마스터 후보군 대신 유저가 진짜 던진 투표 내역(7개)만 쏙 골라서 로드
+        List<MatchVoteCandidateEntity> votedCandidates = matchChoiceRepository.findActualVotedCandidatesByMatchId(matchId);
+        if (votedCandidates == null || votedCandidates.isEmpty()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
 
         MatchEntity match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.INVALID_MATCH_NOT_FOUND));
@@ -48,7 +51,7 @@ public class MatchUpWinnerResultManager {
                 .map(MatchUpEntity::getWinnerId)
                 .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST));
 
-        // 4. 선호도 분석 엔진 호출
+        // 4. 선호도 분석 엔진 호출 (이제 유저의 실데이터가 공급되어 TIE가 풀립니다)
         MatchPreferenceAnalysis analysis = analyzer.analyze(votedCandidates);
 
         int totalMatchCount = match.getInitialImageCount() - 1;
@@ -62,15 +65,15 @@ public class MatchUpWinnerResultManager {
                 totalMatchCount,
                 LocalDateTime.now(),
                 analysis.getResultType(),
-                safeToPreferenceType(analysis.getMainPref()),        // valueOf() → 안전 변환
-                safeToPreferenceDetailType(analysis.getDetailPref()) // valueOf() → 안전 변환
+                safeToPreferenceType(analysis.getMainPref()),
+                safeToPreferenceDetailType(analysis.getDetailPref())
         ));
 
-        // 6. 랭킹 엔티티 리스트 한 번에 저장 (saveAll 최적화)
+        // 6. 랭킹 엔티티 리스트 한 번에 저장
         List<MatchPreferenceResultEntity> preferenceEntities = analysis.getRanks().stream()
                 .map(rank -> new MatchPreferenceResultEntity(
                         resultEntity.getId(),
-                        safeToPreferenceType(rank.getLabel()),        // valueOf() → 안전 변환
+                        safeToPreferenceType(rank.getLabel()),
                         rank.getRank(),
                         rank.getCount()
                 ))
@@ -99,8 +102,6 @@ public class MatchUpWinnerResultManager {
                 )
         );
     }
-
-    //  안전 변환 헬퍼
 
     private PreferenceType safeToPreferenceType(String value) {
         if (value == null) return null;
