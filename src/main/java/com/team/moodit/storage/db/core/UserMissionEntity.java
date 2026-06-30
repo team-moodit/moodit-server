@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 )
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserMissionEntity extends BaseNoStatusEntity {
+public class UserMissionEntity extends BaseEntity {
     private Long userId;
     private Long matchId;
     private Long missionOfferId;

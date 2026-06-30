@@ -12,6 +12,7 @@ import com.team.moodit.support.response.ApiResponse;
 import com.team.moodit.support.response.DefaultIdResponse;
 import com.team.moodit.support.response.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,6 +50,16 @@ public class UserMissionController {
         return ApiResponse.success(userMissionAssembler.getUserMission(apiUser, userMissionId));
     }
 
+    @DeleteMapping("/v1/user-missions/{userMissionId}")
+    public ApiResponse<?> deleteUserMission(
+            ApiUser apiUser,
+            @PathVariable Long userMissionId
+    ) {
+        userMissionService.deleteUserMission(apiUser, userMissionId);
+        return ApiResponse.success();
+    }
+
+    // TODO: 성공 후 최신 데이터까지 반환
     @PostMapping("/v1/user-missions/{userMissionId}/complete")
     public ApiResponse<DefaultIdResponse> completeUserMission(
             ApiUser apiUser,
