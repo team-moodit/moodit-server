@@ -59,7 +59,6 @@ public class UserMissionController {
         return ApiResponse.success();
     }
 
-    // TODO: 성공 후 최신 데이터까지 반환
     @PostMapping("/v1/user-missions/{userMissionId}/complete")
     public ApiResponse<UserMissionResponse> completeUserMission(
             ApiUser apiUser,
