@@ -29,12 +29,6 @@ public class MatchRemover {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        // 연쇄 삭제 흐름 수행
-        matchResultRepository.findByUserIdAndMatchId(userId, matchId).ifPresent(result -> {
-            preferenceResultRepository.deleteByMatchResultId(result.getId());
-        });
-        matchResultRepository.deleteByMatchId(matchId);
-
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
         if (matchUps != null && !matchUps.isEmpty()) {
             for (MatchUpEntity mu : matchUps) {
