@@ -6,6 +6,7 @@ import com.team.moodit.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Component
@@ -24,8 +25,12 @@ public class MatchRemover {
         MatchEntity match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
-        // 도메인 권한 검증
         if (!match.getUserId().equals(userId)) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        boolean isCompleted = matchResultRepository.existsByUserIdAndMatchId(userId, matchId);
+        if (isCompleted) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
@@ -38,7 +43,6 @@ public class MatchRemover {
 
         matchVoteCandidateRepository.deleteByMatchId(matchId);
         matchUpRepository.deleteByMatchId(matchId);
-
         matchRepository.delete(match);
     }
 }
