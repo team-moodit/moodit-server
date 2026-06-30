@@ -1,9 +1,11 @@
 package com.team.moodit.api.controller.v1.response;
 
+import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.userMission.UserMission;
 import com.team.moodit.support.file.File;
+import com.team.moodit.support.hangul.HangulResolver;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ public record UserMissionResponse(
         String matchTitle,
         String matchRepresentativeImageUrl, // 매치 대표 이미지
         String matchPreferenceType,
+        String matchPreferenceTypeParticle,
         int matchRoundCount,
         LocalDateTime matchCompletedAt,
         Double satisfactionScore
@@ -43,6 +46,8 @@ public record UserMissionResponse(
             File matchRepresentativeImageFile,
             Double satisfactionScore
     ) {
+        PreferenceType preferenceType = matchResult.getPreferenceResult().getPreferenceType();
+
         return new UserMissionResponse(
                 missions.getId(),
                 missions.getTitle(),
@@ -50,9 +55,8 @@ public record UserMissionResponse(
                 missions.getCompletedAt(),
                 matchResult.getTitle(),
                 matchRepresentativeImageFile.getUrl(),
-                matchResult.getPreferenceResult().getPreferenceType() != null
-                        ? matchResult.getPreferenceResult().getPreferenceType().getTitle()
-                        : null,
+                preferenceType != null ? preferenceType.getTitle() : null,
+                preferenceType != null ? HangulResolver.resolveParticle(preferenceType.getTitle()) : null,
                 matchResult.getRoundCount(),
                 matchResult.getCompletedAt(),
                 satisfactionScore
