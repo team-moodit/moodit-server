@@ -1,6 +1,9 @@
 package com.team.moodit.domain.enums;
 
 import java.util.Set;
+
+import com.team.moodit.support.error.ApiException;
+import com.team.moodit.support.error.ErrorType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +32,21 @@ public enum PreferenceType {
     private final String title;
     private final Set<PreferenceDetailType> detailTypes;
 
-    public boolean support(PreferenceDetailType preferenceDetailType) {
-        return detailTypes.contains(preferenceDetailType);
+    public static PreferenceType from(String value) {
+        if (value == null || value.isBlank()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        for (PreferenceType type : PreferenceType.values()) {
+            // 1. DB에 저장된 영문 이름(FITNESS, TREND 등)과 매칭 (대소문자 무시)
+            if (type.name().equalsIgnoreCase(value.trim())) {
+                return type;
+            }
+            // 2. 한글 타이틀("나와의 적합도", "지속성" 등)과 매칭
+            if (type.getTitle().equals(value.trim())) {
+                return type;
+            }
+        }
+        throw new ApiException(ErrorType.INVALID_REQUEST);
     }
 }

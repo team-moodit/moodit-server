@@ -5,6 +5,9 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_batch_fetch_size: 100
+      hibernate.jdbc.batch_size: 100
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
 
 ---
 spring.config.activate.on-profile: local
@@ -23,7 +26,7 @@ storage:
   datasource:
     core:
       driver-class-name: org.postgresql.Driver
-      jdbc-url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      jdbc-url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?reWriteBatchedInserts=true
       username: ${DATABASE_USERNAME}
       password: ${DATABASE_PASSWORD}
       minimum-idle: 0
@@ -36,7 +39,7 @@ storage:
   datasource:
     core:
       driver-class-name: org.postgresql.Driver
-      jdbc-url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
+      jdbc-url: jdbc:postgresql://${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}?reWriteBatchedInserts=true
       username: ${DATABASE_USERNAME}
       password: ${DATABASE_PASSWORD}
       minimum-idle: 0

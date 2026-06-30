@@ -1,6 +1,7 @@
 package com.team.moodit.domain.match;
 
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.support.error.ApiException;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -19,11 +21,9 @@ public class MatchVoteManager {
     private final MatchUpRepository matchUpRepository;
     private final MatchUpCreator matchUpCreator;
 
-    /**
-     * 투표 처리 (개별 경기는 엔티티의 @Version 낙관적 락으로 동시성 제어)
-     */
     @Transactional
-    public VoteSaveResponse processVote(Long matchId,Long userId, VoteCommand command) {
+    public VoteSaveResponse processVote(Long matchId, Long userId, VoteCommand command) {
+        // 1. 현재 투표 중인 경기 조회 (낙관적 락 자동 적용)
         MatchUpEntity currentMatchUp = matchUpRepository.findById(command.getMatchUpId())
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
@@ -31,82 +31,79 @@ public class MatchVoteManager {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
+        // 2. 투표 데이터 기록 및 승자 업데이트
         currentMatchUp.validateCandidate(command.getPhotoId());
         currentMatchUp.updateWinner(command.getPhotoId());
 
-        matchChoiceCreator.createChoice(
-                currentMatchUp.getId(),
-                command.getPhotoId(),
-                command.getReasonId()
-        );
+        matchChoiceCreator.createChoice(currentMatchUp.getId(), command.getPhotoId(), command.getReasonId());
 
-        // 현재 경기에 대한 낙관적 락 버전을 즉시 올리고 플러시
+        // 3. 락 버전 갱신 및 플러시
         matchUpRepository.saveAndFlush(currentMatchUp);
 
-        // 라운드 전환 로직 수행 (비관적 락으로 줄 세우기 진입)
+        // 4. 라운드 전환 검사 및 다음 경기 반환
         return handleRoundTransition(matchId, currentMatchUp.getRoundNumber());
     }
 
     /**
-     * 라운드 전환 및 다음 경기 계산 (비관적 쓰기 락을 통한 대진표 중복 생성 방지)
+     * 라운드 전환 로직: 대진표 생성 및 다음 매치 ID 계산
      */
+    @Transactional
     public VoteSaveResponse handleRoundTransition(Long matchId, int currentRound) {
+        // 전체 매치업을 최신 상태로 가져와서 계산
+        List<MatchUpEntity> allMatchUps = matchUpRepository.findByMatchId(matchId);
 
-        List<MatchUpEntity> freshMatchUps = matchUpRepository.findByMatchId(matchId);
-
-        List<MatchUpEntity> actualMatchesInRound = freshMatchUps.stream()
+        // 현재 라운드 진행 상황 파악
+        List<MatchUpEntity> roundMatches = allMatchUps.stream()
                 .filter(m -> m.getRoundNumber() == currentRound)
-                .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
                 .toList();
 
-        if (actualMatchesInRound.isEmpty()) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
-
-        int currentRoundOrder = (int) actualMatchesInRound.stream()
-                .filter(MatchUpEntity::isVoted)
-                .count();
-
-        boolean isRoundCompleted = actualMatchesInRound.stream()
-                .allMatch(MatchUpEntity::isVoted);
+        int currentRoundOrder = (int) roundMatches.stream().filter(MatchUpEntity::isVoted).count();
+        boolean isRoundCompleted = roundMatches.stream().allMatch(MatchUpEntity::isVoted);
 
         Long nextMatchId = null;
         boolean isTournamentFinished = false;
 
         if (isRoundCompleted) {
-            //  Double-Checked Locking: 다른 쓰레드가 찰나의 차이로 이미 다음 라운드를 생성했는지 락 내부에서 재검증
-            boolean isNextRoundAlreadyCreated = freshMatchUps.stream()
-                    .anyMatch(m -> m.getRoundNumber() == currentRound + 1);
+            // [Double-Checked Locking] 이미 다음 라운드가 생성되었는지 재확인
+            boolean isNextRoundExists = allMatchUps.stream().anyMatch(m -> m.getRoundNumber() == currentRound + 1);
 
-            if (isNextRoundAlreadyCreated) {
-                // 이미 생성되어 있다면 새로 만들지 않고, 해당 라운드의 첫 번째 경기 ID를 반환
-                nextMatchId = freshMatchUps.stream()
-                        .filter(m -> m.getRoundNumber() == currentRound + 1)
-                        .findFirst()
-                        .map(MatchUpEntity::getId)
-                        .orElse(null);
+            if (isNextRoundExists) {
+                nextMatchId = findNextNeedVoteMatchId(allMatchUps);
             } else {
-                List<Long> winnersImageIds = freshMatchUps.stream()
-                        .filter(m -> m.getRoundNumber() == currentRound)
+                List<Long> winners = roundMatches.stream()
                         .map(MatchUpEntity::getWinnerId)
                         .filter(id -> id != null && id != 0L)
                         .toList();
 
-                if (winnersImageIds.size() == 1) {
+                if (winners.size() == 1) {
                     isTournamentFinished = true;
                 } else {
-                    List<MatchUpEntity> nextRoundMatches = matchUpCreator.createNextRoundMatches(matchId, currentRound, winnersImageIds);
+                    // 다음 라운드 대진표 생성
+                    List<MatchUpEntity> nextRoundMatches = matchUpCreator.createNextRoundMatches(matchId, currentRound, winners);
                     nextMatchId = matchUpRepository.saveAll(nextRoundMatches).get(0).getId();
                 }
             }
         } else {
-            nextMatchId = actualMatchesInRound.stream()
-                    .filter(m -> !m.isVoted())
-                    .findFirst()
+            // 같은 라운드 내 다음 경기
+            nextMatchId = roundMatches.stream()
+                    .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
+                    .min(Comparator.comparing(MatchUpEntity::getId))
                     .map(MatchUpEntity::getId)
                     .orElse(null);
         }
 
         return new VoteSaveResponse(nextMatchId, currentRound, currentRoundOrder, isTournamentFinished);
+    }
+
+    /**
+     * 토너먼트 전체에서 투표가 필요한 가장 빠른 매치업 ID를 탐색 (라운드 전환 대응)
+     */
+    private Long findNextNeedVoteMatchId(List<MatchUpEntity> allMatchUps) {
+        return allMatchUps.stream()
+                .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
+                .min(Comparator.comparing(MatchUpEntity::getRoundNumber)
+                        .thenComparing(MatchUpEntity::getId))
+                .map(MatchUpEntity::getId)
+                .orElse(null);
     }
 }
