@@ -34,7 +34,7 @@ public class MatchUpWinnerResultManager {
     }
 
     private MatchResult createMatchResult(Long matchId, Long userId) {
-        // 2. [버그 해결 핵심] 마스터 후보군 대신 유저가 진짜 던진 투표 내역(7개)만 쏙 골라서 로드
+
         List<MatchVoteCandidateEntity> votedCandidates = matchChoiceRepository.findActualVotedCandidatesByMatchId(matchId);
         if (votedCandidates == null || votedCandidates.isEmpty()) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
