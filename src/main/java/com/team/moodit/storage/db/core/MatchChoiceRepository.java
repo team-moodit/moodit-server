@@ -14,4 +14,6 @@ public interface MatchChoiceRepository extends JpaRepository<MatchChoiceEntity,L
             "JOIN MatchVoteCandidateEntity mvc ON mc.reasonId = mvc.id " +
             "WHERE mu.matchId = :matchId")
     List<MatchVoteCandidateEntity> findActualVotedCandidatesByMatchId(@Param("matchId") Long matchId);
+
+    void deleteByMatchUpId(Long id);
 }

@@ -73,7 +73,7 @@ public class MatchController {
             ApiUser apiUser,
             @PathVariable Long matchId
     ) {
-        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(apiUser.getId(),matchId);
+        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(apiUser.getId(), matchId);
         return ApiResponse.success(response);
     }
 
@@ -88,6 +88,15 @@ public class MatchController {
         // 2. 방금 DTO에 새로 추가한 생성자(MatchResult를 인자로 받는) 덕분에 바로 꽂아 넣을 수 있습니다!
         return ApiResponse.success(new MatchUpWinnerResponse(winnerDomain));
 
+    }
+
+    @DeleteMapping("/v1/matches/{matchId}")
+    public ApiResponse<String> deleteMatchUp(
+            ApiUser apiUser,
+            @PathVariable Long matchId
+    ) {
+        matchService.deleteMatch(apiUser.getId(), matchId);
+        return ApiResponse.success("매치 " + matchId + "번과 관련된 모든 데이터가 클린하게 삭제되었습니다.");
     }
 
 }
