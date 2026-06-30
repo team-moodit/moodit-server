@@ -22,7 +22,7 @@ public class MatchUpWinnerResultManager {
     private final MatchPreferenceResultRepository preferenceResultRepository;
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
-    private final MatchChoiceRepository matchChoiceRepository; // 🚀 [수정] 실제 투표지 조회를 위해 주입 변경
+    private final MatchChoiceRepository matchChoiceRepository; //
     private final MatchResultAnalyzer analyzer;
 
     @Transactional

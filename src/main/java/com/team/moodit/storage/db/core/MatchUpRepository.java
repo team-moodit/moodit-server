@@ -30,4 +30,6 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity, Long> {
 
     @Query("SELECT mc FROM MatchVoteCandidateEntity mc WHERE mc.matchId = :matchId")
     List<MatchVoteCandidateEntity> findVotedLabelsByMatchId(@Param("matchId") Long matchId);
+
+    void deleteByMatchId(Long matchId);
 }
