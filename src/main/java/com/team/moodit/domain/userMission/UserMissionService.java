@@ -21,6 +21,10 @@ public class UserMissionService {
         return userMissionReader.getUserMission(apiUser.getId(), userMissionId);
     }
 
+    public Long deleteUserMission(ApiUser apiUser, Long userMissionId) {
+        return userMissionManager.remove(apiUser.getId(), userMissionId);
+    }
+
     public Long completeUserMission(ApiUser apiUser, Long userMissionId) {
         return userMissionManager.complete(apiUser.getId(), userMissionId);
     }

@@ -101,7 +101,7 @@ class MissionOfferServiceTest {
         assertThat(savedOffer.getAcceptedCandidateId()).isEqualTo(offer.getCandidates().getFirst().getId());
         assertThat(savedOffer.getAcceptedAt()).isNotNull();
 
-        // user mission should have single entryㅁ
+        // user mission should have single entry
         assertThat(userMissionRepository.findAll()).singleElement()
                 .satisfies(userMission -> {
                     assertThat(userMission.getId()).isEqualTo(offerResult.getAssignedMissionId());

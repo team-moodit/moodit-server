@@ -1,6 +1,7 @@
 package com.team.moodit.domain.userMission;
 
 import com.team.moodit.api.controller.v1.UserMissionListType;
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.storage.db.core.UserMissionEntity;
 import com.team.moodit.storage.db.core.UserMissionRepository;
@@ -18,14 +19,16 @@ public class UserMissionReader {
 
     public Page<UserMission> getUserMissions(Long userId, UserMissionListType type, OffsetLimit offsetLimit) {
         org.springframework.data.domain.Page<UserMissionEntity> missions = switch (type) {
-            case IN_PROGRESS -> userMissionRepository.findByUserIdAndStateOrderByIdDesc(
+            case IN_PROGRESS -> userMissionRepository.findByUserIdAndStateAndStatusOrderByIdDesc(
                     userId,
                     UserMissionState.IN_PROGRESS,
+                    EntityStatus.ACTIVE,
                     offsetLimit.toPageable()
             );
-            case COMPLETED -> userMissionRepository.findByUserIdAndStateOrderByIdDesc(
+            case COMPLETED -> userMissionRepository.findByUserIdAndStateAndStatusOrderByIdDesc(
                     userId,
                     UserMissionState.COMPLETED,
+                    EntityStatus.ACTIVE,
                     offsetLimit.toPageable()
             );
             case FEEDBACK_SUBMITTED -> userMissionRepository.findCompletedWithFeedback(
@@ -50,7 +53,7 @@ public class UserMissionReader {
     }
 
     public UserMission getUserMission(Long userId, Long userMissionId) {
-        UserMissionEntity entity = userMissionRepository.findByIdAndUserId(userMissionId, userId)
+        UserMissionEntity entity = userMissionRepository.findByIdAndUserIdAndStatus(userMissionId, userId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         return new UserMission(

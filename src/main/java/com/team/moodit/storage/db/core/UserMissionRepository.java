@@ -1,5 +1,6 @@
 package com.team.moodit.storage.db.core;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.UserMissionState;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -9,16 +10,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface UserMissionRepository extends JpaRepository<UserMissionEntity, Long> {
-    Optional<UserMissionEntity> findByIdAndUserId(Long id, Long userId);
-    Optional<UserMissionEntity> findByIdAndUserIdAndState(Long id, Long userId, UserMissionState state);
-    Page<UserMissionEntity> findByUserIdAndStateOrderByIdDesc(Long userId, UserMissionState state, Pageable pageable);
-    Optional<UserMissionEntity> findByMissionOfferId(Long missionOfferId);
+    Optional<UserMissionEntity> findByIdAndUserIdAndStatus(Long id, Long userId, EntityStatus status);
+    Optional<UserMissionEntity> findByIdAndUserIdAndStateAndStatus(Long id, Long userId, UserMissionState state, EntityStatus status);
+    Page<UserMissionEntity> findByUserIdAndStateAndStatusOrderByIdDesc(Long userId, UserMissionState state, EntityStatus status, Pageable pageable);
+    Optional<UserMissionEntity> findByMissionOfferIdAndStatus(Long missionOfferId, EntityStatus status);
 
     @Query("""
         select userMission
         from UserMissionEntity userMission
         where userMission.userId = :userId
           and userMission.state = UserMissionState.COMPLETED
+          and userMission.status = EntityStatus.ACTIVE
           and exists (
               select 1
               from FeedbackEntity feedback

@@ -1,5 +1,6 @@
 package com.team.moodit.domain.missionOffer;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.PreferenceResultType;
 import com.team.moodit.storage.db.core.MissionOfferCandidateEntity;
 import com.team.moodit.storage.db.core.MissionOfferCandidateRepository;
@@ -31,7 +32,7 @@ public class MissionOfferReader {
                     MissionOffer offer = toMissionOffer(offerEntity);
 
                     Long assignedMissionId = userMissionRepository
-                            .findByMissionOfferId(offer.getId())
+                            .findByMissionOfferIdAndStatus(offer.getId(), EntityStatus.ACTIVE)
                             .map(UserMissionEntity::getId)
                             .orElse(null);
 
