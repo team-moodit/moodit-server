@@ -73,7 +73,7 @@ public class MatchController {
             ApiUser apiUser,
             @PathVariable Long matchId
     ) {
-        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(apiUser.getId(), matchId);
+        MatchUpFlowResponse response = matchUpFinder.findNextMatchUp(matchId, apiUser.getId());
         return ApiResponse.success(response);
     }
 
