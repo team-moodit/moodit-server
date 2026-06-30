@@ -52,4 +52,5 @@ public class MatchVoteCandidateEntity extends BaseIdEntity {
         this.preferenceDetail = preferenceDetail;
         this.createdAt = LocalDateTime.now();
     }
+
 }
