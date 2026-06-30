@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,13 +40,18 @@ public class MatchUpReader {
 
         Optional<MatchUpEntity> currentMatchUpOpt = matchUps.stream()
                 .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
-                .findFirst();
+                .min(Comparator.comparing(MatchUpEntity::getRoundNumber)
+                        .thenComparing(MatchUpEntity::getId));
 
         if (currentMatchUpOpt.isEmpty()) {
             return MatchUpStart.createCompleted(match.getTitle());
         }
 
         MatchUpEntity matchUp = currentMatchUpOpt.get();
+
+        if (matchUp.getCandidateBId() == null || matchUp.getCandidateBId() == 0L) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
 
         File fileA = fileReader.getFile(matchUp.getCandidateAId());
         File fileB = fileReader.getFile(matchUp.getCandidateBId());
@@ -54,24 +60,27 @@ public class MatchUpReader {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        long totalCompletedCount = matchUps.stream()
+        List<MatchUpEntity> actualMatches = matchUps.stream()
                 .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
+                .toList();
+
+        long completedMatchCount = actualMatches.stream()
                 .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted())
                 .count();
 
-        int globalMatchIndex = (int) totalCompletedCount + 1;
+        int reasonRoundNumber = (int) completedMatchCount + 1;
 
         List<MatchVoteCandidateEntity> sampledVotes = matchVoteCandidateRepository
-                .findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, globalMatchIndex);
+                .findByMatchIdAndRoundNumberOrderByDisplayOrderAsc(matchId, reasonRoundNumber);
+
         if (sampledVotes == null) {
             sampledVotes = List.of();
         }
 
         int targetRoundNumber = matchUp.getRoundNumber();
 
-        List<MatchUpEntity> actualMatchesInRound = matchUps.stream()
+        List<MatchUpEntity> actualMatchesInRound = actualMatches.stream()
                 .filter(m -> m.getRoundNumber() == targetRoundNumber)
-                .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
                 .toList();
 
         int totalMatchUpInRound = actualMatchesInRound.size();
@@ -79,14 +88,14 @@ public class MatchUpReader {
         long completedCountInRound = actualMatchesInRound.stream()
                 .filter(m -> m.getState() == MatchUpState.COMPLETED || m.isVoted())
                 .count();
+
         int displayMatchIndex = (int) completedCountInRound + 1;
 
-
         int totalImages = match.getInitialImageCount();
-        boolean isPerfectBracket = (totalImages == 4 || totalImages == 8 || totalImages == 16 || totalImages == 32);
+        boolean isPerfectBracket =
+                totalImages == 4 || totalImages == 8 || totalImages == 16 || totalImages == 32;
 
         String roundName;
-
 
         if (targetRoundNumber == 1 && !isPerfectBracket) {
             roundName = "예선전";

@@ -26,6 +26,9 @@ public class MatchVoteCandidateEntity extends BaseIdEntity {
     private Long matchId;
 
     @Column(nullable = false)
+    private Integer displayOrder;
+
+    @Column(nullable = false)
     private Integer roundNumber;
 
     @Column(nullable = false)
@@ -43,14 +46,22 @@ public class MatchVoteCandidateEntity extends BaseIdEntity {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public MatchVoteCandidateEntity(Long matchId, Integer roundNumber, Long voteId, String content, String preference, String preferenceDetail) {
+    public MatchVoteCandidateEntity(
+            Long matchId,
+            Integer roundNumber,
+            Integer displayOrder,
+            Long voteId,
+            String content,
+            String preference,
+            String preferenceDetail
+    ) {
         this.matchId = matchId;
         this.roundNumber = roundNumber;
+        this.displayOrder = displayOrder;
         this.voteId = voteId;
         this.content = content;
         this.preference = preference;
         this.preferenceDetail = preferenceDetail;
-        this.createdAt = LocalDateTime.now();
     }
 
 }

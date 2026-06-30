@@ -13,18 +13,19 @@ import java.util.*;
 @RequiredArgsConstructor
 public class MatchUpCreator {
 
+    private static final String EMPTY_DETAIL = "";
+
     public MatchUpCreateResult createMatches(Long matchId, List<Long> imageIds, List<MatchVoteEntity> allTemplates) {
         validateInputs(imageIds, allTemplates);
 
         int totalImages = imageIds.size();
         int targetRound = calculateTargetRound(totalImages);
-        int firstRoundPlayersCount = (totalImages - targetRound) * 2;
+        int preliminaryMatchCount = totalImages - targetRound;
+        int preliminaryPlayerCount = preliminaryMatchCount * 2;
         int totalMatchRounds = totalImages - 1;
 
-        // [버그 수정 반영] 16강/32강 등 부전승 예외 판정이 해결된 대진표 생성
-        List<MatchUpEntity> matchUps = generateMatchUps(matchId, imageIds, firstRoundPlayersCount);
+        List<MatchUpEntity> matchUps = generateMatchUps(matchId, imageIds, preliminaryPlayerCount);
 
-        // 1. [O(N) 최적화] templatePool 초기화 및 단 1번의 루프로 그룹 매핑 완료
         Map<PreferenceType, Map<String, List<MatchVoteEntity>>> templatePool = new EnumMap<>(PreferenceType.class);
         for (PreferenceType type : PreferenceType.values()) {
             templatePool.put(type, new HashMap<>());
@@ -35,87 +36,81 @@ public class MatchUpCreator {
                 continue;
             }
 
-            // [최적화 캐싱 메서드 호출]
             PreferenceType type = PreferenceType.from(template.getPreference());
-            String detail = template.getPreferenceDetail() != null ? template.getPreferenceDetail() : "";
+            String detail = normalizeDetail(template.getPreferenceDetail());
 
             templatePool.get(type)
                     .computeIfAbsent(detail, k -> new ArrayList<>())
                     .add(template);
         }
 
-        // 각 상세 그룹 내 문장 셔플
         for (Map<String, List<MatchVoteEntity>> detailMap : templatePool.values()) {
             for (List<MatchVoteEntity> sentences : detailMap.values()) {
                 Collections.shuffle(sentences);
             }
         }
 
-        // 2. 전체 라운드 수에 맞춘 타입별 상세 선호 노출 스케줄 세우기
         Map<PreferenceType, List<String>> detailSchedule = new EnumMap<>(PreferenceType.class);
 
         for (PreferenceType type : PreferenceType.values()) {
-            Map<String, List<MatchVoteEntity>> detailMap = templatePool.getOrDefault(type, Collections.emptyMap());
+            Map<String, List<MatchVoteEntity>> detailMap =
+                    templatePool.getOrDefault(type, Collections.emptyMap());
+
             List<String> details = new ArrayList<>(detailMap.keySet());
-            List<String> scheduleList = new ArrayList<>(totalMatchRounds);
+            List<String> scheduleList = createDetailSchedule(details, totalMatchRounds);
 
-            if (!details.isEmpty()) {
-                int quotient = totalMatchRounds / details.size();
-                int remainder = totalMatchRounds % details.size();
-
-                Collections.shuffle(details);
-
-                for (int i = 0; i < quotient; i++) {
-                    scheduleList.addAll(details);
-                }
-
-                if (remainder > 0) {
-                    List<String> remainderDetails = new ArrayList<>(details);
-                    Collections.shuffle(remainderDetails);
-                    for (int i = 0; i < remainder; i++) {
-                        scheduleList.add(remainderDetails.get(i));
-                    }
-                }
-            } else {
-                for (int i = 0; i < totalMatchRounds; i++) {
-                    scheduleList.add("");
-                }
-            }
             detailSchedule.put(type, scheduleList);
         }
 
-        // 3. 수립된 스케줄에 맞춰 라운드별 투표 문장 매핑
-        List<MatchVoteCandidateEntity> voteCandidates = new ArrayList<>(totalMatchRounds * 4);
+        List<MatchVoteCandidateEntity> voteCandidates =
+                new ArrayList<>(totalMatchRounds * PreferenceType.values().length);
+
         Map<String, Integer> usageCounters = new HashMap<>();
+        List<String> previousPreferenceOrder = null;
 
         for (int round = 1; round <= totalMatchRounds; round++) {
             List<MatchVoteEntity> roundCandidates = new ArrayList<>();
 
             for (PreferenceType type : PreferenceType.values()) {
                 String targetDetail = detailSchedule.get(type).get(round - 1);
-                List<MatchVoteEntity> sentences = templatePool.get(type).get(targetDetail);
 
-                if (sentences == null || sentences.isEmpty()) {
-                    roundCandidates.add(allTemplates.get(round % allTemplates.size()));
-                    continue;
-                }
+                MatchVoteEntity candidate = pickCandidate(
+                        type,
+                        targetDetail,
+                        templatePool,
+                        usageCounters
+                );
 
-                String counterKey = type.name() + "_" + targetDetail;
-                int currentIdx = usageCounters.getOrDefault(counterKey, 0) % sentences.size();
-
-                roundCandidates.add(sentences.get(currentIdx));
-                usageCounters.put(counterKey, currentIdx + 1);
+                roundCandidates.add(candidate);
             }
 
-            Collections.shuffle(roundCandidates);
+            List<String> currentPreferenceOrder;
+
+            do {
+                Collections.shuffle(roundCandidates);
+                currentPreferenceOrder = roundCandidates.stream()
+                        .map(MatchVoteEntity::getPreference)
+                        .toList();
+            } while (previousPreferenceOrder != null
+                    && previousPreferenceOrder.equals(currentPreferenceOrder));
+
+            previousPreferenceOrder = currentPreferenceOrder;
+
+            int displayOrder = 1;
 
             for (MatchVoteEntity candidate : roundCandidates) {
                 voteCandidates.add(new MatchVoteCandidateEntity(
-                        matchId, round, candidate.getId(), candidate.getContent(),
-                        candidate.getPreference(), candidate.getPreferenceDetail() != null ? candidate.getPreferenceDetail() : ""
+                        matchId,
+                        round,
+                        displayOrder++,
+                        candidate.getId(),
+                        candidate.getContent(),
+                        candidate.getPreference(),
+                        normalizeDetail(candidate.getPreferenceDetail())
                 ));
             }
         }
+
         return new MatchUpCreateResult(matchUps, voteCandidates);
     }
 
@@ -132,29 +127,123 @@ public class MatchUpCreator {
                     new RealMatchUp(matchId, nextRoundNumber, winnerImageIds.get(i), winnerImageIds.get(i + 1))
             ));
         }
+
         return nextMatchUps;
     }
 
-    // 🚨 [진짜 해결사 구간] 2의 거듭제곱(16, 32) 분기 조건 전면 수정
-    private List<MatchUpEntity> generateMatchUps(Long matchId, List<Long> imageIds, int firstRoundPlayersCount) {
-        List<Long> shuffledIds = new ArrayList<>(imageIds);
-        Collections.shuffle(shuffledIds);
-        List<MatchUpEntity> matchUps = new ArrayList<>(imageIds.size());
+    private List<String> createDetailSchedule(List<String> details, int totalMatchRounds) {
+        List<String> schedule = new ArrayList<>(totalMatchRounds);
 
-        // 16강, 32강처럼 부전승 선수가 아예 필요 없는 상태일 때
-        if (firstRoundPlayersCount == 0) {
-            for (int i = 0; i < shuffledIds.size(); i += 2) {
-                matchUps.add(MatchUpEntity.of(new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))));
+        if (details.isEmpty()) {
+            for (int i = 0; i < totalMatchRounds; i++) {
+                schedule.add(EMPTY_DETAIL);
             }
-        } else {
-            // 24강 등 부전승이 필요한 대진 구조일 때 (기존 기획 유지)
-            for (int i = 0; i < firstRoundPlayersCount; i += 2) {
-                matchUps.add(MatchUpEntity.of(new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))));
+            return schedule;
+        }
+
+        if (details.size() == 1) {
+            for (int i = 0; i < totalMatchRounds; i++) {
+                schedule.add(details.get(0));
             }
-            for (int i = firstRoundPlayersCount; i < shuffledIds.size(); i++) {
-                matchUps.add(MatchUpEntity.of(new AutoPassMatch(matchId, 1, shuffledIds.get(i))));
+            return schedule;
+        }
+
+        List<String> shuffledDetails = new ArrayList<>(details);
+        Collections.shuffle(shuffledDetails);
+
+        int index = 0;
+        String lastDetail = null;
+
+        while (schedule.size() < totalMatchRounds) {
+            String currentDetail = shuffledDetails.get(index % shuffledDetails.size());
+
+            if (lastDetail != null && lastDetail.equals(currentDetail)) {
+                Collections.shuffle(shuffledDetails);
+                index = 0;
+                continue;
+            }
+
+            schedule.add(currentDetail);
+            lastDetail = currentDetail;
+            index++;
+
+            if (index % shuffledDetails.size() == 0) {
+                Collections.shuffle(shuffledDetails);
             }
         }
+
+        return schedule;
+    }
+
+    private MatchVoteEntity pickCandidate(
+            PreferenceType type,
+            String targetDetail,
+            Map<PreferenceType, Map<String, List<MatchVoteEntity>>> templatePool,
+            Map<String, Integer> usageCounters
+    ) {
+        Map<String, List<MatchVoteEntity>> detailMap = templatePool.get(type);
+
+        if (detailMap == null || detailMap.isEmpty()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        List<MatchVoteEntity> sentences = detailMap.get(targetDetail);
+
+        if (sentences == null || sentences.isEmpty()) {
+            sentences = new ArrayList<>();
+
+            for (List<MatchVoteEntity> list : detailMap.values()) {
+                sentences.addAll(list);
+            }
+
+            Collections.shuffle(sentences);
+        }
+
+        if (sentences.isEmpty()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        String counterKey = type.name() + "_" + targetDetail;
+        int currentIdx = usageCounters.getOrDefault(counterKey, 0);
+
+        if (currentIdx >= sentences.size()) {
+            Collections.shuffle(sentences);
+            currentIdx = 0;
+        }
+
+        MatchVoteEntity selected = sentences.get(currentIdx);
+        usageCounters.put(counterKey, currentIdx + 1);
+
+        return selected;
+    }
+
+    private List<MatchUpEntity> generateMatchUps(Long matchId, List<Long> imageIds, int preliminaryPlayerCount) {
+        List<Long> shuffledIds = new ArrayList<>(imageIds);
+        Collections.shuffle(shuffledIds);
+
+        List<MatchUpEntity> matchUps = new ArrayList<>(imageIds.size());
+
+        if (preliminaryPlayerCount == 0) {
+            for (int i = 0; i < shuffledIds.size(); i += 2) {
+                matchUps.add(MatchUpEntity.of(
+                        new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))
+                ));
+            }
+            return matchUps;
+        }
+
+        for (int i = 0; i < preliminaryPlayerCount; i += 2) {
+            matchUps.add(MatchUpEntity.of(
+                    new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))
+            ));
+        }
+
+        for (int i = preliminaryPlayerCount; i < shuffledIds.size(); i++) {
+            matchUps.add(MatchUpEntity.of(
+                    new AutoPassMatch(matchId, 1, shuffledIds.get(i))
+            ));
+        }
+
         return matchUps;
     }
 
@@ -162,6 +251,7 @@ public class MatchUpCreator {
         if (imageIds == null || imageIds.size() < 4 || imageIds.size() > 32) {
             throw new ApiException(ErrorType.INVALID_IMAGE_COUNT);
         }
+
         if (allTemplates == null || allTemplates.isEmpty()) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
@@ -170,5 +260,9 @@ public class MatchUpCreator {
     private int calculateTargetRound(int n) {
         boolean isPowerOfTwo = (n > 0) && ((n & (n - 1)) == 0);
         return isPowerOfTwo ? n : Integer.highestOneBit(n - 1);
+    }
+
+    private String normalizeDetail(String detail) {
+        return detail != null ? detail : EMPTY_DETAIL;
     }
 }

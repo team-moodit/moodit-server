@@ -56,6 +56,8 @@ public class MatchController {
         return ApiResponse.success(MatchStartResponse.of(domainMatch));
     }
 
+
+
     @PostMapping("/v1/matches/{matchId}/votes")
     public ApiResponse<VoteSaveResponse> saveVote(
             ApiUser apiUser, // 필요 시 사용자 검증 및 히스토리 추적용으로 바인딩 허용
