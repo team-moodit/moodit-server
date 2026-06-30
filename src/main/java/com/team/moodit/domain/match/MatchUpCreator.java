@@ -21,6 +21,7 @@ public class MatchUpCreator {
         int firstRoundPlayersCount = (totalImages - targetRound) * 2;
         int totalMatchRounds = totalImages - 1;
 
+        // [버그 수정 반영] 16강/32강 등 부전승 예외 판정이 해결된 대진표 생성
         List<MatchUpEntity> matchUps = generateMatchUps(matchId, imageIds, firstRoundPlayersCount);
 
         // 1. [O(N) 최적화] templatePool 초기화 및 단 1번의 루프로 그룹 매핑 완료
@@ -29,12 +30,12 @@ public class MatchUpCreator {
             templatePool.put(type, new HashMap<>());
         }
 
-        // 스트림 중복 순회 및 내부 from() 연속 호출 문제를 단일 루프로 해결
         for (MatchVoteEntity template : allTemplates) {
             if (template.getPreference() == null) {
                 continue;
             }
 
+            // [최적화 캐싱 메서드 호출]
             PreferenceType type = PreferenceType.from(template.getPreference());
             String detail = template.getPreferenceDetail() != null ? template.getPreferenceDetail() : "";
 
@@ -134,16 +135,25 @@ public class MatchUpCreator {
         return nextMatchUps;
     }
 
+    // 🚨 [진짜 해결사 구간] 2의 거듭제곱(16, 32) 분기 조건 전면 수정
     private List<MatchUpEntity> generateMatchUps(Long matchId, List<Long> imageIds, int firstRoundPlayersCount) {
         List<Long> shuffledIds = new ArrayList<>(imageIds);
         Collections.shuffle(shuffledIds);
-
         List<MatchUpEntity> matchUps = new ArrayList<>(imageIds.size());
-        for (int i = 0; i < firstRoundPlayersCount; i += 2) {
-            matchUps.add(MatchUpEntity.of(new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))));
-        }
-        for (int i = firstRoundPlayersCount; i < imageIds.size(); i++) {
-            matchUps.add(MatchUpEntity.of(new AutoPassMatch(matchId, 1, shuffledIds.get(i))));
+
+        // 16강, 32강처럼 부전승 선수가 아예 필요 없는 상태일 때
+        if (firstRoundPlayersCount == 0) {
+            for (int i = 0; i < shuffledIds.size(); i += 2) {
+                matchUps.add(MatchUpEntity.of(new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))));
+            }
+        } else {
+            // 24강 등 부전승이 필요한 대진 구조일 때 (기존 기획 유지)
+            for (int i = 0; i < firstRoundPlayersCount; i += 2) {
+                matchUps.add(MatchUpEntity.of(new RealMatchUp(matchId, 1, shuffledIds.get(i), shuffledIds.get(i + 1))));
+            }
+            for (int i = firstRoundPlayersCount; i < shuffledIds.size(); i++) {
+                matchUps.add(MatchUpEntity.of(new AutoPassMatch(matchId, 1, shuffledIds.get(i))));
+            }
         }
         return matchUps;
     }
