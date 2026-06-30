@@ -6,9 +6,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SocialProfile {
-    private SocialProviderType provider;
+public class SocialUserPrivacy {
+    private SocialProviderType providerType;
     private String providerUserId;
     private String providerUserEmail;
-    private String providerUserName;
 }

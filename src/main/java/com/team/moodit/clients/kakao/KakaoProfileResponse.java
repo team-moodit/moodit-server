@@ -13,8 +13,7 @@ public record KakaoProfileResponse(
     }
 
     public record KakaoAccount(
-            String email,
-            String name
+            String email
     ) {
     }
 }

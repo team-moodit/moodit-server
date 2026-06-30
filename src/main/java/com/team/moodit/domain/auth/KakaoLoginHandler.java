@@ -11,14 +11,13 @@ import org.springframework.stereotype.Component;
 public class KakaoLoginHandler {
     private final KakaoApiClient kakaoApiClient;
 
-    public SocialProfile getProfile(String kakaoAccessToken) {
+    public SocialUserPrivacy getProfile(String kakaoAccessToken) {
         KakaoClientProfileResult kakaoProfile = kakaoApiClient.getProfile(kakaoAccessToken);
 
-        return new SocialProfile(
+        return new SocialUserPrivacy(
                 SocialProviderType.KAKAO,
                 kakaoProfile.id(),
-                kakaoProfile.email(),
-                kakaoProfile.name()
+                kakaoProfile.email()
         );
     }
 }

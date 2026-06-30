@@ -5,5 +5,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserAuthIdentityRepository extends JpaRepository<UserAuthIdentityEntity, Long> {
-    Optional<UserAuthIdentityEntity> findByProviderTypeAndProviderUserId(SocialProviderType provider, String providerUserId);
+    Boolean existsByProviderTypeAndProviderUserId(SocialProviderType providerType, String providerUserId);
+
+    Optional<UserAuthIdentityEntity> findByProviderTypeAndProviderUserId(SocialProviderType providerType, String providerUserId);
 }

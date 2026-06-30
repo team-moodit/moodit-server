@@ -1,6 +1,6 @@
 package com.team.moodit.domain.user;
 
-import com.team.moodit.domain.auth.SocialProfile;
+import com.team.moodit.domain.auth.SocialUserPrivacy;
 import com.team.moodit.domain.enums.UserRole;
 import com.team.moodit.storage.db.core.UserAuthIdentityEntity;
 import com.team.moodit.storage.db.core.UserAuthIdentityRepository;
@@ -18,7 +18,7 @@ public class UserManager {
     private final UserAuthIdentityRepository userAuthIdentityRepository;
 
     @Transactional
-    public Long createSocialUser(SocialProfile profile) {
+    public Long createSocialUser(SocialUserPrivacy profile) {
         UserEntity savedUser = userRepository.save(
                 new UserEntity(
                         UserRole.USER,
@@ -29,7 +29,7 @@ public class UserManager {
         userAuthIdentityRepository.save(
                 new UserAuthIdentityEntity(
                         savedUser.getId(),
-                        profile.getProvider(),
+                        profile.getProviderType(),
                         profile.getProviderUserId()
                 )
         );
