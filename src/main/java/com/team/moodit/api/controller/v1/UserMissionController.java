@@ -61,12 +61,12 @@ public class UserMissionController {
 
     // TODO: 성공 후 최신 데이터까지 반환
     @PostMapping("/v1/user-missions/{userMissionId}/complete")
-    public ApiResponse<DefaultIdResponse> completeUserMission(
+    public ApiResponse<UserMissionResponse> completeUserMission(
             ApiUser apiUser,
             @PathVariable Long userMissionId
     ) {
         Long successId = userMissionService.completeUserMission(apiUser, userMissionId);
-        return ApiResponse.success(new DefaultIdResponse(successId));
+        return ApiResponse.success(userMissionAssembler.getUserMission(apiUser, successId));
     }
 
     @PostMapping("/v1/user-missions/{userMissionId}/feedback")
