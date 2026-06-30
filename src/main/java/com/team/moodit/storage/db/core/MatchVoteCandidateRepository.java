@@ -10,4 +10,6 @@ public interface MatchVoteCandidateRepository extends JpaRepository<MatchVoteCan
     List<MatchVoteCandidateEntity> findByMatchIdAndRoundNumber(Long matchId, Integer roundNumber);
 
     List<MatchVoteCandidateEntity> findAllByMatchIdAndRoundNumberOrderByIdAsc(Long matchId, Integer roundNumber);
+
+    List<MatchVoteCandidateEntity> findAllByMatchId(Long matchId);
 }

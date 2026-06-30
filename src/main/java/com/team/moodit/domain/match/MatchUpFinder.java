@@ -6,6 +6,7 @@ import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchVoteCandidateEntity;
 import com.team.moodit.storage.db.core.MatchVoteCandidateRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
@@ -39,13 +40,13 @@ public class MatchUpFinder {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
-        // 아직 투표 진행하지 않은 다음 매치업 탐색
+        // 아직 투표를 진행하지 않은 다음 매치업 탐색
         MatchUpEntity nextTarget = matchUps.stream()
                 .filter(m -> !m.isVoted())
                 .findFirst()
                 .orElse(null);
 
-        // 다음 타겟 경기가 없으면 모든 토너먼트가 완료된 상태로 판단
+        // 진행할 타겟 경기가 없으면 토너먼트 전체 완료로 판단
         boolean isTournamentCompleted = (nextTarget == null);
 
         String roundTitle = "결승전";
@@ -63,7 +64,6 @@ public class MatchUpFinder {
                 .count();
 
         if (isTournamentCompleted) {
-            // 토너먼트 종료 시 마지막 진행 경기 인덱스로 고정
             currentMatchIndex = (int) totalCompletedCount;
         } else {
             if (nextTarget.getCandidateBId() == null || nextTarget.getCandidateBId() == 0L) {
@@ -87,6 +87,7 @@ public class MatchUpFinder {
             int targetRoundNumber = nextTarget.getRoundNumber();
             int totalImages = match.getInitialImageCount();
             boolean isPerfectBracket = (totalImages == 4 || totalImages == 8 || totalImages == 16 || totalImages == 32);
+
             if (targetRoundNumber == 1 && !isPerfectBracket) {
                 roundTitle = "예선전";
             } else if (totalMatchUpInRound == 1) {
@@ -111,8 +112,23 @@ public class MatchUpFinder {
             );
         }
 
-        List<MatchStartResponse.ReasonResponse> reasons = matchVoteCandidateRepository
-                .findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, currentMatchIndex).stream()
+        // 동적 대진표(부전승 포함) 대응을 위한 실제 DB 기반 최대 라운드 연산
+        int maxRoundNumber = matchUps.stream()
+                .mapToInt(MatchUpEntity::getRoundNumber)
+                .max()
+                .orElse(1);
+
+        int queryRoundNumber = isTournamentCompleted ? maxRoundNumber : nextTarget.getRoundNumber();
+
+        // 토너먼트 종료 시점에는 결승전을 포함한 전체 라운드 표(사유 데이터)를 취합하고, 진행 중일 때는 해당 라운드 데이터만 조회
+        List<MatchVoteCandidateEntity> sourceList;
+        if (isTournamentCompleted) {
+            sourceList = matchVoteCandidateRepository.findAllByMatchId(matchId);
+        } else {
+            sourceList = matchVoteCandidateRepository.findAllByMatchIdAndRoundNumberOrderByIdAsc(matchId, queryRoundNumber);
+        }
+
+        List<MatchStartResponse.ReasonResponse> reasons = sourceList.stream()
                 .map(v -> new MatchStartResponse.ReasonResponse(v.getId(), v.getContent()))
                 .toList();
 
