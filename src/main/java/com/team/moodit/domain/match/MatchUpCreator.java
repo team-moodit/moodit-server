@@ -248,7 +248,7 @@ public class MatchUpCreator {
     }
 
     private void validateInputs(List<Long> imageIds, List<MatchVoteEntity> allTemplates) {
-        if (imageIds == null || imageIds.size() < 4 || imageIds.size() > 32) {
+        if (imageIds == null || imageIds.size() < 8 || imageIds.size() > 32) {
             throw new ApiException(ErrorType.INVALID_IMAGE_COUNT);
         }
 
