@@ -82,17 +82,27 @@ public class MatchUpEntity extends BaseNoStatusEntity {
      * 선택한 이미지가 현재 대진의 후보가 맞는지 검증 (중복 투표 및 부전승 투표 차단)
      */
     public void validateCandidate(Long selectedPhotoId) {
-        // 부전승 경기이거나 이미 투표가 완료된 경기는 투표 불가
-        if (this.state == MatchUpState.SKIPPED || this.winnerId != null) {
+        if (this.state == MatchUpState.SKIPPED) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        // 선택한 사진이 후보 A도 아니고 후보 B도 아니면 예외 처리
-        if (!selectedPhotoId.equals(this.candidateAId) && !selectedPhotoId.equals(this.candidateBId)) {
+        if (this.winnerId != null) {
+            if (isSameWinner(selectedPhotoId)) {
+                return;
+            }
+
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        if (!selectedPhotoId.equals(this.candidateAId)
+                && !selectedPhotoId.equals(this.candidateBId)) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
     }
 
+    public boolean isSameWinner(Long selectedPhotoId) {
+        return this.winnerId != null && this.winnerId.equals(selectedPhotoId);
+    }
     /**
      * 해당 경기가 이미 투표 완료되었는지 여부 반환
      */
