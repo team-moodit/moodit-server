@@ -1,10 +1,10 @@
 package com.team.moodit.api.controller.v1;
 
+import com.team.moodit.api.assembler.MissionOfferAssembler;
 import com.team.moodit.api.controller.v1.request.AcceptMissionOfferRequest;
 import com.team.moodit.api.controller.v1.request.CreateMissionOfferRequest;
 import com.team.moodit.api.controller.v1.response.AcceptMissionOfferResponse;
 import com.team.moodit.api.controller.v1.response.MissionOfferResponse;
-import com.team.moodit.domain.missionOffer.MissionOfferCreateResult;
 import com.team.moodit.domain.missionOffer.MissionOfferService;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class MissionOfferController {
+    private final MissionOfferAssembler missionOfferAssembler;
     private final MissionOfferService missionOfferService;
 
     @PostMapping("/v1/mission-offers")
@@ -23,8 +24,7 @@ public class MissionOfferController {
             ApiUser apiUser,
             @RequestBody CreateMissionOfferRequest request
     ) {
-        MissionOfferCreateResult result = missionOfferService.getOrCreateOffer(apiUser, request.matchResultId());
-        return ApiResponse.success(MissionOfferResponse.of(result));
+        return ApiResponse.success(missionOfferAssembler.getMissionOffer(apiUser, request));
     }
 
     @PostMapping("/v1/mission-offers/accept")
