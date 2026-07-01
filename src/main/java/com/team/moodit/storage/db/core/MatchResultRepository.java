@@ -20,4 +20,6 @@ public interface MatchResultRepository extends JpaRepository<MatchResultEntity, 
     void deleteByMatchId(Long matchId);
 
     boolean existsByUserIdAndMatchId(Long userId, Long matchId);
+
+    List<MatchResultEntity> findByUserIdOrderByCompletedAtDesc(Long userId);
 }

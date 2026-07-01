@@ -1,0 +1,19 @@
+package com.team.moodit.domain.match;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@AllArgsConstructor
+public class InProgressMatch {
+
+    private final Long matchId;
+    private final String title;
+
+    private final int currentRound;
+    private final int totalRound;
+
+    private final LocalDateTime lastPlayedAt;
+}
