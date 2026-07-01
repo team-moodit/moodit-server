@@ -50,7 +50,7 @@ public class MatchResultFinder {
                 ).toList();
     }
 
-    public MatchResult findOwnedByUser(Long userId, Long matchResultId) {
+    public MatchResult find(Long userId, Long matchResultId) {
         MatchResultEntity matchResult = matchResultRepository.findById(matchResultId)
                 .orElseThrow(() -> new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND));
         if (!matchResult.getUserId().equals(userId)) {

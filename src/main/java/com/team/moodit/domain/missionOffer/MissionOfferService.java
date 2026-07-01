@@ -15,7 +15,7 @@ public class MissionOfferService {
     private final MatchResultFinder matchResultFinder;
 
     public MissionOfferCreateResult getOrCreateOffer(ApiUser apiUser, Long matchResultId) {
-        MatchResult matchResult = matchResultFinder.findOwnedByUser(apiUser.getId(), matchResultId);
+        MatchResult matchResult = matchResultFinder.find(apiUser.getId(), matchResultId);
         return missionOfferManager.getOrCreate(apiUser.getId(), matchResult);
     }
 
