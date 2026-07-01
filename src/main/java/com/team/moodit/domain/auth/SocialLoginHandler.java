@@ -22,7 +22,7 @@ public class SocialLoginHandler {
 
     @Transactional
     public AuthUser authenticateSocialUser(SocialUserPrivacy socialUserPrivacy) {
-        Boolean isNewUser = userAuthIdentityRepository.existsByProviderTypeAndProviderUserId(
+        boolean isNewUser = !userAuthIdentityRepository.existsByProviderTypeAndProviderUserId(
                 socialUserPrivacy.getProviderType(),
                 socialUserPrivacy.getProviderUserId()
         );
