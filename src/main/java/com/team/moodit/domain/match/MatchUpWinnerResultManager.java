@@ -74,8 +74,8 @@ public class MatchUpWinnerResultManager {
                 .map(rank -> new MatchPreferenceResultEntity(
                         resultEntity.getId(),
                         safeToPreferenceType(rank.getLabel()),
-                        rank.getRank(),
-                        rank.getCount()
+                        rank.getCount(),
+                        rank.getRank()
                 ))
                 .toList();
         preferenceResultRepository.saveAll(preferenceEntities);
