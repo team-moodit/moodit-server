@@ -34,14 +34,7 @@ public class MatchResultAnalyzer {
                 .sorted(Comparator.comparingInt(LabelStatistics::count).reversed())
                 .toList();
 
-        List<PreferenceRankDto> ranks = new ArrayList<>();
-        for (int i = 0; i < mainStats.size(); i++) {
-            ranks.add(new PreferenceRankDto(
-                    mainStats.get(i).label(),
-                    i + 1,
-                    mainStats.get(i).count()
-            ));
-        }
+        List<PreferenceRankDto> ranks = createRanks(mainStats);
 
         boolean isMainTie =
                 mainStats.size() > 1
@@ -104,6 +97,24 @@ public class MatchResultAnalyzer {
                 null,
                 ranks
         );
+    }
+
+    private List<PreferenceRankDto> createRanks(List<LabelStatistics> mainStats) {
+        List<PreferenceRankDto> ranks = new ArrayList<>();
+
+        int rank = 1;
+
+        for (int i = 0; i < mainStats.size(); i++) {
+            if (i > 0 && mainStats.get(i).count() != mainStats.get(i - 1).count()) {
+                rank++;
+            }
+            ranks.add(new PreferenceRankDto(
+                    mainStats.get(i).label(),
+                    rank,
+                    mainStats.get(i).count()
+            ));
+        }
+        return ranks;
     }
 
     private record LabelStatistics(String label, int count) {
