@@ -1,6 +1,5 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.userMission.UserMission;
@@ -14,11 +13,7 @@ public record UserMissionResponse(
         String missionTitle,
         UserMissionState missionState,
         LocalDateTime missionCompletedAt,
-        String matchTitle,
-        String matchRepresentativeImageUrl, // 매치 대표 이미지
-        String matchPreferenceType,
-        int matchRoundCount,
-        LocalDateTime matchCompletedAt,
+        MatchResultResponse matchResult,
         Double satisfactionScore
 
 ) {
@@ -44,18 +39,12 @@ public record UserMissionResponse(
             File matchRepresentativeImageFile,
             Double satisfactionScore
     ) {
-        PreferenceType preferenceType = matchResult.getPreferenceResult().getPreferenceType();
-
         return new UserMissionResponse(
                 missions.getId(),
                 missions.getTitle(),
                 missions.getState(),
                 missions.getCompletedAt(),
-                matchResult.getTitle(),
-                matchRepresentativeImageFile.getUrl(),
-                preferenceType != null ? preferenceType.getTitle() : null,
-                matchResult.getRoundCount(),
-                matchResult.getCompletedAt(),
+                MatchResultResponse.of(matchResult, matchRepresentativeImageFile),
                 satisfactionScore
         );
     }
