@@ -26,23 +26,30 @@ public class MatchCreator {
     @Transactional
     public Long create(Long userId, NewMatch newMatch, List<Long> imageIds) {
         MatchEntity savedMatch = matchRepository.save(
-                new MatchEntity(userId, newMatch.getTitle(), MatchState.ING, imageIds.size())
+                new MatchEntity(
+                        userId,
+                        newMatch.getTitle(),
+                        MatchState.ING,
+                        imageIds.size()
+                )
         );
 
         List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
-        if (imageIds.size() != uploadedImages.size()) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
+        if (imageIds.size() != uploadedImages.size()) throw new ApiException(ErrorType.INVALID_REQUEST);
 
-        // 1. 이미지 매핑 저장 (JPA 매핑 테이블 엔티티가 있다는 가정 하에 saveAll 처리)
-        List<MatchImageEntity> matchImages = uploadedImages.stream()
-                .map(file -> new MatchImageEntity(savedMatch.getId(), file.getId()))
-                .collect(Collectors.toList());
-        matchImageRepository.saveAll(matchImages);
+        List<MatchImageEntity> savedMatchImages = matchImageRepository.saveAll(
+                uploadedImages.stream().map(it ->
+                        new MatchImageEntity(
+                                savedMatch.getId(),
+                                it.getId()
+                        )
+                ).toList()
+        );
+        List<Long> savedImageIds = savedMatchImages.stream().map(MatchImageEntity::getId).toList();
 
         // 2. 전체 템플릿 조회 및 대진표/질문 규칙 조립
         List<MatchVoteEntity> allTemplates = matchVoteRepository.findAll();
-        MatchUpCreateResult result = matchUpCreator.createMatches(savedMatch.getId(), imageIds, allTemplates);
+        MatchUpCreateResult result = matchUpCreator.createMatches(savedMatch.getId(), savedImageIds, allTemplates);
 
         // 3. 표준 JPA를 이용한 일괄 저장
         matchUpRepository.saveAll(result.getMatchUps());
