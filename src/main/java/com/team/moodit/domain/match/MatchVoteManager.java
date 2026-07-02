@@ -23,7 +23,7 @@ public class MatchVoteManager {
 
     @Transactional
     public VoteSaveResponse processVote(Long matchId, Long userId, VoteCommand command) {
-        MatchUpEntity currentMatchUp = matchUpRepository.findById(command.getMatchUpId())
+        MatchUpEntity currentMatchUp = matchUpRepository.findByIdForUpdate(command.getMatchUpId())
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         if (!currentMatchUp.getMatchId().equals(matchId)) {
@@ -50,9 +50,6 @@ public class MatchVoteManager {
         return handleRoundTransition(matchId, currentMatchUp.getRoundNumber());
     }
 
-    /**
-     * 라운드 전환 로직: 대진표 생성 및 다음 매치 ID 계산
-     */
     @Transactional
     public VoteSaveResponse handleRoundTransition(Long matchId, int currentRound) {
         List<MatchUpEntity> allMatchUps = matchUpRepository.findByMatchId(matchId);
@@ -114,9 +111,6 @@ public class MatchVoteManager {
         );
     }
 
-    /**
-     * 토너먼트 전체에서 투표가 필요한 가장 빠른 매치업 ID를 탐색
-     */
     private Long findNextNeedVoteMatchId(List<MatchUpEntity> allMatchUps) {
         return allMatchUps.stream()
                 .filter(m -> m.getState() == MatchUpState.NEED_VOTE)
