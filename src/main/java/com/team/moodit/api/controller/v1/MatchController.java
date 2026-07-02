@@ -103,7 +103,7 @@ public class MatchController {
         matchService.deleteMatch(apiUser.getId(), matchId);
         return ApiResponse.success("매치 " + matchId + "번과 관련된 모든 데이터가 클린하게 삭제되었습니다.");
     }
-    @GetMapping("/v1/matches")
+    @GetMapping("/v1/matches/moodtab")
     public ApiResponse<MatchTabResponse> getTabMatchup(
             ApiUser apiUser,
             @RequestParam(defaultValue = "0") int inProgressPage,
