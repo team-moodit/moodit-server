@@ -131,9 +131,9 @@ public class MatchUpReader {
                 displayMatchIndex,
                 roundName,
                 isTournamentCompleted,
-                fileA.getId(),
+                matchUp.getCandidateAId(),
                 fileA.getUrl(),
-                fileB.getId(),
+                matchUp.getCandidateBId(),
                 fileB.getUrl(),
                 sampledVotes
         );
