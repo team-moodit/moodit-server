@@ -153,9 +153,7 @@ public class MatchTabReader {
     }
 
     private int calculateTotalRound(int initialImageCount) {
-        if (initialImageCount <= 4) {
-            return 4;
-        }
+
         if (initialImageCount <= 8) {
             return 8;
         }
