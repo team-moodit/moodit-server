@@ -3,11 +3,13 @@ package com.team.moodit.api.controller.v1;
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
+import com.team.moodit.api.controller.v1.response.MatchProgressResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.api.controller.v1.response.MatchTabResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.match.MatchProgressResult;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
 import com.team.moodit.domain.match.MatchTab;
@@ -33,6 +35,7 @@ public class MatchController {
     private final MatchVoteManager matchVoteManager;
     private final MatchUpFinder matchUpFinder;
     private final MatchUpWinnerResultManager matchUpWinnerResultManager;
+
 
     @PostMapping("/v1/matches")
     public ApiResponse<MatchCreateResponse> createMatch(
@@ -120,6 +123,17 @@ public class MatchController {
         );
 
         return ApiResponse.success(MatchTabResponse.of(matchTab));
+    }
+    @GetMapping("/v1/matches/{matchId}/progress")
+    public ApiResponse<MatchProgressResponse> getMatchProgress(
+            ApiUser apiUser,
+            @PathVariable Long matchId
+
+    ) {
+        MatchProgressResult matchProgressResult =
+                matchService.getMatchProgress(apiUser,matchId);
+
+        return ApiResponse.success(MatchProgressResponse.from(matchProgressResult));
     }
 
 }

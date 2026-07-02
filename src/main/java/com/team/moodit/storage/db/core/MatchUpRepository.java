@@ -29,4 +29,6 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity, Long> {
     void deleteByMatchId(Long matchId);
 
     List<MatchUpEntity> findByMatchIdIn(List<Long> matchIds);
+
+    List<MatchUpEntity> findByMatchIdOrderByRoundNumberAscIdAsc(Long matchId);
 }

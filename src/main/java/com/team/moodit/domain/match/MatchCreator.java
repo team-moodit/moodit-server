@@ -35,6 +35,13 @@ public class MatchCreator {
         );
 
         List<FileEntity> uploadedImages = fileRepository.findByUserIdAndIdIn(userId, imageIds);
+        System.out.println("userId = " + userId);
+        System.out.println("imageIds = " + imageIds);
+        System.out.println("uploadedImages.size = " + uploadedImages.size());
+        System.out.println("uploadedImageIds = " + uploadedImages.stream()
+                .map(FileEntity::getId)
+                .toList());
+
         if (imageIds.size() != uploadedImages.size()) throw new ApiException(ErrorType.INVALID_REQUEST);
 
         List<MatchImageEntity> savedMatchImages = matchImageRepository.saveAll(

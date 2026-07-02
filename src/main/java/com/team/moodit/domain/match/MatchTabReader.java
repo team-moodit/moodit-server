@@ -7,12 +7,12 @@ import com.team.moodit.storage.db.core.MatchResultRepository;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.support.Page;
-
 import com.team.moodit.support.file.FileReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class MatchTabReader {
+
     private final MatchRepository matchRepository;
     private final MatchResultRepository matchResultRepository;
     private final MatchUpRepository matchUpRepository;
@@ -81,16 +82,10 @@ public class MatchTabReader {
                 .toList();
 
         List<CompletedMatch> allCompletedMatches = results.stream()
-                .map(result -> {
-                    MatchEntity match = matchMap.get(result.getMatchId());
-
-                    if (match == null) {
-                        return null;
-                    }
-
-                    return toCompletedMatch(match, result);
-                })
-                .filter(match -> match != null)
+                .map(result -> toCompletedMatch(
+                        matchMap.get(result.getMatchId()),
+                        result
+                ))
                 .toList();
 
         return new MatchTab(
@@ -123,12 +118,14 @@ public class MatchTabReader {
                 result.getRepresentativeMatchImageId()
         ).getUrl();
 
+        LocalDate completedAt = result.getCompletedAt().toLocalDate();
+
         return new CompletedMatch(
                 match.getId(),
                 match.getTitle(),
                 result.getRepresentativeMatchImageId(),
                 winnerImageUri,
-                result.getCompletedAt().toLocalDate()
+                completedAt
         );
     }
 
@@ -147,6 +144,7 @@ public class MatchTabReader {
         }
 
         int toIndex = Math.min(fromIndex + safeSize, items.size());
+
         return new Page<>(
                 items.subList(fromIndex, toIndex),
                 items.size(),
@@ -172,17 +170,16 @@ public class MatchTabReader {
         if (matchUps == null || matchUps.isEmpty()) {
             return totalRound;
         }
+
         return matchUps.stream()
                 .filter(this::isActualMatch)
                 .filter(matchUp -> !matchUp.isVoted())
                 .min(Comparator.comparing(MatchUpEntity::getRoundNumber)
                         .thenComparing(MatchUpEntity::getId))
-                .map(matchUp -> convertRoundNumberToDisplayRound(
-                        matchUps,
-                        matchUp.getRoundNumber()
-                ))
+                .map(matchUp -> convertRoundNumberToDisplayRound(matchUps, matchUp.getRoundNumber()))
                 .orElse(1);
     }
+
     private int convertRoundNumberToDisplayRound(
             List<MatchUpEntity> matchUps,
             int roundNumber
@@ -191,6 +188,7 @@ public class MatchTabReader {
                 .filter(matchUp -> matchUp.getRoundNumber() == roundNumber)
                 .filter(this::isActualMatch)
                 .count();
+
         return Math.max((int) actualMatchCountInRound * 2, 1);
     }
 
