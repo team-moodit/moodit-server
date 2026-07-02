@@ -1,18 +1,24 @@
 package com.team.moodit.api.controller.v1.response;
 
+import static com.team.moodit.api.controller.v1.request.AddReviewRequest.RATE_MAX;
+import static com.team.moodit.api.controller.v1.request.AddReviewRequest.RATE_MIN;
+
 import com.team.moodit.api.controller.v1.response.PreferenceReportResponse.PreferenceDistribution;
 import com.team.moodit.domain.enums.PreferenceType;
-import com.team.moodit.domain.feedback.FeedbackSpec;
 import com.team.moodit.domain.report.PreferenceCriterionShare;
 import com.team.moodit.domain.report.UserTasteReport;
+import com.team.moodit.domain.review.RateSummary;
 import java.util.List;
 
 public record ReportResponse(
         ReportSummaryResponse summary,
         PreferenceReportResponse preferenceReport,
-        MissionSatisfactionResponse missionSatisfaction
+        RateSummaryResponse rateSummary
 ) {
-    public static ReportResponse of(UserTasteReport report) {
+    public static ReportResponse of(
+            UserTasteReport report,
+            RateSummary rateSummary
+    ) {
         return new ReportResponse(
                 new ReportSummaryResponse(
                         report.getRecordSummary().getTotalMatchCount(),
@@ -23,11 +29,11 @@ public record ReportResponse(
                         PreferenceDistribution.of(report.getPreferenceReport().topCriterion()),
                         report.getPreferenceReport().getCriteria().stream().map(PreferenceDistribution::of).toList()
                 ),
-                new MissionSatisfactionResponse(
-                        report.getSatisfactionSummary().getFeedbackCount(),
-                        report.getSatisfactionSummary().getAverageScore(),
-                        FeedbackSpec.MIN_SATISFACTION_SCORE,
-                        FeedbackSpec.MAX_SATISFACTION_SCORE
+                new RateSummaryResponse(
+                        rateSummary.getCount(),
+                        rateSummary.getRate(),
+                        RATE_MIN,
+                        RATE_MAX
 
                 )
         );
@@ -62,10 +68,3 @@ record PreferenceReportResponse(
         }
     }
 }
-
-record MissionSatisfactionResponse(
-        long feedbackCount,
-        double averageScore,
-        double minScore,
-        double maxScore
-) {}

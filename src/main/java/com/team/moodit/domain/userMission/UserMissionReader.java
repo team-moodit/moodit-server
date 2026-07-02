@@ -1,6 +1,5 @@
 package com.team.moodit.domain.userMission;
 
-import com.team.moodit.api.controller.v1.UserMissionListType;
 import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.storage.db.core.UserMissionEntity;
@@ -17,25 +16,13 @@ import org.springframework.stereotype.Component;
 public class UserMissionReader {
     private final UserMissionRepository userMissionRepository;
 
-    public Page<UserMission> getUserMissions(Long userId, UserMissionListType type, OffsetLimit offsetLimit) {
-        org.springframework.data.domain.Page<UserMissionEntity> missions = switch (type) {
-            case IN_PROGRESS -> userMissionRepository.findByUserIdAndStateAndStatusOrderByIdDesc(
-                    userId,
-                    UserMissionState.IN_PROGRESS,
-                    EntityStatus.ACTIVE,
-                    offsetLimit.toPageable()
-            );
-            case COMPLETED -> userMissionRepository.findByUserIdAndStateAndStatusOrderByIdDesc(
-                    userId,
-                    UserMissionState.COMPLETED,
-                    EntityStatus.ACTIVE,
-                    offsetLimit.toPageable()
-            );
-            case FEEDBACK_SUBMITTED -> userMissionRepository.findCompletedWithFeedback(
-                    userId,
-                    offsetLimit.toPageable()
-            );
-        };
+    public Page<UserMission> getUserMissions(Long userId, UserMissionState state, OffsetLimit offsetLimit) {
+        org.springframework.data.domain.Page<UserMissionEntity> missions = userMissionRepository.findByUserIdAndStateAndStatusOrderByIdDesc(
+                userId,
+                state,
+                EntityStatus.ACTIVE,
+                offsetLimit.toPageable()
+        );
 
         return new Page<>(
                 missions.getContent().stream().map(it ->

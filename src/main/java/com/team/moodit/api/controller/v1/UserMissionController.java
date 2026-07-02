@@ -1,9 +1,8 @@
 package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.assembler.UserMissionAssembler;
-import com.team.moodit.api.controller.v1.request.SubmitFeedbackRequest;
 import com.team.moodit.api.controller.v1.response.UserMissionResponse;
-import com.team.moodit.domain.feedback.FeedbackService;
+import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.domain.userMission.UserMissionService;
 import com.team.moodit.support.OffsetLimit;
 import com.team.moodit.support.Page;
@@ -24,19 +23,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserMissionController {
     private final UserMissionAssembler userMissionAssembler;
-    private final FeedbackService feedbackService;
     private final UserMissionService userMissionService;
 
     @GetMapping("/v1/user-missions")
     public ApiResponse<PageResponse<UserMissionResponse>> getUserMissions(
             ApiUser apiUser,
-            @RequestParam UserMissionListType type,
+            @RequestParam("type") UserMissionState state,
             @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) Integer limit
     ) {
         Page<UserMissionResponse> responses = userMissionAssembler.getUserMissions(
                 apiUser,
-                type,
+                state,
                 new OffsetLimit(offset, limit)
         );
         return ApiResponse.success(PageResponse.of(responses));
@@ -66,15 +64,5 @@ public class UserMissionController {
     ) {
         Long successId = userMissionService.completeUserMission(apiUser, userMissionId);
         return ApiResponse.success(userMissionAssembler.getUserMission(apiUser, successId));
-    }
-
-    @PostMapping("/v1/user-missions/{userMissionId}/feedback")
-    public ApiResponse<DefaultIdResponse> submitFeedback(
-            ApiUser apiUser,
-            @PathVariable Long userMissionId,
-            @RequestBody SubmitFeedbackRequest request
-    ) {
-        Long successId = feedbackService.submit(apiUser, userMissionId, request.toNewFeedback());
-        return ApiResponse.success(new DefaultIdResponse(successId));
     }
 }

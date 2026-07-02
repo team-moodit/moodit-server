@@ -1,11 +1,14 @@
 package com.team.moodit.api.assembler;
 
-import com.team.moodit.api.controller.v1.UserMissionListType;
 import com.team.moodit.api.controller.v1.response.UserMissionResponse;
-import com.team.moodit.domain.feedback.FeedbackService;
+import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.domain.match.MatchImage;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
+import com.team.moodit.domain.review.Review;
+import com.team.moodit.domain.review.ReviewFinder;
+import com.team.moodit.domain.review.ReviewService;
+import com.team.moodit.domain.review.ReviewTarget;
 import com.team.moodit.domain.userMission.UserMission;
 import com.team.moodit.domain.userMission.UserMissionService;
 import com.team.moodit.support.OffsetLimit;
@@ -13,7 +16,7 @@ import com.team.moodit.support.Page;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.file.File;
 import com.team.moodit.support.file.FileReader;
-import com.team.moodit.support.response.PageResponse;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,10 +29,11 @@ public class UserMissionAssembler {
     private final UserMissionService userMissionService;
     private final MatchService matchService;
     private final FileReader fileReader;
-    private final FeedbackService feedbackService;
+    private final ReviewService reviewService;
+    private final ReviewFinder reviewFinder;
 
-    public Page<UserMissionResponse> getUserMissions(ApiUser apiUser, UserMissionListType type, OffsetLimit offsetLimit) {
-        Page<UserMission> missions = userMissionService.getUserMissions(apiUser, type, offsetLimit);
+    public Page<UserMissionResponse> getUserMissions(ApiUser apiUser, UserMissionState state, OffsetLimit offsetLimit) {
+        Page<UserMission> missions = userMissionService.getUserMissions(apiUser, state, offsetLimit);
         List<MatchResult> matchResults = matchService.findMatchResults(missions.content().stream().map(UserMission::getMatchId).distinct().toList());
         List<MatchImage> matchImages = matchService.getMatchImages(matchResults.stream().map(MatchResult::getRepresentativeMatchImageId).toList());
 
@@ -41,14 +45,18 @@ public class UserMissionAssembler {
                 matchImage -> fileMap.get(matchImage.getFileId())
         ));
 
-        Map<Long, Double> scoreMap = feedbackService.scores(missions.content().stream().map(UserMission::getId).toList());
+        List<ReviewTarget> reviewTargets = missions.content().stream().map(it -> new ReviewTarget(it.getId())).toList();
+        Map<Long, Review> reviewMap = reviewService.findReviews(reviewTargets).stream().collect(Collectors.toMap(
+                it -> it.getTarget().getUserMissionId(),
+                it -> it
+        ));
 
         return new Page<>(
                 UserMissionResponse.of(
                         missions.content(),
                         matchResultMap,
                         matchImageFileMap,
-                        scoreMap
+                        reviewMap
                 ),
                 missions.totalCount(),
                 missions.hasNext()
@@ -59,8 +67,8 @@ public class UserMissionAssembler {
         UserMission userMission = userMissionService.getUserMission(apiUser, userMissionId);
         MatchResult matchResult = matchService.getMatchResult(apiUser, userMission.getMatchId());
         MatchImage matchImage = matchService.getMatchImage(matchResult.getRepresentativeMatchImageId());
-        Map<Long, Double> scoreMap = feedbackService.scores(List.of(userMissionId));
+        Review review = reviewService.findReview(new ReviewTarget(userMission.getId()));
         File file = fileReader.getFile(matchImage.getFileId());
-        return UserMissionResponse.of(userMission, matchResult, file, scoreMap.get(userMissionId));
+        return UserMissionResponse.of(userMission, matchResult, file, review);
     }
 }

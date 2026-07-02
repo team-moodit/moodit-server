@@ -8,5 +8,4 @@ import lombok.Getter;
 public class UserTasteReport {
     AnalysisRecordSummary recordSummary;
     PreferenceReport preferenceReport;
-    MissionSatisfactionSummary satisfactionSummary;
 }

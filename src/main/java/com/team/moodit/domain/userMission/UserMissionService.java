@@ -1,6 +1,6 @@
 package com.team.moodit.domain.userMission;
 
-import com.team.moodit.api.controller.v1.UserMissionListType;
+import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.support.OffsetLimit;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.auth.ApiUser;
@@ -13,8 +13,8 @@ public class UserMissionService {
     private final UserMissionReader userMissionReader;
     private final UserMissionManager userMissionManager;
 
-    public Page<UserMission> getUserMissions(ApiUser apiUser, UserMissionListType type, OffsetLimit offsetLimit) {
-        return userMissionReader.getUserMissions(apiUser.getId(), type, offsetLimit);
+    public Page<UserMission> getUserMissions(ApiUser apiUser, UserMissionState state, OffsetLimit offsetLimit) {
+        return userMissionReader.getUserMissions(apiUser.getId(), state, offsetLimit);
     }
 
     public UserMission getUserMission(ApiUser apiUser, Long userMissionId) {

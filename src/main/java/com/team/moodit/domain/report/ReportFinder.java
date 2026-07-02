@@ -3,7 +3,6 @@ package com.team.moodit.domain.report;
 import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.enums.UserMissionState;
-import com.team.moodit.storage.db.core.FeedbackRepository;
 import com.team.moodit.storage.db.core.MatchPreferenceResultRepository;
 import com.team.moodit.storage.db.core.MatchResultRepository;
 import com.team.moodit.storage.db.core.PreferenceSelectionCountProjection;
@@ -21,7 +20,6 @@ public class ReportFinder {
     private final MatchResultRepository matchResultRepository;
     private final MatchPreferenceResultRepository matchPreferenceResultRepository;
     private final UserMissionRepository userMissionRepository;
-    private final FeedbackRepository feedbackRepository;
 
     public UserTasteReport find(Long userId) {
         long totalMatchCount = matchResultRepository.countByUserId(userId);
@@ -51,9 +49,6 @@ public class ReportFinder {
             );
         }).toList();
 
-        Double averageScore = feedbackRepository.averageSatisfactionScoreByUserId(userId);
-        long feedbackCount = feedbackRepository.countByUserId(userId);
-
         return new UserTasteReport(
                 new AnalysisRecordSummary(
                         totalMatchCount,
@@ -62,10 +57,6 @@ public class ReportFinder {
                 new PreferenceReport(
                         totalSelectionCount,
                         criteria
-                ),
-                new MissionSatisfactionSummary(
-                        feedbackCount,
-                        averageScore != null ? averageScore : 0
                 )
         );
     }

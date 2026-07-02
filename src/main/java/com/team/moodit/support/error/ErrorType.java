@@ -32,10 +32,11 @@ public enum ErrorType {
     // UserMission
     USER_MISSION_INVALID_STATE(HttpStatus.BAD_REQUEST, "미션 상태가 올바르지 않습니다.", LogLevel.INFO),
 
-    // Feedback
-    FEEDBACK_REQUIRED_REASON(HttpStatus.BAD_REQUEST, "만족도가 3점 미만일 때 불만족 사유는 필수입니다.", LogLevel.INFO),
-    FEEDBACK_HAS_NOT_MISSION(HttpStatus.BAD_REQUEST, "피드백 제출 가능한 미션이 없습니다.", LogLevel.INFO),
-    FEEDBACK_ALREADY_SUBMITTED(HttpStatus.BAD_REQUEST, "이미 피드백이 제출된 미션입니다.", LogLevel.INFO),
+    // Review
+    REVIEW_INVALID_RATE(HttpStatus.BAD_REQUEST, "만족도는 1점 이상 5점 이하입니다.", LogLevel.INFO),
+    REVIEW_REQUIRED_CONTENT(HttpStatus.BAD_REQUEST, "만족도가 3점 미만일 때 불만족 사유는 필수입니다.", LogLevel.INFO),
+    REVIEW_HAS_NOT_MISSION(HttpStatus.BAD_REQUEST, "리뷰 작성 가능한 미션이 없습니다.", LogLevel.INFO),
+    REVIEW_ALREADY_SUBMITTED(HttpStatus.BAD_REQUEST, "이미 리뷰가 작성된 미션입니다.", LogLevel.INFO),
 
     // Title
     MISSING_TITLE(HttpStatus.BAD_REQUEST,"제목은 필수입니다.", LogLevel.INFO),
