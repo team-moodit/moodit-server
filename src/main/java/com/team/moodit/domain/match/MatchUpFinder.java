@@ -2,10 +2,12 @@ package com.team.moodit.domain.match;
 
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
+import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchImageEntity;
+import com.team.moodit.storage.db.core.MatchImageRepository;
+import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
-import com.team.moodit.storage.db.core.MatchRepository;
-import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchVoteCandidateRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
@@ -22,6 +24,7 @@ public class MatchUpFinder {
 
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
+    private final MatchImageRepository matchImageRepository;
     private final MatchVoteCandidateRepository matchVoteCandidateRepository;
     private final FileReader fileReader;
 
@@ -36,16 +39,17 @@ public class MatchUpFinder {
         }
 
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchId(matchId);
+
         if (matchUps == null || matchUps.isEmpty()) {
             throw new ApiException(ErrorType.NOT_FOUND);
         }
 
         MatchUpEntity nextTarget = matchUps.stream()
-                .filter(m -> !m.isVoted())
+                .filter(matchUp -> !matchUp.isVoted())
                 .findFirst()
                 .orElse(null);
 
-        boolean isTournamentCompleted = (nextTarget == null);
+        boolean isTournamentCompleted = nextTarget == null;
 
         String roundTitle = "결승전";
         int displayMatchIndex = 1;
@@ -59,11 +63,11 @@ public class MatchUpFinder {
             }
 
             List<MatchUpEntity> sameRoundMatchUps = matchUps.stream()
-                    .filter(m -> m.getRoundNumber() == nextTarget.getRoundNumber())
+                    .filter(matchUp -> matchUp.getRoundNumber() == nextTarget.getRoundNumber())
                     .toList();
 
             List<MatchUpEntity> actualMatchesInRound = sameRoundMatchUps.stream()
-                    .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
+                    .filter(matchUp -> matchUp.getCandidateBId() != null && matchUp.getCandidateBId() != 0L)
                     .toList();
 
             totalMatchUpInRound = actualMatchesInRound.size();
@@ -94,18 +98,30 @@ public class MatchUpFinder {
                 roundTitle = "32강전";
             }
 
-            String candidateAUrl = fileReader.getFile(nextTarget.getCandidateAId()).getUrl();
-            String candidateBUrl = fileReader.getFile(nextTarget.getCandidateBId()).getUrl();
+            MatchImageEntity candidateAImage = matchImageRepository.findById(nextTarget.getCandidateAId())
+                    .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+
+            MatchImageEntity candidateBImage = matchImageRepository.findById(nextTarget.getCandidateBId())
+                    .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+
+            String candidateAUrl = fileReader.getFile(candidateAImage.getFileId()).getUrl();
+            String candidateBUrl = fileReader.getFile(candidateBImage.getFileId()).getUrl();
 
             nextMatchUpResponse = new MatchStartResponse.NextMatchUpResponse(
                     nextTarget.getId(),
-                    new MatchStartResponse.CandidateResponse(nextTarget.getCandidateAId(), candidateAUrl),
-                    new MatchStartResponse.CandidateResponse(nextTarget.getCandidateBId(), candidateBUrl)
+                    new MatchStartResponse.CandidateResponse(
+                            nextTarget.getCandidateAId(),
+                            candidateAUrl
+                    ),
+                    new MatchStartResponse.CandidateResponse(
+                            nextTarget.getCandidateBId(),
+                            candidateBUrl
+                    )
             );
         }
 
         long completedMatchCount = matchUps.stream()
-                .filter(m -> m.getCandidateBId() != null && m.getCandidateBId() != 0L)
+                .filter(matchUp -> matchUp.getCandidateBId() != null && matchUp.getCandidateBId() != 0L)
                 .filter(MatchUpEntity::isVoted)
                 .count();
 
@@ -114,7 +130,10 @@ public class MatchUpFinder {
         List<MatchStartResponse.ReasonResponse> reasons = matchVoteCandidateRepository
                 .findByMatchIdAndRoundNumberOrderByDisplayOrderAsc(matchId, reasonRoundNumber)
                 .stream()
-                .map(v -> new MatchStartResponse.ReasonResponse(v.getId(), v.getContent()))
+                .map(candidate -> new MatchStartResponse.ReasonResponse(
+                        candidate.getId(),
+                        candidate.getContent()
+                ))
                 .toList();
 
         boolean finalCompletedStatus = isTournamentCompleted || "결승전".equals(roundTitle);
