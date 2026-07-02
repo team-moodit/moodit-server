@@ -47,7 +47,7 @@ public record UserMissionResponse(
                 missions.getState(),
                 missions.getCompletedAt(),
                 MatchResultResponse.of(matchResult, matchRepresentativeImageFile),
-                review.getContent().getRate()
+                review != null ? review.getContent().getRate() : null
         );
     }
 }

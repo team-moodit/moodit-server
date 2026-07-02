@@ -30,7 +30,6 @@ public class UserMissionAssembler {
     private final MatchService matchService;
     private final FileReader fileReader;
     private final ReviewService reviewService;
-    private final ReviewFinder reviewFinder;
 
     public Page<UserMissionResponse> getUserMissions(ApiUser apiUser, UserMissionState state, OffsetLimit offsetLimit) {
         Page<UserMission> missions = userMissionService.getUserMissions(apiUser, state, offsetLimit);
