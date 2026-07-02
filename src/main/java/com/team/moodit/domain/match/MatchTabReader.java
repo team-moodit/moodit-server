@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchResultEntity;
@@ -12,11 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,7 +57,7 @@ public class MatchTabReader {
                 .collect(Collectors.toMap(
                         MatchResultEntity::getMatchId,
                         result -> result,
-                        (a, b) -> a
+                        (first, second) -> first
                 ));
 
         Set<Long> completedMatchIds = resultMap.keySet();
@@ -68,7 +68,8 @@ public class MatchTabReader {
                         match -> match
                 ));
 
-        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdIn(matchIds);
+        List<MatchUpEntity> matchUps =
+                matchUpRepository.findByMatchIdIn(matchIds);
 
         Map<Long, List<MatchUpEntity>> matchUpMap = matchUps.stream()
                 .collect(Collectors.groupingBy(MatchUpEntity::getMatchId));
@@ -82,10 +83,16 @@ public class MatchTabReader {
                 .toList();
 
         List<CompletedMatch> allCompletedMatches = results.stream()
-                .map(result -> toCompletedMatch(
-                        matchMap.get(result.getMatchId()),
-                        result
-                ))
+                .map(result -> {
+                    MatchEntity match = matchMap.get(result.getMatchId());
+
+                    if (match == null) {
+                        return null;
+                    }
+
+                    return toCompletedMatch(match, result);
+                })
+                .filter(Objects::nonNull)
                 .toList();
 
         return new MatchTab(
@@ -99,7 +106,11 @@ public class MatchTabReader {
             List<MatchUpEntity> matchUps
     ) {
         int totalRound = calculateTotalRound(match.getInitialImageCount());
-        int currentRound = calculateCurrentRound(matchUps, totalRound);
+        int currentRound = calculateCurrentRound(
+                match.getInitialImageCount(),
+                totalRound,
+                matchUps
+        );
 
         return new InProgressMatch(
                 match.getId(),
@@ -118,14 +129,12 @@ public class MatchTabReader {
                 result.getRepresentativeMatchImageId()
         ).getUrl();
 
-        LocalDate completedAt = result.getCompletedAt().toLocalDate();
-
         return new CompletedMatch(
                 match.getId(),
                 match.getTitle(),
                 result.getRepresentativeMatchImageId(),
                 winnerImageUri,
-                completedAt
+                result.getCompletedAt().toLocalDate()
         );
     }
 
@@ -153,46 +162,46 @@ public class MatchTabReader {
     }
 
     private int calculateTotalRound(int initialImageCount) {
-
-        if (initialImageCount <= 8) {
-            return 8;
-        }
-        if (initialImageCount <= 16) {
-            return 16;
-        }
-        return 32;
+        return Integer.highestOneBit(initialImageCount);
     }
 
     private int calculateCurrentRound(
-            List<MatchUpEntity> matchUps,
-            int totalRound
+            int initialImageCount,
+            int totalRound,
+            List<MatchUpEntity> matchUps
     ) {
         if (matchUps == null || matchUps.isEmpty()) {
             return totalRound;
         }
 
-        return matchUps.stream()
-                .filter(this::isActualMatch)
-                .filter(matchUp -> !matchUp.isVoted())
-                .min(Comparator.comparing(MatchUpEntity::getRoundNumber)
-                        .thenComparing(MatchUpEntity::getId))
-                .map(matchUp -> convertRoundNumberToDisplayRound(matchUps, matchUp.getRoundNumber()))
+        int currentRoundNumber = matchUps.stream()
+                .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
+                .map(MatchUpEntity::getRoundNumber)
+                .min(Integer::compareTo)
                 .orElse(1);
+
+        return calculateDisplayRound(
+                initialImageCount,
+                totalRound,
+                currentRoundNumber
+        );
     }
 
-    private int convertRoundNumberToDisplayRound(
-            List<MatchUpEntity> matchUps,
-            int roundNumber
+    private int calculateDisplayRound(
+            int initialImageCount,
+            int totalRound,
+            int currentRoundNumber
     ) {
-        long actualMatchCountInRound = matchUps.stream()
-                .filter(matchUp -> matchUp.getRoundNumber() == roundNumber)
-                .filter(this::isActualMatch)
-                .count();
+        boolean hasPreliminaryRound = initialImageCount != totalRound;
 
-        return Math.max((int) actualMatchCountInRound * 2, 1);
-    }
+        if (!hasPreliminaryRound) {
+            return totalRound / (int) Math.pow(2, currentRoundNumber - 1);
+        }
 
-    private boolean isActualMatch(MatchUpEntity matchUp) {
-        return matchUp.getCandidateBId() != null && matchUp.getCandidateBId() != 0L;
+        if (currentRoundNumber == 1) {
+            return totalRound;
+        }
+
+        return totalRound / (int) Math.pow(2, currentRoundNumber - 2);
     }
 }
