@@ -15,8 +15,8 @@ public class ReportController {
 
     @GetMapping("/v1/reports")
     public ApiResponse<ReportResponse> getReport(
-//            ApiUser apiUser
+            ApiUser apiUser
     ) {
-        return ApiResponse.success(reportAssembler.getReport(new ApiUser(1L)));
+        return ApiResponse.success(reportAssembler.getReport(apiUser));
     }
 }
