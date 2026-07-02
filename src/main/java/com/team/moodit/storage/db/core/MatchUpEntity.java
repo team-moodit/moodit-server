@@ -107,7 +107,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
      * 해당 경기가 이미 투표 완료되었는지 여부 반환
      */
     public boolean isVoted() {
-        // 승자 ID(winnerId)가 존재하거나 상태가 COMPLETED/SKIPPED이면 투표가 끝난 경기입니다.
-        return this.winnerId != null || this.state == MatchUpState.COMPLETED;
+        return this.state == MatchUpState.COMPLETED
+                || this.state == MatchUpState.SKIPPED;
     }
 }
