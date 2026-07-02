@@ -17,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchVoteManager {
 
+    private final MatchUpWinnerResultManager matchUpWinnerResultManager;
     private final MatchChoiceCreator matchChoiceCreator;
     private final MatchUpRepository matchUpRepository;
     private final MatchUpCreator matchUpCreator;
@@ -46,8 +47,18 @@ public class MatchVoteManager {
 
             matchUpRepository.saveAndFlush(currentMatchUp);
         }
+        VoteSaveResponse response =
+                handleRoundTransition(matchId, currentMatchUp.getRoundNumber());
 
-        return handleRoundTransition(matchId, currentMatchUp.getRoundNumber());
+        // 결승 종료 시 결과를 미리 생성
+        if (response.isTournamentFinished()) {
+            matchUpWinnerResultManager.getOrCreateMatchUpWinnerResult(
+                    matchId,
+                    userId
+            );
+        }
+
+        return response;
     }
 
     @Transactional

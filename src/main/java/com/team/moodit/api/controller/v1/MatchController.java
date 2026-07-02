@@ -4,11 +4,13 @@ import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
+import com.team.moodit.api.controller.v1.response.MatchTabResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
+import com.team.moodit.domain.match.MatchTab;
 import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
 import com.team.moodit.domain.match.MatchUpWinnerResultManager;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -99,6 +102,24 @@ public class MatchController {
     ) {
         matchService.deleteMatch(apiUser.getId(), matchId);
         return ApiResponse.success("매치 " + matchId + "번과 관련된 모든 데이터가 클린하게 삭제되었습니다.");
+    }
+    @GetMapping("/v1/matches")
+    public ApiResponse<MatchTabResponse> getTabMatchup(
+            ApiUser apiUser,
+            @RequestParam(defaultValue = "0") int inProgressPage,
+            @RequestParam(defaultValue = "5") int inProgressSize,
+            @RequestParam(defaultValue = "0") int completedPage,
+            @RequestParam(defaultValue = "10") int completedSize
+    ) {
+        MatchTab matchTab = matchService.getMatchTab(
+                apiUser.getId(),
+                inProgressPage,
+                inProgressSize,
+                completedPage,
+                completedSize
+        );
+
+        return ApiResponse.success(MatchTabResponse.of(matchTab));
     }
 
 }

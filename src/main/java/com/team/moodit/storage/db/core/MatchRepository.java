@@ -2,5 +2,8 @@ package com.team.moodit.storage.db.core;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface MatchRepository extends JpaRepository<MatchEntity,Long> {
+    List<MatchEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

@@ -16,6 +16,7 @@ public class MatchService {
     private final MatchResultFinder matchResultFinder;
     private final MatchUpWinnerResultManager matchUpWinnerResultManager;
     private final MatchRemover matchRemover;
+    private final MatchTabReader matchTabReader;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
@@ -48,5 +49,20 @@ public class MatchService {
     }
     public void deleteMatch(Long userId, Long matchId) {
         matchRemover.deleteMatch(userId, matchId);
+    }
+
+    public MatchTab getMatchTab(Long userId,
+                                int inProgressPage,
+                                int inProgressSize,
+                                int completedPage,
+                                int completedSize)
+    {
+        return matchTabReader.getMatchTab(
+                userId,
+                inProgressPage,
+                inProgressSize,
+                completedPage,
+                completedSize
+        );
     }
 }

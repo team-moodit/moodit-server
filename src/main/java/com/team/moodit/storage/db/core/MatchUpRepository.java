@@ -27,4 +27,6 @@ public interface MatchUpRepository extends JpaRepository<MatchUpEntity, Long> {
     List<MatchVoteCandidateEntity> findVotedLabelsByMatchId(@Param("matchId") Long matchId);
 
     void deleteByMatchId(Long matchId);
+
+    List<MatchUpEntity> findByMatchIdIn(List<Long> matchIds);
 }
