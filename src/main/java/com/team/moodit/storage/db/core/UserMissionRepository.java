@@ -32,4 +32,6 @@ public interface UserMissionRepository extends JpaRepository<UserMissionEntity, 
             @Param("userId") Long userId,
             Pageable pageable
     );
+
+    long countByUserIdAndStateAndStatus(Long userId, UserMissionState state, EntityStatus status);
 }

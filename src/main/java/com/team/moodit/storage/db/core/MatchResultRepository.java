@@ -17,7 +17,5 @@ public interface MatchResultRepository extends JpaRepository<MatchResultEntity, 
     @Query("SELECT m FROM MatchResultEntity m WHERE m.userId = :userId AND m.matchId = :matchId")
     Optional<MatchResultEntity> findByUserIdAndMatchIdForUpdate(@Param("userId") Long userId, @Param("matchId") Long matchId);
 
-    void deleteByMatchId(Long matchId);
-
-    boolean existsByUserIdAndMatchId(Long userId, Long matchId);
+    long countByUserId(Long userId);
 }
