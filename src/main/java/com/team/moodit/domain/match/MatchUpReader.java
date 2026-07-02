@@ -2,6 +2,8 @@ package com.team.moodit.domain.match;
 
 import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchImageEntity;
+import com.team.moodit.storage.db.core.MatchImageRepository;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
@@ -25,6 +27,7 @@ public class MatchUpReader {
 
     private final MatchRepository matchRepository;
     private final MatchUpRepository matchUpRepository;
+    private final MatchImageRepository matchImageRepository;
     private final MatchVoteCandidateRepository matchVoteCandidateRepository;
     private final FileReader fileReader;
 
@@ -53,8 +56,14 @@ public class MatchUpReader {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        File fileA = fileReader.getFile(matchUp.getCandidateAId());
-        File fileB = fileReader.getFile(matchUp.getCandidateBId());
+        MatchImageEntity candidateAImage = matchImageRepository.findById(matchUp.getCandidateAId())
+                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+
+        MatchImageEntity candidateBImage = matchImageRepository.findById(matchUp.getCandidateBId())
+                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+
+        File fileA = fileReader.getFile(candidateAImage.getFileId());
+        File fileB = fileReader.getFile(candidateBImage.getFileId());
 
         if (fileA == null || fileB == null) {
             throw new ApiException(ErrorType.NOT_FOUND);
