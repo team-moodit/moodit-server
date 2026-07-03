@@ -35,7 +35,6 @@ public enum ErrorType {
     // Review
     REVIEW_INVALID_RATE(HttpStatus.BAD_REQUEST, "만족도는 1점 이상 5점 이하입니다.", LogLevel.INFO),
     REVIEW_REQUIRED_CONTENT(HttpStatus.BAD_REQUEST, "만족도가 3점 미만일 때 불만족 사유는 필수입니다.", LogLevel.INFO),
-    REVIEW_HAS_NOT_MISSION(HttpStatus.BAD_REQUEST, "리뷰 작성 가능한 미션이 없습니다.", LogLevel.INFO),
     REVIEW_ALREADY_SUBMITTED(HttpStatus.BAD_REQUEST, "이미 리뷰가 작성된 미션입니다.", LogLevel.INFO),
 
     // Title
