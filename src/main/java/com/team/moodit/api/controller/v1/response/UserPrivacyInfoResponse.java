@@ -10,7 +10,7 @@ public record UserPrivacyInfoResponse(
             UserPrivacy userPrivacy
     ) {
         return new UserPrivacyInfoResponse(
-                userPrivacy.getName() == null ? "이름이 없습니당" : userPrivacy.getName(),
+                userPrivacy.getName() != null ? userPrivacy.getName() : null,
                 userPrivacy.getEmail()
         );
     }
