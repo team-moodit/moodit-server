@@ -17,4 +17,5 @@ public interface MatchResultRepository extends JpaRepository<MatchResultEntity, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM MatchResultEntity m WHERE m.userId = :userId AND m.matchId = :matchId")
     Optional<MatchResultEntity> findByUserIdAndMatchIdForUpdate(@Param("userId") Long userId, @Param("matchId") Long matchId);
+    Optional<MatchResultEntity> findByMatchId(Long matchId);
 }

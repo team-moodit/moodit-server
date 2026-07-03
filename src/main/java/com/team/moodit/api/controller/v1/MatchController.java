@@ -2,6 +2,7 @@ package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
+import com.team.moodit.api.controller.v1.response.MatchCompletedResponse;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchProgressResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
@@ -9,6 +10,7 @@ import com.team.moodit.api.controller.v1.response.MatchTabResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.match.MatchCompletedResult;
 import com.team.moodit.domain.match.MatchProgressResult;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
@@ -134,6 +136,18 @@ public class MatchController {
                 matchService.getMatchProgress(apiUser,matchId);
 
         return ApiResponse.success(MatchProgressResponse.from(matchProgressResult));
+    }
+
+    @GetMapping("/v1/matches/{matchId}/result")
+    public ApiResponse<MatchCompletedResponse> getMatchCompleted(
+            ApiUser apiUser,
+            @PathVariable Long matchId
+
+    ) {
+        MatchCompletedResult matchCompletedResult =
+                matchService.getMatchCompleted(apiUser,matchId);
+
+        return ApiResponse.success(MatchCompletedResponse.from(matchCompletedResult));
     }
 }
 

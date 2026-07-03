@@ -17,6 +17,7 @@ public class MatchService {
     private final MatchRemover matchRemover;
     private final MatchTabReader matchTabReader;
     private final MatchProgressReader matchProgressReader;
+    private final MatchCompletedReader matchCompletedReader;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
@@ -58,5 +59,8 @@ public class MatchService {
 
     public MatchProgressResult getMatchProgress(ApiUser apiUser,Long matchId) {
         return matchProgressReader.getMatchProgress(apiUser.getId(),matchId);
+    }
+    public MatchCompletedResult getMatchCompleted(ApiUser apiUser,Long matchId){
+        return matchCompletedReader.getMatchCompleted(apiUser.getId(),matchId);
     }
 }
