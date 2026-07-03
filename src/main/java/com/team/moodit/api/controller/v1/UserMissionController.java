@@ -8,14 +8,12 @@ import com.team.moodit.support.OffsetLimit;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
-import com.team.moodit.support.response.DefaultIdResponse;
 import com.team.moodit.support.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,13 +25,13 @@ public class UserMissionController {
 
     @GetMapping("/v1/user-missions")
     public ApiResponse<PageResponse<UserMissionResponse>> getUserMissions(
-//            ApiUser apiUser,
+            ApiUser apiUser,
             @RequestParam UserMissionState state,
             @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) Integer limit
     ) {
         Page<UserMissionResponse> responses = userMissionAssembler.getUserMissions(
-                new ApiUser(2L),
+                apiUser,
                 state,
                 new OffsetLimit(offset, limit)
         );

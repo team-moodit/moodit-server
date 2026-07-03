@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 public record UserMissionResponse(
-        Long userMissionId,
+        long userMissionId,
         String missionTitle,
         UserMissionState missionState,
         LocalDateTime missionCompletedAt,
@@ -19,29 +19,8 @@ public record UserMissionResponse(
         BigDecimal rate
 
 ) {
-    public static List<UserMissionResponse> of(
-            List<UserMission> missions,
-            Map<Long, MatchResult> matchResultMap,
-            Map<Long, File> matchRepresentativeImageFileMap,
-            Map<Long, Review> reviewMap
-    ) {
-        return missions.stream().map(it ->
-                of(
-                        it,
-                        matchResultMap.get(it.getMatchId()),
-                        matchRepresentativeImageFileMap.get(matchResultMap.get(it.getMatchId()).getRepresentativeMatchImageId()),
-                        reviewMap.get(it.getId())
-                )
-        ).toList();
-    }
-
-    public static UserMissionResponse of(
-            UserMission missions,
-            MatchResult matchResult,
-            File matchRepresentativeImageFile,
-            Review review
-    ) {
-        return new UserMissionResponse(
+    public UserMissionResponse(UserMission missions, MatchResult matchResult, File matchRepresentativeImageFile, Review review) {
+        this(
                 missions.getId(),
                 missions.getTitle(),
                 missions.getState(),
@@ -49,5 +28,21 @@ public record UserMissionResponse(
                 MatchResultResponse.of(matchResult, matchRepresentativeImageFile),
                 review != null ? review.getContent().getRate() : null
         );
+    }
+
+    public static List<UserMissionResponse> of(
+            List<UserMission> missions,
+            Map<Long, MatchResult> matchResultMap,
+            Map<Long, File> matchRepresentativeImageFileMap,
+            Map<Long, Review> reviewMap
+    ) {
+        return missions.stream().map(it ->
+                new UserMissionResponse(
+                        it,
+                        matchResultMap.get(it.getMatchId()),
+                        matchRepresentativeImageFileMap.get(matchResultMap.get(it.getMatchId()).getRepresentativeMatchImageId()),
+                        reviewMap.get(it.getId())
+                )
+        ).toList();
     }
 }

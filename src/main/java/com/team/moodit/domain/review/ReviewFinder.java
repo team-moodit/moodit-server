@@ -2,11 +2,10 @@ package com.team.moodit.domain.review;
 
 import com.team.moodit.storage.db.core.ReviewEntity;
 import com.team.moodit.storage.db.core.ReviewRepository;
-import com.team.moodit.support.error.ApiException;
-import com.team.moodit.support.error.ErrorType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -48,19 +47,24 @@ public class ReviewFinder {
         ).toList();
     }
 
-    public Review find(ReviewTarget target) {
-        ReviewEntity found = reviewRepository.findByUserMissionId(target.getUserMissionId())
-                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
-        return new Review(
-                found.getId(),
-                found.getUserId(),
-                new ReviewTarget(
-                        found.getUserMissionId()
-                ),
-                new ReviewContent(
-                        found.getRate(),
-                        found.getContent()
-                )
-        );
+    public Review findOrNull(ReviewTarget target) {
+        Optional<ReviewEntity> foundOpt = reviewRepository.findByUserMissionId(target.getUserMissionId());
+
+        if (foundOpt.isPresent()) {
+            ReviewEntity review = foundOpt.get();
+            return new Review(
+                    review.getId(),
+                    review.getUserId(),
+                    new ReviewTarget(
+                            review.getUserMissionId()
+                    ),
+                    new ReviewContent(
+                            review.getRate(),
+                            review.getContent()
+                    )
+            );
+        } else {
+            return null;
+        }
     }
 }

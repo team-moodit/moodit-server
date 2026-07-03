@@ -22,8 +22,8 @@ public class ReviewService {
         return reviewFinder.find(targets);
     }
 
-    public Review findReview(ReviewTarget target) {
-        return reviewFinder.find(target);
+    public Review findReviewOrNull(ReviewTarget target) {
+        return reviewFinder.findOrNull(target);
     }
 
     public Long addReview(ApiUser apiUser, ReviewTarget target, ReviewContent content) {

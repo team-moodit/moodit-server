@@ -66,8 +66,8 @@ public class UserMissionAssembler {
         UserMission userMission = userMissionService.getUserMission(apiUser, userMissionId);
         MatchResult matchResult = matchService.getMatchResult(apiUser, userMission.getMatchId());
         MatchImage matchImage = matchService.getMatchImage(matchResult.getRepresentativeMatchImageId());
-        Review review = reviewService.findReview(new ReviewTarget(userMission.getId()));
+        Review review = reviewService.findReviewOrNull(new ReviewTarget(userMission.getId()));
         File file = fileReader.getFile(matchImage.getFileId());
-        return UserMissionResponse.of(userMission, matchResult, file, review);
+        return new UserMissionResponse(userMission, matchResult, file, review);
     }
 }

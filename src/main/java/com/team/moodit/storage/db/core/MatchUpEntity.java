@@ -94,8 +94,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        if (!selectedPhotoId.equals(this.candidateAId)
-                && !selectedPhotoId.equals(this.candidateBId)) {
+        if (!selectedPhotoId.equals(this.candidateAId) && !selectedPhotoId.equals(this.candidateBId)) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
     }
