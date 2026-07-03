@@ -32,6 +32,10 @@ public enum PreferenceType {
     private final String title;
     private final Set<PreferenceDetailType> detailTypes;
 
+    public boolean hasDetail() {
+        return !detailTypes.isEmpty();
+    }
+
     public static PreferenceType from(String value) {
         if (value == null || value.isBlank()) {
             throw new ApiException(ErrorType.INVALID_REQUEST);

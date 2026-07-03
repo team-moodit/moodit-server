@@ -1,6 +1,7 @@
 package com.team.moodit.domain.match;
 
 import com.team.moodit.domain.enums.PreferenceResultType;
+import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.storage.db.core.MatchVoteCandidateEntity;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Component
@@ -41,6 +43,27 @@ public class MatchResultAnalyzer {
                         && mainStats.get(0).count() == mainStats.get(1).count();
 
         if (isMainTie) {
+            List<String> topMainPreferences = mainStats.stream()
+                    .filter(stat -> stat.count() == mainStats.get(0).count())
+                    .map(LabelStatistics::label)
+                    .toList();
+
+            List<String> detailSupportedPreferences = topMainPreferences.stream()
+                    .filter(this::hasDetailPreference)
+                    .toList();
+
+            if (!detailSupportedPreferences.isEmpty()) {
+                MatchPreferenceAnalysis detailTieResult = analyzeDetailTie(
+                        votedCandidates,
+                        detailSupportedPreferences,
+                        ranks
+                );
+
+                if (detailTieResult != null) {
+                    return detailTieResult;
+                }
+            }
+
             return new MatchPreferenceAnalysis(
                     PreferenceResultType.TIE,
                     null,
@@ -117,6 +140,65 @@ public class MatchResultAnalyzer {
         return ranks;
     }
 
+
     private record LabelStatistics(String label, int count) {
+    }
+
+
+    private boolean hasDetailPreference(String preference) {
+        return PreferenceType.from(preference).hasDetail();
+    }
+
+    private MatchPreferenceAnalysis analyzeDetailTie(
+            List<MatchVoteCandidateEntity> votedCandidates,
+            List<String> detailSupportedPreferences,
+            List<PreferenceRankDto> ranks
+    ) {
+        List<MatchVoteCandidateEntity> detailCandidates = votedCandidates.stream()
+                .filter(candidate -> detailSupportedPreferences.contains(candidate.getPreference()))
+                .filter(candidate -> candidate.getPreferenceDetail() != null)
+                .filter(candidate -> !candidate.getPreferenceDetail().isBlank())
+                .toList();
+
+        if (detailCandidates.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Long> detailCountMap = detailCandidates.stream()
+                .collect(Collectors.groupingBy(
+                        MatchVoteCandidateEntity::getPreferenceDetail,
+                        Collectors.counting()
+                ));
+
+        long maxDetailCount = detailCountMap.values().stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0);
+
+        List<String> topDetails = detailCountMap.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxDetailCount)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        String selectedDetail = topDetails.get(
+                new Random().nextInt(topDetails.size())
+        );
+
+        String selectedPreference = detailCandidates.stream()
+                .filter(candidate -> selectedDetail.equals(candidate.getPreferenceDetail()))
+                .map(MatchVoteCandidateEntity::getPreference)
+                .findAny()
+                .orElse(null);
+
+        if (selectedPreference == null) {
+            return null;
+        }
+
+        return new MatchPreferenceAnalysis(
+                PreferenceResultType.TYPE_AND_DETAIL,
+                selectedPreference,
+                selectedDetail,
+                ranks
+        );
     }
 }
