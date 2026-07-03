@@ -6,6 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserAuthIdentityRepository extends JpaRepository<UserAuthIdentityEntity, Long> {
     Boolean existsByProviderTypeAndProviderUserId(SocialProviderType providerType, String providerUserId);
-
     Optional<UserAuthIdentityEntity> findByProviderTypeAndProviderUserId(SocialProviderType providerType, String providerUserId);
 }

@@ -17,7 +17,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class MatchUpWinnerResultManager {
-
     private final MatchResultRepository matchResultRepository;
     private final MatchPreferenceResultRepository preferenceResultRepository;
     private final MatchUpRepository matchUpRepository;

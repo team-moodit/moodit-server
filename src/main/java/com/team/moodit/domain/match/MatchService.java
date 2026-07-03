@@ -14,7 +14,6 @@ public class MatchService {
     private final MatchImageReader matchImageReader;
     private final MatchUpReader matchUpReader;
     private final MatchResultFinder matchResultFinder;
-    private final MatchUpWinnerResultManager matchUpWinnerResultManager;
     private final MatchRemover matchRemover;
     private final MatchTabReader matchTabReader;
     private final MatchProgressReader matchProgressReader;
@@ -43,21 +42,11 @@ public class MatchService {
         return matchUpReader.getMatchUp(matchId);
     }
 
-
-
-    public MatchResult getOrCreateWinnerResult(ApiUser apiUser, Long matchId) {
-        return matchUpWinnerResultManager.getOrCreateMatchUpWinnerResult(matchId, apiUser.getId());
-    }
     public void deleteMatch(Long userId, Long matchId) {
         matchRemover.deleteMatch(userId, matchId);
     }
 
-    public MatchTab getMatchTab(Long userId,
-                                int inProgressPage,
-                                int inProgressSize,
-                                int completedPage,
-                                int completedSize)
-    {
+    public MatchTab getMatchTab(Long userId, int inProgressPage, int inProgressSize, int completedPage, int completedSize) {
         return matchTabReader.getMatchTab(
                 userId,
                 inProgressPage,
@@ -66,8 +55,8 @@ public class MatchService {
                 completedSize
         );
     }
-    public MatchProgressResult getMatchProgress(ApiUser apiUser,Long matchId)
-    {
+
+    public MatchProgressResult getMatchProgress(ApiUser apiUser,Long matchId) {
         return matchProgressReader.getMatchProgress(apiUser.getId(),matchId);
     }
 }

@@ -12,7 +12,6 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 public class MatchUpCreator {
-
     private static final String EMPTY_DETAIL = "";
 
     public MatchUpCreateResult createMatches(Long matchId, List<Long> imageIds, List<MatchVoteEntity> allTemplates) {

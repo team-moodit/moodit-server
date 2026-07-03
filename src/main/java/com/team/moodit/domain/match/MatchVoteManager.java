@@ -16,7 +16,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class MatchVoteManager {
-
     private final MatchUpWinnerResultManager matchUpWinnerResultManager;
     private final MatchChoiceCreator matchChoiceCreator;
     private final MatchUpRepository matchUpRepository;
@@ -31,8 +30,7 @@ public class MatchVoteManager {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
-        boolean alreadyVotedSameWinner =
-                currentMatchUp.isSameWinner(command.getPhotoId());
+        boolean alreadyVotedSameWinner = currentMatchUp.isSameWinner(command.getPhotoId());
 
         currentMatchUp.validateCandidate(command.getPhotoId());
 

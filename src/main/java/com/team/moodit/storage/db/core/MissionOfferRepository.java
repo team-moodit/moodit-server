@@ -6,6 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MissionOfferRepository extends JpaRepository<MissionOfferEntity, Long> {
     Optional<MissionOfferEntity> findByIdAndState(Long id, MissionOfferState state);
-
     Optional<MissionOfferEntity> findByUserIdAndMatchResultId(Long userid, Long matchResultId);
 }

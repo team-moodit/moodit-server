@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class MatchTabReader {
-
     private final MatchRepository matchRepository;
     private final MatchResultRepository matchResultRepository;
     private final MatchUpRepository matchUpRepository;

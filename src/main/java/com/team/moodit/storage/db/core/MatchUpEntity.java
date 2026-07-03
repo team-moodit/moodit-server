@@ -20,14 +20,16 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "match_up", indexes = {
-        @Index(name = "idx_match_id", columnList = "matchId"),         // 토너먼트 전체 조회 시 성능 향상
-        @Index(name = "idx_match_id_round", columnList = "matchId, roundNumber") // 특정 라운드 경기 조회 시 최적화
-})
+@Table(
+        name = "match_up",
+        indexes = {
+                @Index(name = "idx_match_id", columnList = "matchId"),         // 토너먼트 전체 조회 시 성능 향상
+                @Index(name = "idx_match_id_round", columnList = "matchId, roundNumber") // 특정 라운드 경기 조회 시 최적화
+        }
+)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MatchUpEntity extends BaseNoStatusEntity {
-
     @Column(nullable = false)
     private Long matchId;
     private int roundNumber;
@@ -36,6 +38,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
     private Long winnerId;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR")
     private MatchUpState state;
 
     @Version
@@ -62,7 +65,12 @@ public class MatchUpEntity extends BaseNoStatusEntity {
     // 3. 정적 팩토리 메서드
     public static MatchUpEntity of(MatchUp matchUp) {
         if (matchUp instanceof RealMatchUp real) {
-            return new MatchUpEntity(real.getMatchId(), real.getRoundNumber(), real.getCandidateAId(), real.getCandidateBId());
+            return new MatchUpEntity(
+                    real.getMatchId(),
+                    real.getRoundNumber(),
+                    real.getCandidateAId(),
+                    real.getCandidateBId()
+            );
         }
         if (matchUp instanceof AutoPassMatch autoPass) {
             return new MatchUpEntity(autoPass.getMatchId(), autoPass.getRoundNumber(), autoPass.getCandidateId());
@@ -87,10 +95,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
         }
 
         if (this.winnerId != null) {
-            if (isSameWinner(selectedPhotoId)) {
-                return;
-            }
-
+            if (isSameWinner(selectedPhotoId)) return;
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
@@ -102,6 +107,7 @@ public class MatchUpEntity extends BaseNoStatusEntity {
     public boolean isSameWinner(Long selectedPhotoId) {
         return this.winnerId != null && this.winnerId.equals(selectedPhotoId);
     }
+
     /**
      * 해당 경기가 이미 투표 완료되었는지 여부 반환
      */

@@ -135,7 +135,6 @@ public class MatchController {
 
         return ApiResponse.success(MatchProgressResponse.from(matchProgressResult));
     }
-
 }
 
 

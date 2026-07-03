@@ -11,6 +11,5 @@ public interface UserMissionRepository extends JpaRepository<UserMissionEntity, 
     Optional<UserMissionEntity> findByIdAndUserIdAndStatus(Long id, Long userId, EntityStatus status);
     Page<UserMissionEntity> findByUserIdAndStateAndStatusOrderByIdDesc(Long userId, UserMissionState state, EntityStatus status, Pageable pageable);
     Optional<UserMissionEntity> findByMissionOfferIdAndStatus(Long missionOfferId, EntityStatus status);
-
     long countByUserIdAndStateAndStatus(Long userId, UserMissionState state, EntityStatus status);
 }

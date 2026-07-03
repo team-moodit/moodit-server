@@ -24,7 +24,6 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class MatchUpReader {
-
     private final MatchRepository matchRepository;
     private final MatchUpRepository matchUpRepository;
     private final MatchImageRepository matchImageRepository;

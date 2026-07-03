@@ -21,7 +21,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class MatchUpFinder {
-
     private final MatchUpRepository matchUpRepository;
     private final MatchRepository matchRepository;
     private final MatchImageRepository matchImageRepository;
