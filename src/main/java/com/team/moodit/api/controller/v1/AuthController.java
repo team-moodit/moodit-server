@@ -26,11 +26,7 @@ public class AuthController {
             @RequestBody KakaoLoginRequest request
     ) {
         LoginResult result = loginService.loginWithKakao(request.accessToken());
-        return ApiResponse.success(new LoginResponse(
-                result.getUserId(),
-                result.getAccessToken(),
-                result.getRefreshToken()
-        ));
+        return ApiResponse.success(LoginResponse.of(result));
     }
 
     @PostMapping("/v1/auth/refresh")
