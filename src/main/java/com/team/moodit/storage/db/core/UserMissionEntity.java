@@ -40,6 +40,10 @@ public class UserMissionEntity extends BaseEntity {
         this.completedAt = LocalDateTime.now();
     }
 
+    public void reviewed() {
+        this.state = UserMissionState.REVIEWED;
+    }
+
     public UserMissionEntity(Long userId, Long matchId, Long missionOfferId, Long missionTemplateId, String title, UserMissionState state) {
         this.userId = userId;
         this.matchId = matchId;
