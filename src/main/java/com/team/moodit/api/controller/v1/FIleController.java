@@ -6,6 +6,7 @@ import com.team.moodit.support.file.FileUploader;
 import com.team.moodit.support.file.UploadResult;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -24,6 +25,16 @@ public class FIleController {
             @RequestPart MultipartFile file
     ) {
         UploadResult result = fileUploader.upload(apiUser.getId(), resourceType, file);
+        return ApiResponse.success(result);
+    }
+
+    @GetMapping("/v1/files/presigned-url")
+    public ApiResponse<UploadResult> getPresignedUrl(
+//            ApiUser apiUser,
+            @RequestParam ObjectResourceType resourceType,
+            @RequestParam String fileName
+    ) {
+        UploadResult result = fileUploader.createPresignedUrl(1L, resourceType, fileName);
         return ApiResponse.success(result);
     }
 }

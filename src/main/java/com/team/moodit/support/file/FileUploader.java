@@ -26,7 +26,7 @@ public class FileUploader {
 
     public UploadResult upload(Long userId, ObjectResourceType resourceType, MultipartFile file) {
         try {
-            String extension = extractExtension(file);
+            String extension = extractExtension(file.getOriginalFilename());
             String objectKey = objectKeyGenerator.generate(resourceType, extension);
 
             s3Uploader.uploadFile(file, objectKey);
@@ -52,7 +52,32 @@ public class FileUploader {
         }
     }
 
-    private String extractExtension(MultipartFile file) {
-        return Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf("."));
+    public UploadResult createPresignedUrl(Long userId, ObjectResourceType resourceType, String fileName) {
+        try {
+            String extension = extractExtension(fileName);
+            String objectKey = objectKeyGenerator.generate(resourceType, extension);
+
+            FileEntity savedFile = fileRepository.save(
+                    new FileEntity(
+                            userId,
+                            resourceType,
+                            objectKey,
+                            fileName,
+                            "image/" + extension
+                    )
+            );
+            System.out.println(extension);
+            return new UploadResult(
+                    savedFile.getId(),
+                    s3Uploader.createPresignedUrl(objectKey, extension)
+            );
+        } catch (Exception e) {
+            log.error("[FileUploader] userId: {}, fileName: {}. message: {}", userId, fileName, e.getMessage(), e);
+            throw new ApiException(ErrorType.FILE_UPLOADING_FAILED);
+        }
+    }
+
+    private String extractExtension(String fileName) {
+        return Objects.requireNonNull(fileName).substring(fileName.lastIndexOf("."));
     }
 }
