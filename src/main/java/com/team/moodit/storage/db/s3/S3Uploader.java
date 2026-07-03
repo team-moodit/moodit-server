@@ -47,7 +47,7 @@ public class S3Uploader {
                                 PutObjectRequest.builder()
                                         .bucket(bucket)
                                         .key(objectKey)
-                                        .contentType("image/" + extension.replaceAll("\\.", ""))
+                                        .contentType("image/" + extension)
                                         .build()
                         ).build()
         );

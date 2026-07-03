@@ -54,8 +54,10 @@ public class FileUploader {
 
     public UploadResult createPresignedUrl(Long userId, ObjectResourceType resourceType, String fileName) {
         try {
-            String extension = extractExtension(fileName);
-            String objectKey = objectKeyGenerator.generate(resourceType, extension);
+            String rawExtension = extractExtension(fileName);
+            String objectKey = objectKeyGenerator.generate(resourceType, rawExtension);
+
+            String extension = rawExtension.replace(".", "").replace(" ", "+");
 
             FileEntity savedFile = fileRepository.save(
                     new FileEntity(
@@ -66,7 +68,7 @@ public class FileUploader {
                             "image/" + extension
                     )
             );
-            System.out.println(extension);
+            System.out.println(extension); // .svg xml
             return new UploadResult(
                     savedFile.getId(),
                     s3Uploader.createPresignedUrl(objectKey, extension)
