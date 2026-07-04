@@ -10,4 +10,9 @@ public interface MissionTemplateRepository extends JpaRepository<MissionTemplate
     List<MissionTemplateEntity> findByPreferenceTypeAndPreferenceDetailTypeAndStatus(PreferenceType preferenceType, PreferenceDetailType preferenceDetailType, EntityStatus status);
     List<MissionTemplateEntity> findByPreferenceTypeAndStatus(PreferenceType preferenceType, EntityStatus status);
     List<MissionTemplateEntity> findByPreferenceTypeInAndStatus(List<PreferenceType> preferenceTypes, EntityStatus status);
+    List<MissionTemplateEntity> findByPreferenceTypeAndPreferenceDetailTypeInAndStatus(
+            PreferenceType preferenceType,
+            List<PreferenceDetailType> preferenceDetailTypes,
+            EntityStatus status
+    );
 }

@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.PreferenceDetailTypeScore;
 import com.team.moodit.domain.PreferenceTypeScore;
 import com.team.moodit.storage.db.core.MatchPreferenceResultEntity;
 import com.team.moodit.storage.db.core.MatchPreferenceResultRepository;
@@ -33,12 +34,20 @@ public class MatchResultReader {
                         matchResult.getPreferenceType(),
                         matchResult.getPreferenceDetailType(),
                         preferenceResults.stream().map(it ->
-                              new PreferenceTypeScore(
-                                      it.getPreferenceType(),
-                                      it.getPreferenceDetailType(),
-                                      it.getSelectedCount(),
-                                      it.getRank()
-                              )
+                                new PreferenceTypeScore(
+                                        it.getPreferenceType(),
+                                        it.getPreferenceDetailType(),
+                                        it.getSelectedCount(),
+                                        it.getRank()
+                                )
+                        ).toList(),
+                        preferenceResults.stream().map(it ->
+                                new PreferenceDetailTypeScore(
+                                        it.getPreferenceType(),
+                                        it.getPreferenceDetailType(),
+                                        it.getSelectedCount(),
+                                        it.getRank()
+                                )
                         ).toList()
                 )
         );

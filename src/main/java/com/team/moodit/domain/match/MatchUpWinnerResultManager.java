@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.PreferenceDetailTypeScore;
 import com.team.moodit.domain.PreferenceTypeScore;
 import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceType;
@@ -98,6 +99,9 @@ public class MatchUpWinnerResultManager {
                         entity.getPreferenceDetailType(),
                         preferenceEntities.stream().map(p ->
                                 new PreferenceTypeScore(p.getPreferenceType(),p.getPreferenceDetailType(), p.getSelectedCount(), p.getRank())
+                        ).toList(),
+                        preferenceEntities.stream().map(it ->
+                                new PreferenceDetailTypeScore(it.getPreferenceType(), it.getPreferenceDetailType(), it.getSelectedCount(), it.getRank())
                         ).toList()
                 )
         );

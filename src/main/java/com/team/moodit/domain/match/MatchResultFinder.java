@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.PreferenceDetailTypeScore;
 import com.team.moodit.domain.PreferenceTypeScore;
 import com.team.moodit.storage.db.core.MatchPreferenceResultEntity;
 import com.team.moodit.storage.db.core.MatchPreferenceResultRepository;
@@ -45,6 +46,14 @@ public class MatchResultFinder {
                                                         p.getSelectedCount(),
                                                         p.getRank()
                                                 )
+                                        ).toList(),
+                                        matchPreferenceMap.get(it.getId()).stream().map(p ->
+                                                new PreferenceDetailTypeScore(
+                                                        it.getPreferenceType(),
+                                                        p.getPreferenceDetailType(),
+                                                        p.getSelectedCount(),
+                                                        p.getRank()
+                                                )
                                         ).toList()
                                 )
                         )
@@ -76,6 +85,14 @@ public class MatchResultFinder {
                         matchResult.getPreferenceDetailType(),
                         matchPreferenceResults.stream().map(it ->
                                 new PreferenceTypeScore(
+                                        it.getPreferenceType(),
+                                        it.getPreferenceDetailType(),
+                                        it.getSelectedCount(),
+                                        it.getRank()
+                                )
+                        ).toList(),
+                        matchPreferenceResults.stream().map(it ->
+                                new PreferenceDetailTypeScore(
                                         it.getPreferenceType(),
                                         it.getPreferenceDetailType(),
                                         it.getSelectedCount(),

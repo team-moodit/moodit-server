@@ -1,6 +1,7 @@
 package com.team.moodit.domain.mission;
 
 import com.team.moodit.domain.enums.EntityStatus;
+import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.match.MatchPreferenceResult;
 import com.team.moodit.storage.db.core.MissionTemplateEntity;
@@ -67,9 +68,35 @@ public class MissionTemplateFinder {
     }
 
     private List<MissionTemplateEntity> findTieOfferable(MatchPreferenceResult result) {
+        return result.getTopRankPreferenceType().stream()
+                .flatMap(preferenceType -> findTieOfferableByPreferenceType(result, preferenceType).stream())
+                .toList();
+    }
+
+    private List<MissionTemplateEntity> findTieOfferableByPreferenceType(
+            MatchPreferenceResult result,
+            PreferenceType preferenceType
+    ) {
+        if (preferenceType.hasDetail()) {
+            List<PreferenceDetailType> topDetails = result.getTopRankPreferenceDetailTypes(preferenceType);
+
+            if (!topDetails.isEmpty()) {
+                List<MissionTemplateEntity> detailTemplates =
+                        missionTemplateRepository.findByPreferenceTypeAndPreferenceDetailTypeInAndStatus(
+                                preferenceType,
+                                topDetails,
+                                EntityStatus.ACTIVE
+                        );
+
+                if (!detailTemplates.isEmpty()) {
+                    return pickOneByPreferenceType(detailTemplates);
+                }
+            }
+        }
+
         return pickOneByPreferenceType(
-                missionTemplateRepository.findByPreferenceTypeInAndStatus(
-                        result.getTopRankPreferenceType(),
+                missionTemplateRepository.findByPreferenceTypeAndStatus(
+                        preferenceType,
                         EntityStatus.ACTIVE
                 )
         );
@@ -84,6 +111,8 @@ public class MissionTemplateFinder {
                 entity.getDisplayOrder()
         );
     }
+
+
 
     // 선호 결과가 동률이 나와 도출되지 않았을 때 선호 타입 미션 중 랜덤 하나씩 뽑아내기 위함
     private List<MissionTemplateEntity> pickOneByPreferenceType(List<MissionTemplateEntity> entities) {
