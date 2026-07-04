@@ -22,6 +22,7 @@ public class MatchPreferenceResultEntity extends BaseNoStatusEntity {
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "VARCHAR")
     private PreferenceType preferenceType;
+    @Column(columnDefinition = "VARCHAR")
     private PreferenceDetailType preferenceDetailType;
     private int selectedCount;
     private int rank; // NOTE: 동률 시 같은 랭크로 지정
