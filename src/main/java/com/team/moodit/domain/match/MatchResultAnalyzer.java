@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 @Component
 public class MatchResultAnalyzer {
 
+    private final Random random = new Random();
+
     public MatchPreferenceAnalysis analyze(List<MatchVoteCandidateEntity> votedCandidates) {
         if (votedCandidates == null || votedCandidates.isEmpty()) {
             return new MatchPreferenceAnalysis(
@@ -32,7 +34,10 @@ public class MatchResultAnalyzer {
                 ));
 
         List<LabelStatistics> mainStats = mainCountMap.entrySet().stream()
-                .map(e -> new LabelStatistics(e.getKey(), e.getValue().intValue()))
+                .map(entry -> new LabelStatistics(
+                        entry.getKey(),
+                        entry.getValue().intValue()
+                ))
                 .sorted(Comparator.comparingInt(LabelStatistics::count).reversed())
                 .toList();
 
@@ -43,25 +48,14 @@ public class MatchResultAnalyzer {
                         && mainStats.get(0).count() == mainStats.get(1).count();
 
         if (isMainTie) {
-            List<String> topMainPreferences = mainStats.stream()
-                    .filter(stat -> stat.count() == mainStats.get(0).count())
-                    .map(LabelStatistics::label)
-                    .toList();
+            MatchPreferenceAnalysis tieAnalysis = analyzeMainTie(
+                    votedCandidates,
+                    mainStats,
+                    ranks
+            );
 
-            List<String> detailSupportedPreferences = topMainPreferences.stream()
-                    .filter(this::hasDetailPreference)
-                    .toList();
-
-            if (!detailSupportedPreferences.isEmpty()) {
-                MatchPreferenceAnalysis detailTieResult = analyzeDetailTie(
-                        votedCandidates,
-                        detailSupportedPreferences,
-                        ranks
-                );
-
-                if (detailTieResult != null) {
-                    return detailTieResult;
-                }
+            if (tieAnalysis != null) {
+                return tieAnalysis;
             }
 
             return new MatchPreferenceAnalysis(
@@ -74,7 +68,7 @@ public class MatchResultAnalyzer {
 
         String targetMain = mainStats.get(0).label();
 
-        if ("CONSISTENCE".equals(targetMain) || "TREND".equals(targetMain)) {
+        if (!hasDetailPreference(targetMain)) {
             return new MatchPreferenceAnalysis(
                     PreferenceResultType.TYPE_ONLY,
                     targetMain,
@@ -83,35 +77,14 @@ public class MatchResultAnalyzer {
             );
         }
 
-        List<MatchVoteCandidateEntity> subFiltered = votedCandidates.stream()
-                .filter(c -> targetMain.equals(c.getPreference()))
-                .filter(c -> c.getPreferenceDetail() != null && !c.getPreferenceDetail().isBlank())
-                .toList();
+        MatchPreferenceAnalysis detailAnalysis = analyzeSingleMainDetail(
+                votedCandidates,
+                targetMain,
+                ranks
+        );
 
-        if (!subFiltered.isEmpty()) {
-            Map<String, Long> subCountMap = subFiltered.stream()
-                    .collect(Collectors.groupingBy(
-                            MatchVoteCandidateEntity::getPreferenceDetail,
-                            Collectors.counting()
-                    ));
-
-            List<LabelStatistics> subStats = subCountMap.entrySet().stream()
-                    .map(e -> new LabelStatistics(e.getKey(), e.getValue().intValue()))
-                    .sorted(Comparator.comparingInt(LabelStatistics::count).reversed())
-                    .toList();
-
-            boolean isSubTie =
-                    subStats.size() > 1
-                            && subStats.get(0).count() == subStats.get(1).count();
-
-            if (!isSubTie) {
-                return new MatchPreferenceAnalysis(
-                        PreferenceResultType.TYPE_AND_DETAIL,
-                        targetMain,
-                        subStats.get(0).label(),
-                        ranks
-                );
-            }
+        if (detailAnalysis != null) {
+            return detailAnalysis;
         }
 
         return new MatchPreferenceAnalysis(
@@ -122,33 +95,50 @@ public class MatchResultAnalyzer {
         );
     }
 
-    private List<PreferenceRankDto> createRanks(List<LabelStatistics> mainStats) {
-        List<PreferenceRankDto> ranks = new ArrayList<>();
+    /**
+     * 메인 선호가 동률인 경우 처리.
+     *
+     * 요구사항:
+     * - 결과 타입은 TIE 상태를 유지한다.
+     * - 단, 동률 선호 중 상세선호를 가진 선호가 포함되어 있으면
+     *   해당 선호들의 preferenceDetail 선택 횟수를 집계한다.
+     * - 가장 많이 선택된 상세선호를 미션 문구 기준으로 사용한다.
+     * - 상세선호까지 동률이면 랜덤 선택한다.
+     */
+    private MatchPreferenceAnalysis analyzeMainTie(
+            List<MatchVoteCandidateEntity> votedCandidates,
+            List<LabelStatistics> mainStats,
+            List<PreferenceRankDto> ranks
+    ) {
+        int topCount = mainStats.get(0).count();
 
-        int rank = 1;
+        List<String> topMainPreferences = mainStats.stream()
+                .filter(stat -> stat.count() == topCount)
+                .map(LabelStatistics::label)
+                .toList();
 
-        for (int i = 0; i < mainStats.size(); i++) {
-            if (i > 0 && mainStats.get(i).count() != mainStats.get(i - 1).count()) {
-                rank++;
-            }
-            ranks.add(new PreferenceRankDto(
-                    mainStats.get(i).label(),
-                    rank,
-                    mainStats.get(i).count()
-            ));
+        List<String> detailSupportedPreferences = topMainPreferences.stream()
+                .filter(this::hasDetailPreference)
+                .toList();
+
+        if (detailSupportedPreferences.isEmpty()) {
+            return null;
         }
-        return ranks;
+
+        return analyzeDetailTie(
+                votedCandidates,
+                detailSupportedPreferences,
+                ranks
+        );
     }
 
-
-    private record LabelStatistics(String label, int count) {
-    }
-
-
-    private boolean hasDetailPreference(String preference) {
-        return PreferenceType.from(preference).hasDetail();
-    }
-
+    /**
+     * 메인 선호 동률 상태에서 상세선호 기준 미션 문구를 정하기 위한 분석.
+     *
+     * 주의:
+     * 여기서 TYPE_AND_DETAIL로 반환하면 안 된다.
+     * 최종 선호 결과는 여전히 TIE이기 때문에 PreferenceResultType.TIE를 유지한다.
+     */
     private MatchPreferenceAnalysis analyzeDetailTie(
             List<MatchVoteCandidateEntity> votedCandidates,
             List<String> detailSupportedPreferences,
@@ -164,9 +154,12 @@ public class MatchResultAnalyzer {
             return null;
         }
 
-        Map<String, Long> detailCountMap = detailCandidates.stream()
+        Map<DetailKey, Long> detailCountMap = detailCandidates.stream()
                 .collect(Collectors.groupingBy(
-                        MatchVoteCandidateEntity::getPreferenceDetail,
+                        candidate -> new DetailKey(
+                                candidate.getPreference(),
+                                candidate.getPreferenceDetail()
+                        ),
                         Collectors.counting()
                 ));
 
@@ -175,30 +168,119 @@ public class MatchResultAnalyzer {
                 .max()
                 .orElse(0);
 
-        List<String> topDetails = detailCountMap.entrySet().stream()
+        List<DetailStatistics> topDetails = detailCountMap.entrySet().stream()
                 .filter(entry -> entry.getValue() == maxDetailCount)
-                .map(Map.Entry::getKey)
+                .map(entry -> new DetailStatistics(
+                        entry.getKey().preference(),
+                        entry.getKey().detail(),
+                        entry.getValue().intValue()
+                ))
                 .toList();
 
-        String selectedDetail = topDetails.get(
-                new Random().nextInt(topDetails.size())
+        DetailStatistics selectedDetail = pickRandom(topDetails);
+
+        if (selectedDetail == null) {
+            return null;
+        }
+
+        return new MatchPreferenceAnalysis(
+                PreferenceResultType.TIE,
+                selectedDetail.preference(),
+                selectedDetail.detail(),
+                ranks
         );
+    }
 
-        String selectedPreference = detailCandidates.stream()
-                .filter(candidate -> selectedDetail.equals(candidate.getPreferenceDetail()))
-                .map(MatchVoteCandidateEntity::getPreference)
-                .findAny()
-                .orElse(null);
+    /**
+     * 메인 선호가 단독 1위이고, 그 선호가 상세선호를 가진 경우 처리.
+     *
+     * 기존 정책 유지:
+     * - 상세선호가 단독 1위면 TYPE_AND_DETAIL
+     * - 상세선호까지 동률이면 TYPE_ONLY
+     */
+    private MatchPreferenceAnalysis analyzeSingleMainDetail(
+            List<MatchVoteCandidateEntity> votedCandidates,
+            String targetMain,
+            List<PreferenceRankDto> ranks
+    ) {
+        List<MatchVoteCandidateEntity> subFiltered = votedCandidates.stream()
+                .filter(candidate -> targetMain.equals(candidate.getPreference()))
+                .filter(candidate -> candidate.getPreferenceDetail() != null)
+                .filter(candidate -> !candidate.getPreferenceDetail().isBlank())
+                .toList();
 
-        if (selectedPreference == null) {
+        if (subFiltered.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Long> subCountMap = subFiltered.stream()
+                .collect(Collectors.groupingBy(
+                        MatchVoteCandidateEntity::getPreferenceDetail,
+                        Collectors.counting()
+                ));
+
+        List<LabelStatistics> subStats = subCountMap.entrySet().stream()
+                .map(entry -> new LabelStatistics(
+                        entry.getKey(),
+                        entry.getValue().intValue()
+                ))
+                .sorted(Comparator.comparingInt(LabelStatistics::count).reversed())
+                .toList();
+
+        boolean isSubTie =
+                subStats.size() > 1
+                        && subStats.get(0).count() == subStats.get(1).count();
+
+        if (isSubTie) {
             return null;
         }
 
         return new MatchPreferenceAnalysis(
                 PreferenceResultType.TYPE_AND_DETAIL,
-                selectedPreference,
-                selectedDetail,
+                targetMain,
+                subStats.get(0).label(),
                 ranks
         );
+    }
+
+    private List<PreferenceRankDto> createRanks(List<LabelStatistics> mainStats) {
+        List<PreferenceRankDto> ranks = new ArrayList<>();
+
+        int rank = 1;
+
+        for (int i = 0; i < mainStats.size(); i++) {
+            if (i > 0 && mainStats.get(i).count() != mainStats.get(i - 1).count()) {
+                rank++;
+            }
+
+            ranks.add(new PreferenceRankDto(
+                    mainStats.get(i).label(),
+                    rank,
+                    mainStats.get(i).count()
+            ));
+        }
+
+        return ranks;
+    }
+
+    private boolean hasDetailPreference(String preference) {
+        return PreferenceType.from(preference).hasDetail();
+    }
+
+    private DetailStatistics pickRandom(List<DetailStatistics> details) {
+        if (details == null || details.isEmpty()) {
+            return null;
+        }
+
+        return details.get(random.nextInt(details.size()));
+    }
+
+    private record LabelStatistics(String label, int count) {
+    }
+
+    private record DetailKey(String preference, String detail) {
+    }
+
+    private record DetailStatistics(String preference, String detail, int count) {
     }
 }
