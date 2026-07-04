@@ -15,7 +15,7 @@ public class UserPrivacyModifier {
 
     @Transactional
     public Long modifyName(Long userId, String name) {
-        UserPrivacyEntity userPrivacy = userPrivacyRepository.findById(userId)
+        UserPrivacyEntity userPrivacy = userPrivacyRepository.findByUserId(userId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         userPrivacy.applyName(name);
