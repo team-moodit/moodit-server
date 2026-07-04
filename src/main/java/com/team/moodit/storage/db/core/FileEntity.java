@@ -25,14 +25,4 @@ public class FileEntity extends BaseNoStatusEntity {
     private String objectKey;
     private String originalName;
     private String contentType;
-    private Long byteSize;
-
-    public FileEntity(Long userId, ObjectResourceType resourceType, String objectKey, String originalName,
-                      String contentType) {
-        this.userId = userId;
-        this.resourceType = resourceType;
-        this.objectKey = objectKey;
-        this.originalName = originalName;
-        this.contentType = contentType;
-    }
 }

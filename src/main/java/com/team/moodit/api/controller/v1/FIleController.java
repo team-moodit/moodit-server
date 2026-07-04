@@ -7,26 +7,13 @@ import com.team.moodit.support.file.UploadResult;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
 public class FIleController {
     private final FileUploader fileUploader;
-
-    @PostMapping("/v1/files/upload")
-    public ApiResponse<UploadResult> uploadFile(
-            ApiUser apiUser,
-            @RequestParam ObjectResourceType resourceType,
-            @RequestPart MultipartFile file
-    ) {
-        UploadResult result = fileUploader.upload(apiUser.getId(), resourceType, file);
-        return ApiResponse.success(result);
-    }
 
     @GetMapping("/v1/files/presigned-url")
     public ApiResponse<UploadResult> getPresignedUrl(
