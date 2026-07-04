@@ -1,5 +1,6 @@
 package com.team.moodit.storage.db.core;
 
+import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +22,7 @@ public class MatchPreferenceResultEntity extends BaseNoStatusEntity {
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "VARCHAR")
     private PreferenceType preferenceType;
+    private PreferenceDetailType preferenceDetailType;
     private int selectedCount;
     private int rank; // NOTE: 동률 시 같은 랭크로 지정
 }
