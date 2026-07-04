@@ -206,14 +206,9 @@ public class MatchResultAnalyzer {
     ) {
         return ranks.stream()
                 .map(rank -> {
-                    if (rank.getRank() != 1) {
-                        return rank;
-                    }
-
                     if (!hasDetailPreference(rank.getLabel())) {
                         return rank;
                     }
-
                     PreferenceDetailType detail = findTopPreferenceDetail(
                             votedCandidates,
                             rank.getLabel()
