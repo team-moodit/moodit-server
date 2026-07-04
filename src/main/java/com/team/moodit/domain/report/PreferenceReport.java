@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class PreferenceReport {
-    private long totalSelectionCount;
+    private long totalMatchCount;
     private List<PreferenceCriterionShare> criteria;
 
     public PreferenceCriterionShare topCriterion() {

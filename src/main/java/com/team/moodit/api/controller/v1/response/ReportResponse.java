@@ -22,10 +22,10 @@ public record ReportResponse(
         return new ReportResponse(
                 new ReportSummaryResponse(
                         report.getRecordSummary().getTotalMatchCount(),
-                        report.getRecordSummary().getCompletedMissionCount()
+                        report.getRecordSummary().getReviewedMissionCount()
                 ),
                 new PreferenceReportResponse(
-                        report.getPreferenceReport().getTotalSelectionCount(),
+                        report.getPreferenceReport().getTotalMatchCount(),
                         PreferenceDistribution.of(report.getPreferenceReport().topCriterion()),
                         report.getPreferenceReport().getCriteria().stream().map(PreferenceDistribution::of).toList()
                 ),
@@ -47,7 +47,7 @@ record ReportSummaryResponse(
 }
 
 record PreferenceReportResponse(
-        long totalSelectionCount,
+        long totalMatchCount,
         PreferenceDistribution topPreference,
         List<PreferenceDistribution> distributions
 

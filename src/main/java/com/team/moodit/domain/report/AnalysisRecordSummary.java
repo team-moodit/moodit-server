@@ -7,5 +7,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AnalysisRecordSummary {
     long totalMatchCount;
-    long completedMissionCount;
+    long reviewedMissionCount;
 }

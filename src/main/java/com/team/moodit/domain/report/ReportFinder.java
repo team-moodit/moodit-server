@@ -23,9 +23,9 @@ public class ReportFinder {
 
     public UserTasteReport find(Long userId) {
         long totalMatchCount = matchResultRepository.countByUserId(userId);
-        long completedMissionCount = userMissionRepository.countByUserIdAndStateAndStatus(
+        long reviewedMissionCount = userMissionRepository.countByUserIdAndStateAndStatus(
                 userId,
-                UserMissionState.COMPLETED,
+                UserMissionState.REVIEWED,
                 EntityStatus.ACTIVE
         );
 
@@ -52,10 +52,10 @@ public class ReportFinder {
         return new UserTasteReport(
                 new AnalysisRecordSummary(
                         totalMatchCount,
-                        completedMissionCount
+                        reviewedMissionCount
                 ),
                 new PreferenceReport(
-                        totalSelectionCount,
+                        totalMatchCount,
                         criteria
                 )
         );
