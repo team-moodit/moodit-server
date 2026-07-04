@@ -73,6 +73,7 @@ public class MatchUpWinnerResultManager {
                 .map(rank -> new MatchPreferenceResultEntity(
                         resultEntity.getId(),
                         safeToPreferenceType(rank.getLabel()),
+                        rank.getPreferenceDetailType(),
                         rank.getCount(),
                         rank.getRank()
                 ))
@@ -96,7 +97,7 @@ public class MatchUpWinnerResultManager {
                         entity.getPreferenceType(),
                         entity.getPreferenceDetailType(),
                         preferenceEntities.stream().map(p ->
-                                new PreferenceTypeScore(p.getPreferenceType(), p.getSelectedCount(), p.getRank())
+                                new PreferenceTypeScore(p.getPreferenceType(),p.getPreferenceDetailType(), p.getSelectedCount(), p.getRank())
                         ).toList()
                 )
         );

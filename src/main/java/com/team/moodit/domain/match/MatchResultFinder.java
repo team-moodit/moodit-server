@@ -41,6 +41,7 @@ public class MatchResultFinder {
                                         matchPreferenceMap.get(it.getId()).stream().map(p ->
                                                 new PreferenceTypeScore(
                                                         p.getPreferenceType(),
+                                                        p.getPreferenceDetailType(),
                                                         p.getSelectedCount(),
                                                         p.getRank()
                                                 )
@@ -76,6 +77,7 @@ public class MatchResultFinder {
                         matchPreferenceResults.stream().map(it ->
                                 new PreferenceTypeScore(
                                         it.getPreferenceType(),
+                                        it.getPreferenceDetailType(),
                                         it.getSelectedCount(),
                                         it.getRank()
                                 )

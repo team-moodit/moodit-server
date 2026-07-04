@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceResultType;
 import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.storage.db.core.MatchVoteCandidateEntity;
@@ -18,6 +19,7 @@ public class MatchResultAnalyzer {
     private final Random random = new Random();
 
     public MatchPreferenceAnalysis analyze(List<MatchVoteCandidateEntity> votedCandidates) {
+        // 투표 데이터가 없으면 선호 결과를 계산할 수 없으므로 TIE 반환
         if (votedCandidates == null || votedCandidates.isEmpty()) {
             return new MatchPreferenceAnalysis(
                     PreferenceResultType.TIE,
@@ -26,13 +28,13 @@ public class MatchResultAnalyzer {
                     List.of()
             );
         }
-
+        // 메인 선호(FITNESS, TREND, CONSISTENCE, AESTHETICS)별 선택 횟수 집계
         Map<String, Long> mainCountMap = votedCandidates.stream()
                 .collect(Collectors.groupingBy(
                         MatchVoteCandidateEntity::getPreference,
                         Collectors.counting()
                 ));
-
+        // 선택 횟수 기준 내림차순 정렬
         List<LabelStatistics> mainStats = mainCountMap.entrySet().stream()
                 .map(entry -> new LabelStatistics(
                         entry.getKey(),
@@ -40,34 +42,47 @@ public class MatchResultAnalyzer {
                 ))
                 .sorted(Comparator.comparingInt(LabelStatistics::count).reversed())
                 .toList();
-
+        // 메인 선호 순위 생성
+        // preferenceDetailType은 기본적으로 null이며,
+        // TIE인 경우에만 상세선호를 추가로 채운다.
         List<PreferenceRankDto> ranks = createRanks(mainStats);
-
+        // 메인 선호 1위가 동률인지 확인
         boolean isMainTie =
                 mainStats.size() > 1
                         && mainStats.get(0).count() == mainStats.get(1).count();
-
+        /*
+         * PM 요구사항
+         *
+         * 메인 선호가 동률이면 결과 타입은 TIE를 유지한다.
+         *
+         * 단,
+         * FITNESS / AESTHETICS 처럼 상세선호를 가진 타입은
+         * 각 타입별 상세선호 1위를 계산하여 저장한다.
+         *
+         * 이후 미션 생성 시
+         * FITNESS -> BODY_FIT
+         * AESTHETICS -> COLOR
+         * 처럼 각각의 상세선호를 이용하여 미션을 생성한다.
+         *
+         * TREND / CONSISTENCE 는 상세선호가 없으므로
+         * preferenceDetailType은 null로 유지한다.
+         */
         if (isMainTie) {
-            MatchPreferenceAnalysis tieAnalysis = analyzeMainTie(
+            List<PreferenceRankDto> tieRanks = applyTiePreferenceDetails(
                     votedCandidates,
-                    mainStats,
                     ranks
             );
-
-            if (tieAnalysis != null) {
-                return tieAnalysis;
-            }
 
             return new MatchPreferenceAnalysis(
                     PreferenceResultType.TIE,
                     null,
                     null,
-                    ranks
+                    tieRanks
             );
         }
 
         String targetMain = mainStats.get(0).label();
-
+        // 상세선호가 없는 타입(TREND, CONSISTENCE)은 TYPE_ONLY 반환
         if (!hasDetailPreference(targetMain)) {
             return new MatchPreferenceAnalysis(
                     PreferenceResultType.TYPE_ONLY,
@@ -76,13 +91,13 @@ public class MatchResultAnalyzer {
                     ranks
             );
         }
-
+        // 상세선호가 존재하는 타입(FITNESS, AESTHETICS)은 상세선호 분석
         MatchPreferenceAnalysis detailAnalysis = analyzeSingleMainDetail(
                 votedCandidates,
                 targetMain,
                 ranks
         );
-
+        // 상세선호까지 단독 1위인 경우 TYPE_AND_DETAIL 반환
         if (detailAnalysis != null) {
             return detailAnalysis;
         }
@@ -94,109 +109,14 @@ public class MatchResultAnalyzer {
                 ranks
         );
     }
-
     /**
-     * 메인 선호가 동률인 경우 처리.
+     * 메인 선호가 단독 1위이고,
+     * 상세선호를 지원하는 타입(FITNESS, AESTHETICS)인 경우
+     * 상세선호까지 분석한다.
      *
-     * 요구사항:
-     * - 결과 타입은 TIE 상태를 유지한다.
-     * - 단, 동률 선호 중 상세선호를 가진 선호가 포함되어 있으면
-     *   해당 선호들의 preferenceDetail 선택 횟수를 집계한다.
-     * - 가장 많이 선택된 상세선호를 미션 문구 기준으로 사용한다.
-     * - 상세선호까지 동률이면 랜덤 선택한다.
-     */
-    private MatchPreferenceAnalysis analyzeMainTie(
-            List<MatchVoteCandidateEntity> votedCandidates,
-            List<LabelStatistics> mainStats,
-            List<PreferenceRankDto> ranks
-    ) {
-        int topCount = mainStats.get(0).count();
-
-        List<String> topMainPreferences = mainStats.stream()
-                .filter(stat -> stat.count() == topCount)
-                .map(LabelStatistics::label)
-                .toList();
-
-        List<String> detailSupportedPreferences = topMainPreferences.stream()
-                .filter(this::hasDetailPreference)
-                .toList();
-
-        if (detailSupportedPreferences.isEmpty()) {
-            return null;
-        }
-
-        return analyzeDetailTie(
-                votedCandidates,
-                detailSupportedPreferences,
-                ranks
-        );
-    }
-
-    /**
-     * 메인 선호 동률 상태에서 상세선호 기준 미션 문구를 정하기 위한 분석.
-     *
-     * 주의:
-     * 여기서 TYPE_AND_DETAIL로 반환하면 안 된다.
-     * 최종 선호 결과는 여전히 TIE이기 때문에 PreferenceResultType.TIE를 유지한다.
-     */
-    private MatchPreferenceAnalysis analyzeDetailTie(
-            List<MatchVoteCandidateEntity> votedCandidates,
-            List<String> detailSupportedPreferences,
-            List<PreferenceRankDto> ranks
-    ) {
-        List<MatchVoteCandidateEntity> detailCandidates = votedCandidates.stream()
-                .filter(candidate -> detailSupportedPreferences.contains(candidate.getPreference()))
-                .filter(candidate -> candidate.getPreferenceDetail() != null)
-                .filter(candidate -> !candidate.getPreferenceDetail().isBlank())
-                .toList();
-
-        if (detailCandidates.isEmpty()) {
-            return null;
-        }
-
-        Map<DetailKey, Long> detailCountMap = detailCandidates.stream()
-                .collect(Collectors.groupingBy(
-                        candidate -> new DetailKey(
-                                candidate.getPreference(),
-                                candidate.getPreferenceDetail()
-                        ),
-                        Collectors.counting()
-                ));
-
-        long maxDetailCount = detailCountMap.values().stream()
-                .mapToLong(Long::longValue)
-                .max()
-                .orElse(0);
-
-        List<DetailStatistics> topDetails = detailCountMap.entrySet().stream()
-                .filter(entry -> entry.getValue() == maxDetailCount)
-                .map(entry -> new DetailStatistics(
-                        entry.getKey().preference(),
-                        entry.getKey().detail(),
-                        entry.getValue().intValue()
-                ))
-                .toList();
-
-        DetailStatistics selectedDetail = pickRandom(topDetails);
-
-        if (selectedDetail == null) {
-            return null;
-        }
-
-        return new MatchPreferenceAnalysis(
-                PreferenceResultType.TIE,
-                selectedDetail.preference(),
-                selectedDetail.detail(),
-                ranks
-        );
-    }
-
-    /**
-     * 메인 선호가 단독 1위이고, 그 선호가 상세선호를 가진 경우 처리.
-     *
-     * 기존 정책 유지:
-     * - 상세선호가 단독 1위면 TYPE_AND_DETAIL
-     * - 상세선호까지 동률이면 TYPE_ONLY
+     * 기존 정책 유지
+     * - 상세선호 단독 1위 -> TYPE_AND_DETAIL
+     * - 상세선호 동률 -> TYPE_ONLY
      */
     private MatchPreferenceAnalysis analyzeSingleMainDetail(
             List<MatchVoteCandidateEntity> votedCandidates,
@@ -242,7 +162,13 @@ public class MatchResultAnalyzer {
                 ranks
         );
     }
-
+    /**
+     * 메인 선호 순위를 생성한다.
+     *
+     * preferenceDetailType은 기본적으로 null이며,
+     * TIE인 경우 applyTiePreferenceDetails()에서
+     * rank=1인 선호들만 상세선호를 채운다.
+     */
     private List<PreferenceRankDto> createRanks(List<LabelStatistics> mainStats) {
         List<PreferenceRankDto> ranks = new ArrayList<>();
 
@@ -255,6 +181,7 @@ public class MatchResultAnalyzer {
 
             ranks.add(new PreferenceRankDto(
                     mainStats.get(i).label(),
+                    null,
                     rank,
                     mainStats.get(i).count()
             ));
@@ -262,7 +189,88 @@ public class MatchResultAnalyzer {
 
         return ranks;
     }
+    /**
+     * PM 요구사항
+     *
+     * 메인 선호가 동률일 경우
+     * rank=1인 선호들 중
+     * 상세선호를 지원하는 타입(FITNESS, AESTHETICS)에 대해서만
+     * 각 타입별 상세선호 1위를 계산하여 저장한다.
+     *
+     * TREND, CONSISTENCE는
+     * 상세선호가 없으므로 null을 유지한다.
+     */
+    private List<PreferenceRankDto> applyTiePreferenceDetails(
+            List<MatchVoteCandidateEntity> votedCandidates,
+            List<PreferenceRankDto> ranks
+    ) {
+        return ranks.stream()
+                .map(rank -> {
+                    if (rank.getRank() != 1) {
+                        return rank;
+                    }
 
+                    if (!hasDetailPreference(rank.getLabel())) {
+                        return rank;
+                    }
+
+                    PreferenceDetailType detail = findTopPreferenceDetail(
+                            votedCandidates,
+                            rank.getLabel()
+                    );
+
+                    return new PreferenceRankDto(
+                            rank.getLabel(),
+                            detail,
+                            rank.getRank(),
+                            rank.getCount()
+                    );
+                })
+                .toList();
+    }
+    /**
+     * 특정 메인 선호 안에서
+     * 가장 많이 선택된 상세선호를 반환한다.
+     *
+     * 상세선호까지 동률인 경우
+     * 기존 정책과 동일하게 랜덤으로 하나를 선택한다.
+     */
+    private PreferenceDetailType findTopPreferenceDetail(
+            List<MatchVoteCandidateEntity> votedCandidates,
+            String preference
+    ) {
+        Map<String, Long> detailCountMap = votedCandidates.stream()
+                .filter(candidate -> preference.equals(candidate.getPreference()))
+                .filter(candidate -> candidate.getPreferenceDetail() != null)
+                .filter(candidate -> !candidate.getPreferenceDetail().isBlank())
+                .collect(Collectors.groupingBy(
+                        MatchVoteCandidateEntity::getPreferenceDetail,
+                        Collectors.counting()
+                ));
+
+        if (detailCountMap.isEmpty()) {
+            return null;
+        }
+
+        long maxCount = detailCountMap.values().stream()
+                .mapToLong(Long::longValue)
+                .max()
+                .orElse(0);
+
+        List<String> topDetails = detailCountMap.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxCount)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        String selectedDetail = topDetails.get(random.nextInt(topDetails.size()));
+
+        return PreferenceDetailType.from(selectedDetail);
+    }
+
+    /**
+     * 해당 메인 선호가
+     * 상세선호를 지원하는 타입인지 확인한다.
+     */
     private boolean hasDetailPreference(String preference) {
         return PreferenceType.from(preference).hasDetail();
     }

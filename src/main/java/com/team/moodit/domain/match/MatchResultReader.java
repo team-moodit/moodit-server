@@ -35,6 +35,7 @@ public class MatchResultReader {
                         preferenceResults.stream().map(it ->
                               new PreferenceTypeScore(
                                       it.getPreferenceType(),
+                                      it.getPreferenceDetailType(),
                                       it.getSelectedCount(),
                                       it.getRank()
                               )
