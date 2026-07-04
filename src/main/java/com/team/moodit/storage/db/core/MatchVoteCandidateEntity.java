@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @Table(
         name = "`match_vote_candidate`",
         indexes = {
-                //  여기에 match_id와 round_number 복합 인덱스를 코드로 지정합니다!
                 @Index(name = "idx_match_vote_candidate_match_round", columnList = "match_id, round_number")
         }
 )

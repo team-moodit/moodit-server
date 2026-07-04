@@ -20,7 +20,7 @@ public class MatchChoiceEntity extends BaseNoStatusEntity{
     @Column(name = "photo_id", nullable = false)
     private Long photoId;
 
-    //  이 reasonId가 바로 이미 데이터가 채워져 있는 match_vote 테이블의 id를 가리킵니다!
+
     @Column(name = "reason_id", nullable = false)
     private Long reasonId;
 
