@@ -15,9 +15,9 @@ public class MatchService {
     private final MatchUpReader matchUpReader;
     private final MatchResultFinder matchResultFinder;
     private final MatchRemover matchRemover;
-    private final MatchTabReader matchTabReader;
     private final MatchProgressReader matchProgressReader;
     private final MatchCompletedReader matchCompletedReader;
+    private final MatchTabReader matchTabReader;
 
     public Long createMatch(ApiUser apiUser, NewMatch newMatch, List<Long> imageIds) {
         return matchCreator.create(apiUser.getId(), newMatch, imageIds);
@@ -47,20 +47,18 @@ public class MatchService {
         matchRemover.deleteMatch(userId, matchId);
     }
 
-    public MatchTab getMatchTab(Long userId, int inProgressPage, int inProgressSize, int completedPage, int completedSize) {
-        return matchTabReader.getMatchTab(
-                userId,
-                inProgressPage,
-                inProgressSize,
-                completedPage,
-                completedSize
-        );
-    }
 
     public MatchProgressResult getMatchProgress(ApiUser apiUser,Long matchId) {
         return matchProgressReader.getMatchProgress(apiUser.getId(),matchId);
     }
     public MatchCompletedResult getMatchCompleted(ApiUser apiUser,Long matchId){
         return matchCompletedReader.getMatchCompleted(apiUser.getId(),matchId);
+    }
+    public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
+        return matchTabReader.getInProgressMatches(userId, page, size);
+    }
+
+    public CompletedMatches getCompletedMatches(Long userId, int page, int size) {
+        return matchTabReader.getCompletedMatches(userId, page, size);
     }
 }

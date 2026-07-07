@@ -2,19 +2,21 @@ package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
+import com.team.moodit.api.controller.v1.response.CompletedMatchesResponse;
+import com.team.moodit.api.controller.v1.response.InProgressMatchesResponse;
 import com.team.moodit.api.controller.v1.response.MatchCompletedResponse;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchProgressResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
-import com.team.moodit.api.controller.v1.response.MatchTabResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.match.CompletedMatches;
+import com.team.moodit.domain.match.InProgressMatches;
 import com.team.moodit.domain.match.MatchCompletedResult;
 import com.team.moodit.domain.match.MatchProgressResult;
 import com.team.moodit.domain.match.MatchResult;
 import com.team.moodit.domain.match.MatchService;
-import com.team.moodit.domain.match.MatchTab;
 import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
 import com.team.moodit.domain.match.MatchUpWinnerResultManager;
@@ -108,24 +110,36 @@ public class MatchController {
         matchService.deleteMatch(apiUser.getId(), matchId);
         return ApiResponse.success("매치 " + matchId + "번과 관련된 모든 데이터가 클린하게 삭제되었습니다.");
     }
-    @GetMapping("/v1/matches/moodtab")
-    public ApiResponse<MatchTabResponse> getTabMatchup(
+    @GetMapping("/v1/matches/moodtab/inprogress")
+    public ApiResponse<InProgressMatchesResponse> getInProgressMatches(
             ApiUser apiUser,
-            @RequestParam(defaultValue = "0") int inProgressPage,
-            @RequestParam(defaultValue = "5") int inProgressSize,
-            @RequestParam(defaultValue = "0") int completedPage,
-            @RequestParam(defaultValue = "10") int completedSize
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
     ) {
-        MatchTab matchTab = matchService.getMatchTab(
+        InProgressMatches inprogressresult = matchService.getInProgressMatches(
                 apiUser.getId(),
-                inProgressPage,
-                inProgressSize,
-                completedPage,
-                completedSize
+                page,
+                size
         );
 
-        return ApiResponse.success(MatchTabResponse.of(matchTab));
+        return ApiResponse.success(InProgressMatchesResponse.of(inprogressresult));
     }
+
+    @GetMapping("/v1/matches/moodtab/completed")
+    public ApiResponse<CompletedMatchesResponse> getCompletedMatches(
+            ApiUser apiUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        CompletedMatches completedresult = matchService.getCompletedMatches(
+                apiUser.getId(),
+                page,
+                size
+        );
+
+        return ApiResponse.success(CompletedMatchesResponse.of(completedresult));
+    }
+
     @GetMapping("/v1/matches/{matchId}/progress")
     public ApiResponse<MatchProgressResponse> getMatchProgress(
             ApiUser apiUser,

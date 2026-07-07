@@ -16,33 +16,24 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class MatchTabReader {
+
     private final MatchRepository matchRepository;
     private final MatchResultRepository matchResultRepository;
     private final MatchUpRepository matchUpRepository;
     private final FileReader fileReader;
 
     @Transactional(readOnly = true)
-    public MatchTab getMatchTab(
-            Long userId,
-            int inProgressPage,
-            int inProgressSize,
-            int completedPage,
-            int completedSize
-    ) {
+    public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
         List<MatchEntity> matches = matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         if (matches == null || matches.isEmpty()) {
-            return new MatchTab(
-                    new Page<>(List.of(), 0, false),
-                    new Page<>(List.of(), 0, false)
-            );
+            return new InProgressMatches(List.of(), 0, false);
         }
 
         List<Long> matchIds = matches.stream()
@@ -52,20 +43,9 @@ public class MatchTabReader {
         List<MatchResultEntity> results =
                 matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
 
-        Map<Long, MatchResultEntity> resultMap = results.stream()
-                .collect(Collectors.toMap(
-                        MatchResultEntity::getMatchId,
-                        result -> result,
-                        (first, second) -> first
-                ));
-
-        Set<Long> completedMatchIds = resultMap.keySet();
-
-        Map<Long, MatchEntity> matchMap = matches.stream()
-                .collect(Collectors.toMap(
-                        MatchEntity::getId,
-                        match -> match
-                ));
+        Set<Long> completedMatchIds = results.stream()
+                .map(MatchResultEntity::getMatchId)
+                .collect(Collectors.toSet());
 
         List<MatchUpEntity> matchUps =
                 matchUpRepository.findByMatchIdIn(matchIds);
@@ -81,22 +61,46 @@ public class MatchTabReader {
                 ))
                 .toList();
 
+        Page<InProgressMatch> resultPage = createPage(allInProgressMatches, page, size);
+
+        return new InProgressMatches(
+                resultPage.content(),
+                resultPage.totalCount(),
+                resultPage.hasNext()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public CompletedMatches getCompletedMatches(Long userId, int page, int size) {
+        List<MatchEntity> matches = matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        if (matches == null || matches.isEmpty()) {
+            return new CompletedMatches(List.of(), 0, false);
+        }
+
+        Map<Long, MatchEntity> matchMap = matches.stream()
+                .collect(Collectors.toMap(
+                        MatchEntity::getId,
+                        match -> match
+                ));
+
+        List<MatchResultEntity> results =
+                matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
+
         List<CompletedMatch> allCompletedMatches = results.stream()
-                .map(result -> {
-                    MatchEntity match = matchMap.get(result.getMatchId());
-
-                    if (match == null) {
-                        return null;
-                    }
-
-                    return toCompletedMatch(match, result);
-                })
-                .filter(Objects::nonNull)
+                .filter(result -> matchMap.containsKey(result.getMatchId()))
+                .map(result -> toCompletedMatch(
+                        matchMap.get(result.getMatchId()),
+                        result
+                ))
                 .toList();
 
-        return new MatchTab(
-                createPage(allInProgressMatches, inProgressPage, inProgressSize),
-                createPage(allCompletedMatches, completedPage, completedSize)
+        Page<CompletedMatch> resultPage = createPage(allCompletedMatches, page, size);
+
+        return new CompletedMatches(
+                resultPage.content(),
+                resultPage.totalCount(),
+                resultPage.hasNext()
         );
     }
 
