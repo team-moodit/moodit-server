@@ -1,5 +1,6 @@
 package com.team.moodit.domain.auth;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.storage.db.core.UserAuthIdentityEntity;
 import com.team.moodit.storage.db.core.UserAuthIdentityRepository;
 import java.util.Optional;
@@ -20,9 +21,10 @@ public class LoginService {
             String kakaoAccessToken
     ) {
         SocialUserPrivacy profile = kakaoLoginHandler.getProfile(kakaoAccessToken);
-        Optional<UserAuthIdentityEntity> existingUser = userAuthIdentityRepository.findByProviderTypeAndProviderUserId(
+        Optional<UserAuthIdentityEntity> existingUser = userAuthIdentityRepository.findByProviderTypeAndProviderUserIdAndStatus(
                 profile.getProviderType(),
-                profile.getProviderUserId()
+                profile.getProviderUserId(),
+                EntityStatus.ACTIVE
         );
 
         AuthUser authUser = socialLoginHandler.authenticateSocialUser(profile);

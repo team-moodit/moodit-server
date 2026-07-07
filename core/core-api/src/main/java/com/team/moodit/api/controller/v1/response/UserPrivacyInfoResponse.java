@@ -1,6 +1,6 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.user.UserPrivacy;
+import com.team.moodit.domain.user.privacy.UserPrivacy;
 
 public record UserPrivacyInfoResponse(
         String name,

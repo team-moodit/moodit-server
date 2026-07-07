@@ -1,5 +1,6 @@
 package com.team.moodit.domain.auth;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.user.User;
 import com.team.moodit.domain.user.UserManager;
 import com.team.moodit.domain.user.UserReader;
@@ -22,9 +23,10 @@ public class SocialLoginHandler {
 
     @Transactional
     public AuthUser authenticateSocialUser(SocialUserPrivacy socialUserPrivacy) {
-        boolean isNewUser = !userAuthIdentityRepository.existsByProviderTypeAndProviderUserId(
+        boolean isNewUser = !userAuthIdentityRepository.existsByProviderTypeAndProviderUserIdAndStatus(
                 socialUserPrivacy.getProviderType(),
-                socialUserPrivacy.getProviderUserId()
+                socialUserPrivacy.getProviderUserId(),
+                EntityStatus.ACTIVE
         );
 
         Long userId;
@@ -38,9 +40,10 @@ public class SocialLoginHandler {
                     )
             );
         } else {
-            userId = userAuthIdentityRepository.findByProviderTypeAndProviderUserId(
+            userId = userAuthIdentityRepository.findByProviderTypeAndProviderUserIdAndStatus(
                     socialUserPrivacy.getProviderType(),
-                    socialUserPrivacy.getProviderUserId()
+                    socialUserPrivacy.getProviderUserId(),
+                    EntityStatus.ACTIVE
             ).orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND)).getUserId();
         }
 

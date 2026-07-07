@@ -1,4 +1,4 @@
-package com.team.moodit.domain.user;
+package com.team.moodit.domain.user.privacy;
 
 import com.team.moodit.support.auth.ApiUser;
 import lombok.RequiredArgsConstructor;

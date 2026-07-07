@@ -1,8 +1,9 @@
 package com.team.moodit.api.controller.v1;
 
 import com.team.moodit.api.controller.v1.response.UserPrivacyInfoResponse;
-import com.team.moodit.domain.user.UserPrivacy;
-import com.team.moodit.domain.user.UserPrivacyService;
+import com.team.moodit.domain.user.privacy.UserPrivacy;
+import com.team.moodit.domain.user.privacy.UserPrivacyService;
+import com.team.moodit.domain.user.UserService;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class SettingController {
+    private final UserService userService;
     private final UserPrivacyService userPrivacyService;
 
     @GetMapping("/v1/settings/privacy/info")
@@ -30,6 +32,14 @@ public class SettingController {
             @RequestBody String name
     ) {
         userPrivacyService.updatePrivacyName(apiUser, name);
+        return ApiResponse.success();
+    }
+
+    @PostMapping("/v1/settings/withdraw")
+    public ApiResponse<?> withdrawUser(
+            ApiUser apiUser
+    ) {
+        userService.withdraw(apiUser);
         return ApiResponse.success();
     }
 }

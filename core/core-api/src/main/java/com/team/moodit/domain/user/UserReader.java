@@ -1,5 +1,6 @@
 package com.team.moodit.domain.user;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.storage.db.core.UserEntity;
 import com.team.moodit.storage.db.core.UserRepository;
 import com.team.moodit.support.error.ApiException;
@@ -13,7 +14,8 @@ public class UserReader {
     private final UserRepository userRepository;
 
     public User getUser(Long userId) {
-        UserEntity entity = userRepository.findById(userId).orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
+        UserEntity entity = userRepository.findByIdAndStatus(userId, EntityStatus.ACTIVE)
+                .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         return new User(
                 entity.getId(),

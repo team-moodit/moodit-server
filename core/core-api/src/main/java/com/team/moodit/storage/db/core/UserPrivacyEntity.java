@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 )
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserPrivacyEntity extends BaseNoStatusEntity {
+public class UserPrivacyEntity extends BaseEntity {
     private Long userId;
     private String name;
     private String email;

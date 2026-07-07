@@ -1,5 +1,6 @@
 package com.team.moodit.support.auth;
 
+import com.team.moodit.domain.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

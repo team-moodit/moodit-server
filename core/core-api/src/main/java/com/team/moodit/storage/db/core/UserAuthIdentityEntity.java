@@ -13,15 +13,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(
-        name = "user_auth_identity",
-        indexes = {
-                @Index(name = "udx_user_auth_identity_provider_type_provider_user_id", columnList = "providerType, providerUserId")
-        }
-)
+@Table(name = "user_auth_identity")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserAuthIdentityEntity extends BaseNoStatusEntity {
+public class UserAuthIdentityEntity extends BaseEntity {
     private Long userId;
     @Enumerated(EnumType.STRING)
     private SocialProviderType providerType;

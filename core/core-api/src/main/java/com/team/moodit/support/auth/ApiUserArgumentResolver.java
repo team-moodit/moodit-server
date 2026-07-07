@@ -1,6 +1,7 @@
 package com.team.moodit.support.auth;
 
 import com.team.moodit.domain.auth.TokenManager;
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.storage.db.core.UserRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
@@ -39,7 +40,7 @@ public class ApiUserArgumentResolver implements HandlerMethodArgumentResolver {
 
         long subject = Long.parseLong(claims.getSubject());
         return new ApiUser(
-                userRepository.findById(subject).orElseThrow(() -> new ApiException(ErrorType.INVALID_TOKEN)).getId()
+                userRepository.findByIdAndStatus(subject, EntityStatus.ACTIVE).orElseThrow(() -> new ApiException(ErrorType.INVALID_TOKEN)).getId()
         );
     }
 

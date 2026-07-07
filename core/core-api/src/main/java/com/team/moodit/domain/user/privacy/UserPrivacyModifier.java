@@ -1,5 +1,6 @@
-package com.team.moodit.domain.user;
+package com.team.moodit.domain.user.privacy;
 
+import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.storage.db.core.UserPrivacyEntity;
 import com.team.moodit.storage.db.core.UserPrivacyRepository;
 import com.team.moodit.support.error.ApiException;
@@ -15,7 +16,7 @@ public class UserPrivacyModifier {
 
     @Transactional
     public Long modifyName(Long userId, String name) {
-        UserPrivacyEntity userPrivacy = userPrivacyRepository.findByUserId(userId)
+        UserPrivacyEntity userPrivacy = userPrivacyRepository.findByUserIdAndStatus(userId, EntityStatus.ACTIVE)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         userPrivacy.applyName(name);
