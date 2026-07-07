@@ -1,1 +1,4 @@
-
+include(
+        "clients:client-kakao",
+        "core:core-api"
+)
