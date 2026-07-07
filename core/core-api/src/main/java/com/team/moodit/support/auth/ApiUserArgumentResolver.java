@@ -1,6 +1,7 @@
 package com.team.moodit.support.auth;
 
 import com.team.moodit.domain.auth.TokenManager;
+import com.team.moodit.storage.db.core.UserRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import io.jsonwebtoken.Claims;
@@ -18,6 +19,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @RequiredArgsConstructor
 public class ApiUserArgumentResolver implements HandlerMethodArgumentResolver {
     private final TokenManager tokenManager;
+    private final UserRepository userRepository;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -35,8 +37,9 @@ public class ApiUserArgumentResolver implements HandlerMethodArgumentResolver {
         Claims claims = tokenManager.getClaims(token);
         if (!"ACCESS".equals(claims.get("tokenType"))) throw new ApiException(ErrorType.INVALID_TOKEN);
 
+        long subject = Long.parseLong(claims.getSubject());
         return new ApiUser(
-                Long.parseLong(claims.getSubject())
+                userRepository.findById(subject).orElseThrow(() -> new ApiException(ErrorType.INVALID_TOKEN)).getId()
         );
     }
 
