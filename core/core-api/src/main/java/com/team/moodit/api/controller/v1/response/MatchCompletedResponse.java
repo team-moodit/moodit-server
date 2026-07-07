@@ -13,6 +13,7 @@ public record MatchCompletedResponse(
         WinnerImage winnerImage,
         PreferenceResult preferenceResult,
         LocalDateTime completedAt,
+        String preferenceTitle,
         List<SelectedImage> selectedImages
 ) {
 
@@ -22,10 +23,29 @@ public record MatchCompletedResponse(
                 WinnerImage.from(result.getWinnerImage()),
                 PreferenceResult.from(result.getPreferenceResult()),
                 result.getCompletedAt(),
+                resolvePreferenceTitle(result.getPreferenceResult()),
                 result.getSelectedImages().stream()
                         .map(SelectedImage::from)
                         .toList()
         );
+    }
+
+    private static String resolvePreferenceTitle(MatchCompletedPreferenceResult result) {
+        if (result == null || result.getPreferenceResultType() == null) {
+            return null;
+        }
+
+        return switch (result.getPreferenceResultType()) {
+            case TYPE_ONLY -> result.getPreferenceType() == null
+                    ? null
+                    : result.getPreferenceType().getTitle();
+
+            case TYPE_AND_DETAIL -> result.getPreferenceDetailType() == null
+                    ? null
+                    : result.getPreferenceDetailType().name();
+
+            case TIE -> null;
+        };
     }
 
     public record WinnerImage(
