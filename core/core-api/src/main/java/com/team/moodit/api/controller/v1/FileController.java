@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class FIleController {
+public class FileController {
     private final FileUploader fileUploader;
 
     @GetMapping("/v1/files/presigned-url")
