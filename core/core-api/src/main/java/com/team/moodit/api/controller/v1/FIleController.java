@@ -17,11 +17,11 @@ public class FIleController {
 
     @GetMapping("/v1/files/presigned-url")
     public ApiResponse<UploadResult> getPresignedUrl(
-//            ApiUser apiUser,
+            ApiUser apiUser,
             @RequestParam ObjectResourceType resourceType,
             @RequestParam String fileName
     ) {
-        UploadResult result = fileUploader.createPresignedUrl(1L, resourceType, fileName);
+        UploadResult result = fileUploader.createPresignedUrl(apiUser.getId(), resourceType, fileName);
         return ApiResponse.success(result);
     }
 }
