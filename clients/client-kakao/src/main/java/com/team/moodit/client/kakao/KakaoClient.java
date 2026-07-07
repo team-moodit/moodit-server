@@ -1,12 +1,12 @@
-package com.team.moodit.clients.kakao;
+package com.team.moodit.client.kakao;
 
-import com.team.moodit.clients.kakao.model.KakaoClientProfileResult;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class KakaoApiClient {
+public class KakaoClient {
     private final KakaoApi kakaoApi;
 
     public KakaoClientProfileResult getProfile(String accessToken) {

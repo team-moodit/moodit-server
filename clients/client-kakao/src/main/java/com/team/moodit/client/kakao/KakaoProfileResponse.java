@@ -1,9 +1,8 @@
-package com.team.moodit.clients.kakao;
+package com.team.moodit.client.kakao;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.team.moodit.clients.kakao.model.KakaoClientProfileResult;
 
-public record KakaoProfileResponse(
+record KakaoProfileResponse(
         String id,
         @JsonProperty("kakao_account")
         KakaoAccount kakaoAccount
@@ -12,7 +11,7 @@ public record KakaoProfileResponse(
         return KakaoClientProfileResult.of(this);
     }
 
-    public record KakaoAccount(
+    record KakaoAccount(
             String email
     ) {
     }

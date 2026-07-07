@@ -1,7 +1,7 @@
 package com.team.moodit.domain.auth;
 
-import com.team.moodit.clients.kakao.KakaoApiClient;
-import com.team.moodit.clients.kakao.model.KakaoClientProfileResult;
+import com.team.moodit.client.kakao.KakaoClient;
+import com.team.moodit.client.kakao.KakaoClientProfileResult;
 import com.team.moodit.domain.enums.SocialProviderType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class KakaoLoginHandler {
-    private final KakaoApiClient kakaoApiClient;
+    private final KakaoClient kakaoClient;
 
     public SocialUserPrivacy getProfile(String kakaoAccessToken) {
-        KakaoClientProfileResult kakaoProfile = kakaoApiClient.getProfile(kakaoAccessToken);
+        KakaoClientProfileResult kakaoProfile = kakaoClient.getProfile(kakaoAccessToken);
 
         return new SocialUserPrivacy(
                 SocialProviderType.KAKAO,
