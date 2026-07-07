@@ -165,6 +165,10 @@ public class MatchTabReader {
     }
 
     private int calculateTotalRound(int initialImageCount) {
+        if (initialImageCount <= 0) {
+            return 0;
+        }
+
         return Integer.highestOneBit(initialImageCount);
     }
 
@@ -173,6 +177,10 @@ public class MatchTabReader {
             int totalRound,
             List<MatchUpEntity> matchUps
     ) {
+        if (totalRound <= 0) {
+            return 0;
+        }
+
         if (matchUps == null || matchUps.isEmpty()) {
             return totalRound;
         }
@@ -180,8 +188,11 @@ public class MatchTabReader {
         int currentRoundNumber = matchUps.stream()
                 .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
                 .map(MatchUpEntity::getRoundNumber)
+                .filter(roundNumber -> roundNumber > 0)
                 .min(Integer::compareTo)
                 .orElse(1);
+
+        currentRoundNumber = Math.max(currentRoundNumber, 1);
 
         return calculateDisplayRound(
                 initialImageCount,
@@ -195,16 +206,24 @@ public class MatchTabReader {
             int totalRound,
             int currentRoundNumber
     ) {
+        if (totalRound <= 0) {
+            return 0;
+        }
+
+        int safeRoundNumber = Math.max(currentRoundNumber, 1);
+
         boolean hasPreliminaryRound = initialImageCount != totalRound;
 
         if (!hasPreliminaryRound) {
-            return totalRound / (int) Math.pow(2, currentRoundNumber - 1);
+            int divisor = 1 << (safeRoundNumber - 1);
+            return totalRound / Math.max(divisor, 1);
         }
 
-        if (currentRoundNumber == 1) {
+        if (safeRoundNumber == 1) {
             return totalRound;
         }
 
-        return totalRound / (int) Math.pow(2, currentRoundNumber - 2);
+        int divisor = 1 << (safeRoundNumber - 2);
+        return totalRound / Math.max(divisor, 1);
     }
 }
