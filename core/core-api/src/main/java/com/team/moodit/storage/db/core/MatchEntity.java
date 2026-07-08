@@ -29,4 +29,12 @@ public class MatchEntity extends BaseNoStatusEntity {
 
     @Column(nullable = false)
     private Integer initialImageCount;
+
+
+    public void complete() {
+        this.state = MatchState.DONE;
+    }
 }
+
+
+
