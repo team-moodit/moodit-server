@@ -36,13 +36,9 @@ public record MatchCompletedResponse(
         }
 
         return switch (result.getPreferenceResultType()) {
-            case TYPE_ONLY -> result.getPreferenceType() == null
+            case TYPE_ONLY, TYPE_AND_DETAIL -> result.getPreferenceType() == null
                     ? null
                     : result.getPreferenceType().getTitle();
-
-            case TYPE_AND_DETAIL -> result.getPreferenceDetailType() == null
-                    ? null
-                    : result.getPreferenceDetailType().name();
 
             case TIE -> null;
         };
