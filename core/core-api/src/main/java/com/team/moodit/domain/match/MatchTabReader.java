@@ -1,7 +1,10 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchImageEntity;
+import com.team.moodit.storage.db.core.MatchImageRepository;
 import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.MatchResultEntity;
 import com.team.moodit.storage.db.core.MatchResultRepository;
@@ -9,8 +12,6 @@ import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.file.FileReader;
-import com.team.moodit.storage.db.core.MatchImageEntity;
-import com.team.moodit.storage.db.core.MatchImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,8 +56,7 @@ public class MatchTabReader {
                 .map(MatchResultEntity::getMatchId)
                 .collect(Collectors.toSet());
 
-        List<MatchUpEntity> matchUps =
-                matchUpRepository.findByMatchIdIn(matchIds);
+        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdIn(matchIds);
 
         if (matchUps == null) {
             matchUps = List.of();
@@ -66,6 +66,7 @@ public class MatchTabReader {
                 .collect(Collectors.groupingBy(MatchUpEntity::getMatchId));
 
         List<InProgressMatch> allInProgressMatches = matches.stream()
+                .filter(match -> match.getState() == MatchState.ING)
                 .filter(match -> !completedMatchIds.contains(match.getId()))
                 .map(match -> toInProgressMatch(
                         match,
