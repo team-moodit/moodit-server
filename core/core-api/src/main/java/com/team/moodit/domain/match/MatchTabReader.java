@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,12 +44,20 @@ public class MatchTabReader {
         List<MatchResultEntity> results =
                 matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
 
+        if (results == null) {
+            results = List.of();
+        }
+
         Set<Long> completedMatchIds = results.stream()
                 .map(MatchResultEntity::getMatchId)
                 .collect(Collectors.toSet());
 
         List<MatchUpEntity> matchUps =
                 matchUpRepository.findByMatchIdIn(matchIds);
+
+        if (matchUps == null) {
+            matchUps = List.of();
+        }
 
         Map<Long, List<MatchUpEntity>> matchUpMap = matchUps.stream()
                 .collect(Collectors.groupingBy(MatchUpEntity::getMatchId));
@@ -86,6 +95,10 @@ public class MatchTabReader {
 
         List<MatchResultEntity> results =
                 matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
+
+        if (results == null || results.isEmpty()) {
+            return new CompletedMatches(List.of(), 0, false);
+        }
 
         List<CompletedMatch> allCompletedMatches = results.stream()
                 .filter(result -> matchMap.containsKey(result.getMatchId()))
@@ -128,16 +141,23 @@ public class MatchTabReader {
             MatchEntity match,
             MatchResultEntity result
     ) {
-        String winnerImageUri = fileReader.getFile(
-                result.getRepresentativeMatchImageId()
-        ).getUrl();
+        Long winnerImageId = result.getRepresentativeMatchImageId();
+        String winnerImageUri = null;
+
+        if (winnerImageId != null) {
+            winnerImageUri = fileReader.getFile(winnerImageId).getUrl();
+        }
+
+        LocalDate completedAt = result.getCompletedAt() == null
+                ? null
+                : result.getCompletedAt().toLocalDate();
 
         return new CompletedMatch(
                 match.getId(),
                 match.getTitle(),
-                result.getRepresentativeMatchImageId(),
+                winnerImageId,
                 winnerImageUri,
-                result.getCompletedAt().toLocalDate()
+                completedAt
         );
     }
 
