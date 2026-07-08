@@ -27,7 +27,10 @@ public record ReportResponse(
                 new PreferenceReportResponse(
                         report.getPreferenceReport().getTotalMatchCount(),
                         PreferenceDistribution.of(report.getPreferenceReport().topCriterion()),
-                        report.getPreferenceReport().getCriteria().stream().map(PreferenceDistribution::of).toList()
+                        report.getPreferenceReport().getCriteria().stream()
+                                .filter(criteria -> criteria.getPercentage() > 0)
+                                .map(PreferenceDistribution::of)
+                                .toList()
                 ),
                 new RateSummaryResponse(
                         rateSummary.getCount(),
