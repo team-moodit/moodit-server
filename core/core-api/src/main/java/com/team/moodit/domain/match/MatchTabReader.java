@@ -144,8 +144,12 @@ public class MatchTabReader {
         Long winnerImageId = result.getRepresentativeMatchImageId();
         String winnerImageUri = null;
 
-        if (winnerImageId != null) {
-            winnerImageUri = fileReader.getFile(winnerImageId).getUrl();
+        try {
+            if (winnerImageId != null) {
+                winnerImageUri = fileReader.getFile(winnerImageId).getUrl();
+            }
+        } catch (Exception e) {
+            winnerImageUri = null;
         }
 
         LocalDate completedAt = result.getCompletedAt() == null
