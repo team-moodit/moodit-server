@@ -10,12 +10,12 @@ COPY build.gradle settings.gradle ./
 COPY clients/client-kakao/build.gradle clients/client-kakao/build.gradle
 COPY core/core-api/build.gradle ore/core-api/build.gradle
 
-RUN ./gradlew dependencies --no-daemon
+RUN ./gradlew :core:core-api:dependencies --no-daemon
 
 COPY clients clients
 COPY core/core-api core/core-api
 
-RUN ./gradlew build -x test --no-daemon
+RUN ./gradlew :core:core-api:build -x test --no-daemon
 
 RUN java -Djarmode=tools -jar build/libs/*-SNAPSHOT.jar extract --layers --launcher --destination extracted
 
