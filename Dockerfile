@@ -7,9 +7,13 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle settings.gradle ./
 
+COPY clients/client-kakao/build.gradle clients/client-kakao/build.gradle
+COPY core/core-api/build.gradle ore/core-api/build.gradle
+
 RUN ./gradlew dependencies --no-daemon
 
-COPY src src
+COPY clients clients
+COPY core/core-api core/core-api
 
 RUN ./gradlew build -x test --no-daemon
 
