@@ -14,7 +14,7 @@ public interface MatchPreferenceResultRepository extends JpaRepository<MatchPref
         SELECT preference.preferenceType as preferenceType, SUM(preference.selectedCount) as count
         FROM MatchPreferenceResultEntity preference
             JOIN MatchResultEntity matchResult ON preference.matchResultId = matchResult.id
-        WHERE matchResult.id = preference.matchResultId
+        WHERE matchResult.userId = :userId
         GROUP BY preference.preferenceType
         """
     )
