@@ -9,6 +9,8 @@ import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.file.FileReader;
+import com.team.moodit.storage.db.core.MatchImageEntity;
+import com.team.moodit.storage.db.core.MatchImageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class MatchTabReader {
     private final MatchResultRepository matchResultRepository;
     private final MatchUpRepository matchUpRepository;
     private final FileReader fileReader;
+    private final MatchImageRepository matchImageRepository;
 
     @Transactional(readOnly = true)
     public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
@@ -146,7 +149,12 @@ public class MatchTabReader {
 
         try {
             if (winnerImageId != null) {
-                winnerImageUri = fileReader.getFile(winnerImageId).getUrl();
+                MatchImageEntity matchImage = matchImageRepository.findById(winnerImageId)
+                        .orElse(null);
+
+                if (matchImage != null) {
+                    winnerImageUri = fileReader.getFile(matchImage.getFileId()).getUrl();
+                }
             }
         } catch (Exception e) {
             winnerImageUri = null;
