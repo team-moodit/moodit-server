@@ -42,7 +42,7 @@ public class MissionOfferAcceptHandler {
         );
 
         // 임시 코드 개념리팩토링
-        MatchEntity matchEntity = matchRepository.findByIdAndUserId(matchResult.getId(), userId)
+        MatchEntity matchEntity = matchRepository.findByIdAndUserId(matchResult.getMatchId(), userId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
         matchEntity.complete();
 
