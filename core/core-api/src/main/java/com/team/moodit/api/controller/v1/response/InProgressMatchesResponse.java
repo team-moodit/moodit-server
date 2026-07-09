@@ -1,5 +1,6 @@
 package com.team.moodit.api.controller.v1.response;
 
+import com.team.moodit.domain.enums.MatchResumeType;
 import com.team.moodit.domain.match.InProgressMatches;
 
 import java.time.LocalDateTime;
@@ -11,28 +12,32 @@ public record InProgressMatchesResponse(
         boolean hasNext
 ) {
 
-    public static InProgressMatchesResponse of(InProgressMatches inprogressresult) {
+    public static InProgressMatchesResponse of(InProgressMatches result) {
         return new InProgressMatchesResponse(
-                inprogressresult.getContent().stream()
+                result.getContent().stream()
                         .map(match -> new Content(
                                 match.getMatchId(),
+                                match.getMatchResultId(),
                                 match.getTitle(),
                                 match.getCurrentRound(),
                                 match.getTotalRound(),
-                                match.getLastPlayedAt()
+                                match.getLastPlayedAt(),
+                                match.getResumeType()
                         ))
                         .toList(),
-                inprogressresult.getTotalCount(),
-                inprogressresult.isHasNext()
+                result.getTotalCount(),
+                result.isHasNext()
         );
     }
 
     public record Content(
             Long matchId,
+            Long matchResultId,
             String title,
             Integer currentRound,
             Integer totalRound,
-            LocalDateTime lastPlayedAt
+            LocalDateTime lastPlayedAt,
+            MatchResumeType resumeType
     ) {
     }
 }
