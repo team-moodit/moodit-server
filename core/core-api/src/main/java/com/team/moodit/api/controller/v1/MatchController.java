@@ -1,5 +1,6 @@
 package com.team.moodit.api.controller.v1;
 
+import com.team.moodit.api.assembler.MatchAssembler;
 import com.team.moodit.api.controller.v1.request.MatchCreateRequest;
 import com.team.moodit.api.controller.v1.request.VoteSaveRequest;
 import com.team.moodit.api.controller.v1.response.CompletedMatchesResponse;
@@ -7,10 +8,12 @@ import com.team.moodit.api.controller.v1.response.InProgressMatchesResponse;
 import com.team.moodit.api.controller.v1.response.MatchCompletedResponse;
 import com.team.moodit.api.controller.v1.response.MatchCreateResponse;
 import com.team.moodit.api.controller.v1.response.MatchProgressResponse;
+import com.team.moodit.api.controller.v1.response.MatchResponse;
 import com.team.moodit.api.controller.v1.response.MatchStartResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpFlowResponse;
 import com.team.moodit.api.controller.v1.response.MatchUpWinnerResponse;
 import com.team.moodit.api.controller.v1.response.VoteSaveResponse;
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.match.CompletedMatches;
 import com.team.moodit.domain.match.InProgressMatches;
 import com.team.moodit.domain.match.MatchCompletedResult;
@@ -21,8 +24,10 @@ import com.team.moodit.domain.match.MatchUpFinder;
 import com.team.moodit.domain.match.MatchUpStart;
 import com.team.moodit.domain.match.MatchUpWinnerResultManager;
 import com.team.moodit.domain.match.MatchVoteManager;
+import com.team.moodit.support.OffsetLimit;
 import com.team.moodit.support.auth.ApiUser;
 import com.team.moodit.support.response.ApiResponse;
+import com.team.moodit.support.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +44,7 @@ public class MatchController {
     private final MatchVoteManager matchVoteManager;
     private final MatchUpFinder matchUpFinder;
     private final MatchUpWinnerResultManager matchUpWinnerResultManager;
+    private final MatchAssembler matchAssembler;
 
 
     @PostMapping("/v1/matches")
@@ -162,6 +168,18 @@ public class MatchController {
                 matchService.getMatchCompleted(apiUser,matchId);
 
         return ApiResponse.success(MatchCompletedResponse.from(matchCompletedResult));
+    }
+
+    @GetMapping("/v1/matches")
+    public ApiResponse<PageResponse<MatchResponse>> getMatches(
+            ApiUser apiUser,
+            @RequestParam MatchState state,
+            @RequestParam(defaultValue = "0") Integer offset,
+            @RequestParam(defaultValue = "10") Integer limit
+    ) {
+        return ApiResponse.success(
+                matchAssembler.getMatches(apiUser, state, new OffsetLimit(offset, limit))
+        );
     }
 }
 
