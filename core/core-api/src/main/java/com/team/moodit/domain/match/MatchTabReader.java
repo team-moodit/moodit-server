@@ -32,9 +32,9 @@ public class MatchTabReader {
     private final MatchRepository matchRepository;
     private final MatchResultRepository matchResultRepository;
     private final MatchUpRepository matchUpRepository;
-    private final FileReader fileReader;
     private final MatchImageRepository matchImageRepository;
     private final UserMissionRepository userMissionRepository;
+    private final FileReader fileReader;
 
     @Transactional(readOnly = true)
     public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
@@ -48,17 +48,6 @@ public class MatchTabReader {
                 .map(MatchEntity::getId)
                 .toList();
 
-        List<MatchResultEntity> results =
-                matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
-
-        if (results == null) {
-            results = List.of();
-        }
-
-        Set<Long> completedMatchIds = results.stream()
-                .map(MatchResultEntity::getMatchId)
-                .collect(Collectors.toSet());
-
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdIn(matchIds);
 
         if (matchUps == null) {
@@ -70,7 +59,6 @@ public class MatchTabReader {
 
         List<InProgressMatch> allInProgressMatches = matches.stream()
                 .filter(match -> match.getState() == MatchState.ING)
-                .filter(match -> !completedMatchIds.contains(match.getId()))
                 .map(match -> toInProgressMatch(
                         match,
                         matchUpMap.getOrDefault(match.getId(), Collections.emptyList())
@@ -100,6 +88,21 @@ public class MatchTabReader {
                         match -> match
                 ));
 
+        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
+
+        if (userMissions == null || userMissions.isEmpty()) {
+            return new CompletedMatches(List.of(), 0, false);
+        }
+
+        Map<Long, UserMissionEntity> userMissionMap = userMissions.stream()
+                .collect(Collectors.toMap(
+                        UserMissionEntity::getMatchId,
+                        mission -> mission,
+                        (first, second) -> first
+                ));
+
+        Set<Long> missionSelectedMatchIds = userMissionMap.keySet();
+
         List<MatchResultEntity> results =
                 matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
 
@@ -109,9 +112,12 @@ public class MatchTabReader {
 
         List<CompletedMatch> allCompletedMatches = results.stream()
                 .filter(result -> matchMap.containsKey(result.getMatchId()))
+                .filter(result -> matchMap.get(result.getMatchId()).getState() == MatchState.DONE)
+                .filter(result -> missionSelectedMatchIds.contains(result.getMatchId()))
                 .map(result -> toCompletedMatch(
                         matchMap.get(result.getMatchId()),
-                        result
+                        result,
+                        userMissionMap.get(result.getMatchId())
                 ))
                 .toList();
 
@@ -146,7 +152,8 @@ public class MatchTabReader {
 
     private CompletedMatch toCompletedMatch(
             MatchEntity match,
-            MatchResultEntity result
+            MatchResultEntity result,
+            UserMissionEntity userMission
     ) {
         Long winnerImageId = result.getRepresentativeMatchImageId();
         String winnerImageUri = null;
@@ -168,13 +175,8 @@ public class MatchTabReader {
                 ? null
                 : result.getCompletedAt().toLocalDate();
 
-        Long userMissionId = userMissionRepository
-                .findByUserIdAndMatchId(result.getUserId(), result.getMatchId())
-                .map(UserMissionEntity::getId)
-                .orElse(null);
-
         return new CompletedMatch(
-                userMissionId,
+                userMission == null ? null : userMission.getId(),
                 match.getId(),
                 match.getTitle(),
                 winnerImageId,

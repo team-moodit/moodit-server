@@ -41,6 +41,10 @@ public class MatchCompletedReader {
         MatchResultEntity matchResult = matchResultRepository.findByMatchId(matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
+        if (!matchResult.getUserId().equals(userId)) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
         MatchImageEntity winnerMatchImage = matchImageRepository.findById(
                         matchResult.getRepresentativeMatchImageId()
                 )
