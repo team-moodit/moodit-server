@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Getter
 @AllArgsConstructor
 public class CompletedMatch {
+    private final Long userMissionId;
     private final Long matchId;
     private final String title;
     private final Long winnerImageId;

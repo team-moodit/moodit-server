@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchImageEntity;
 import com.team.moodit.storage.db.core.MatchImageRepository;
@@ -30,6 +31,10 @@ public class MatchCompletedReader {
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
 
         if (!match.getUserId().equals(userId)) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        if (match.getState() != MatchState.DONE) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 

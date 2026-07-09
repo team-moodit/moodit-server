@@ -10,6 +10,8 @@ import com.team.moodit.storage.db.core.MatchResultEntity;
 import com.team.moodit.storage.db.core.MatchResultRepository;
 import com.team.moodit.storage.db.core.MatchUpEntity;
 import com.team.moodit.storage.db.core.MatchUpRepository;
+import com.team.moodit.storage.db.core.UserMissionEntity;
+import com.team.moodit.storage.db.core.UserMissionRepository;
 import com.team.moodit.support.Page;
 import com.team.moodit.support.file.FileReader;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class MatchTabReader {
     private final MatchUpRepository matchUpRepository;
     private final FileReader fileReader;
     private final MatchImageRepository matchImageRepository;
+    private final UserMissionRepository userMissionRepository;
 
     @Transactional(readOnly = true)
     public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
@@ -165,7 +168,13 @@ public class MatchTabReader {
                 ? null
                 : result.getCompletedAt().toLocalDate();
 
+        Long userMissionId = userMissionRepository
+                .findByUserIdAndMatchId(result.getUserId(), result.getMatchId())
+                .map(UserMissionEntity::getId)
+                .orElse(null);
+
         return new CompletedMatch(
+                userMissionId,
                 match.getId(),
                 match.getTitle(),
                 winnerImageId,

@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
 import com.team.moodit.storage.db.core.MatchImageEntity;
@@ -36,6 +37,10 @@ public class MatchProgressReader {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
+        if (match.getState() == MatchState.DONE) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
         List<MatchImageEntity> matchImages =
                 matchImageRepository.findByMatchId(matchId);
 
@@ -55,7 +60,7 @@ public class MatchProgressReader {
                 .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
                 .map(MatchUpEntity::getRoundNumber)
                 .min(Integer::compareTo)
-                .orElse(1);
+                .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST));
 
         int currentRound = calculateCurrentRound(
                 selectedImages.size(),
@@ -84,6 +89,10 @@ public class MatchProgressReader {
     }
 
     private int calculateTotalRound(int imageCount) {
+        if (imageCount <= 0) {
+            return 0;
+        }
+
         return Integer.highestOneBit(imageCount);
     }
 
@@ -92,16 +101,21 @@ public class MatchProgressReader {
             int totalRound,
             int currentRoundNumber
     ) {
+        if (totalRound <= 0) {
+            return 0;
+        }
+
+        int safeRoundNumber = Math.max(currentRoundNumber, 1);
         boolean hasPreliminaryRound = imageCount != totalRound;
 
         if (!hasPreliminaryRound) {
-            return totalRound / (int) Math.pow(2, currentRoundNumber - 1);
+            return totalRound / (int) Math.pow(2, safeRoundNumber - 1);
         }
 
-        if (currentRoundNumber == 1) {
+        if (safeRoundNumber == 1) {
             return totalRound;
         }
 
-        return totalRound / (int) Math.pow(2, currentRoundNumber - 2);
+        return totalRound / (int) Math.pow(2, safeRoundNumber - 2);
     }
 }
