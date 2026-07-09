@@ -21,4 +21,42 @@ public interface MatchChoiceRepository extends JpaRepository<MatchChoiceEntity, 
         """
     )
     List<MatchVoteCandidateEntity> findActualVotedCandidatesByMatchId(@Param("matchId") Long matchId);
+
+    @Query(
+        """
+        SELECT mvc.preference as preference, COUNT(mc.id) as count
+        FROM MatchChoiceEntity mc
+        JOIN MatchUpEntity mu
+            ON mc.matchUpId = mu.id
+        JOIN MatchResultEntity mr
+            ON mu.matchId = mr.matchId
+        JOIN MatchVoteCandidateEntity mvc
+            ON mc.reasonId = mvc.id
+        WHERE mr.userId = :userId
+        GROUP BY mvc.preference
+        """
+    )
+    List<PreferenceVoteCountProjection> countVotedPreferenceByUserId(@Param("userId") Long userId);
+
+    @Query(
+        """
+        SELECT mvc.preferenceDetail as preferenceDetail, COUNT(mc.id) as count
+        FROM MatchChoiceEntity mc
+        JOIN MatchUpEntity mu
+            ON mc.matchUpId = mu.id
+        JOIN MatchResultEntity mr
+            ON mu.matchId = mr.matchId
+        JOIN MatchVoteCandidateEntity mvc
+            ON mc.reasonId = mvc.id
+        WHERE mr.userId = :userId
+            AND mvc.preference = :preference
+            AND mvc.preferenceDetail IS NOT NULL
+            AND mvc.preferenceDetail <> ''
+        GROUP BY mvc.preferenceDetail
+        """
+    )
+    List<PreferenceDetailVoteCountProjection> countVotedPreferenceDetailByUserIdAndPreference(
+            @Param("userId") Long userId,
+            @Param("preference") String preference
+    );
 }

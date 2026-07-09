@@ -4,8 +4,10 @@ import static com.team.moodit.api.controller.v1.request.AddReviewRequest.RATE_MA
 import static com.team.moodit.api.controller.v1.request.AddReviewRequest.RATE_MIN;
 
 import com.team.moodit.api.controller.v1.response.PreferenceReportResponse.PreferenceDistribution;
+import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.report.PreferenceCriterionShare;
+import com.team.moodit.domain.report.PreferenceReportType;
 import com.team.moodit.domain.report.UserTasteReport;
 import com.team.moodit.domain.review.RateSummary;
 import java.util.List;
@@ -26,9 +28,10 @@ public record ReportResponse(
                 ),
                 new PreferenceReportResponse(
                         report.getPreferenceReport().getTotalMatchCount(),
-                        PreferenceDistribution.of(report.getPreferenceReport().topCriterion()),
+                        report.getPreferenceReport().getResultType(),
+                        PreferenceDistribution.of(report.getPreferenceReport().getTopPreference()),
+                        PreferenceDistribution.of(report.getPreferenceReport().getTopPreferenceDetail()),
                         report.getPreferenceReport().getCriteria().stream()
-                                .filter(criteria -> criteria.getPercentage() > 0)
                                 .map(PreferenceDistribution::of)
                                 .toList()
                 ),
@@ -51,20 +54,28 @@ record ReportSummaryResponse(
 
 record PreferenceReportResponse(
         long totalMatchCount,
+        PreferenceReportType resultType,
         PreferenceDistribution topPreference,
+        PreferenceDistribution topPreferenceDetail,
         List<PreferenceDistribution> distributions
 
 ) {
     record PreferenceDistribution(
             PreferenceType type,
+            PreferenceDetailType detailType,
             String title,
             long selectedCount,
             int percentage
     ) {
         public static PreferenceDistribution of(PreferenceCriterionShare criteria) {
+            if (criteria == null) {
+                return null;
+            }
+
             return new PreferenceDistribution(
                     criteria.getType(),
-                    criteria.getType().getTitle(),
+                    criteria.getDetailType(),
+                    criteria.getTitle(),
                     criteria.getSelectedCount(),
                     criteria.getPercentage()
             );
