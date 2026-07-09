@@ -69,7 +69,7 @@ public class MatchUpWinnerResultManager {
                 safeToPreferenceDetailType(analysis.getDetailPref())
         ));
 
-        match.complete();
+
 
         // 6. 랭킹 엔티티 리스트 한 번에 저장
         List<MatchPreferenceResultEntity> preferenceEntities = analysis.getRanks().stream()

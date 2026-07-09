@@ -31,9 +31,6 @@ public class MatchEntity extends BaseNoStatusEntity {
     private Integer initialImageCount;
 
 
-    public void complete() {
-        this.state = MatchState.DONE;
-    }
 }
 
 
