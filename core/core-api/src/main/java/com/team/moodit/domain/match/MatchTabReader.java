@@ -158,7 +158,12 @@ public class MatchTabReader {
                 matchUps
         );
 
-        MatchResumeType resumeType = MatchResumeType.MATCH_PROGRESS;
+        boolean hasNeedVote = matchUps.stream()
+                .anyMatch(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE);
+
+        MatchResumeType resumeType = hasNeedVote
+                ? MatchResumeType.MATCH_PROGRESS
+                : MatchResumeType.MISSION_CONFIRM;
 
         return new InProgressMatch(
                 match.getId(),
