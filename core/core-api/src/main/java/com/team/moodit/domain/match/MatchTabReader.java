@@ -22,7 +22,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -78,8 +77,6 @@ public class MatchTabReader {
                 ));
 
         List<InProgressMatch> allInProgressMatches = matches.stream()
-                // 직접 선택 도중 이탈한 매치는 ING 상태를 유지하므로
-                // 이어하기 목록에서는 MatchState만 기준으로 조회한다.
                 .filter(match -> match.getState() == MatchState.ING)
                 .map(match -> toInProgressMatch(
                         match,
@@ -120,11 +117,16 @@ public class MatchTabReader {
                         match -> match
                 ));
 
+        /*
+         * 미션이 삭제돼도 완료한 무드매치는 유지해야 한다.
+         * 따라서 UserMission이 없을 때 빈 완료 목록을 반환하지 않고,
+         * 빈 리스트로 처리해 userMissionId만 null이 되도록 한다.
+         */
         List<UserMissionEntity> userMissions =
                 userMissionRepository.findByUserId(userId);
 
-        if (userMissions == null || userMissions.isEmpty()) {
-            return new CompletedMatches(List.of(), 0, false);
+        if (userMissions == null) {
+            userMissions = List.of();
         }
 
         Map<Long, UserMissionEntity> userMissionMap = userMissions.stream()
@@ -134,8 +136,6 @@ public class MatchTabReader {
                         (first, second) -> first
                 ));
 
-        Set<Long> missionSelectedMatchIds = userMissionMap.keySet();
-
         List<MatchResultEntity> results =
                 matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
 
@@ -143,18 +143,17 @@ public class MatchTabReader {
             return new CompletedMatches(List.of(), 0, false);
         }
 
+        /*
+         * 완료한 무드매치는 UserMission 존재 여부가 아니라
+         * MatchState.DONE과 MatchResult 존재 여부를 기준으로 조회한다.
+         */
         List<CompletedMatch> allCompletedMatches = results.stream()
                 .filter(result ->
                         matchMap.containsKey(result.getMatchId())
                 )
-                // 완료 목록은 MatchState.DONE인 매치만 포함한다.
                 .filter(result ->
                         matchMap.get(result.getMatchId()).getState()
                                 == MatchState.DONE
-                )
-                // 실제 UserMission이 생성된 매치만 완료 목록에 포함한다.
-                .filter(result ->
-                        missionSelectedMatchIds.contains(result.getMatchId())
                 )
                 .map(result -> toCompletedMatch(
                         matchMap.get(result.getMatchId()),
