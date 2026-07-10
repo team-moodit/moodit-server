@@ -30,7 +30,7 @@ public record MatchProgressResponse(
 
     public record MatchInfo(
             int totalImageCount,
-            String createdAt
+            String LastPlayedAt
     ) {
         private static MatchInfo from(MatchProgressInfo matchProgressInfo) {
             return new MatchInfo(
