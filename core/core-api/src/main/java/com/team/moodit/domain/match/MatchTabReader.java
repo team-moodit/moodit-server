@@ -37,8 +37,13 @@ public class MatchTabReader {
     private final FileReader fileReader;
 
     @Transactional(readOnly = true)
-    public InProgressMatches getInProgressMatches(Long userId, int page, int size) {
-        List<MatchEntity> matches = matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public InProgressMatches getInProgressMatches(
+            Long userId,
+            int page,
+            int size
+    ) {
+        List<MatchEntity> matches =
+                matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         if (matches == null || matches.isEmpty()) {
             return new InProgressMatches(List.of(), 0, false);
@@ -48,17 +53,8 @@ public class MatchTabReader {
                 .map(MatchEntity::getId)
                 .toList();
 
-        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
-
-        if (userMissions == null) {
-            userMissions = List.of();
-        }
-
-        Set<Long> missionSelectedMatchIds = userMissions.stream()
-                .map(UserMissionEntity::getMatchId)
-                .collect(Collectors.toSet());
-
-        List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdIn(matchIds);
+        List<MatchUpEntity> matchUps =
+                matchUpRepository.findByMatchIdIn(matchIds);
 
         if (matchUps == null) {
             matchUps = List.of();
@@ -82,10 +78,9 @@ public class MatchTabReader {
                 ));
 
         List<InProgressMatch> allInProgressMatches = matches.stream()
-                .filter(match ->
-                        match.getState() == MatchState.ING
-                                || !missionSelectedMatchIds.contains(match.getId())
-                )
+                // 직접 선택 도중 이탈한 매치는 ING 상태를 유지하므로
+                // 이어하기 목록에서는 MatchState만 기준으로 조회한다.
+                .filter(match -> match.getState() == MatchState.ING)
                 .map(match -> toInProgressMatch(
                         match,
                         matchUpMap.getOrDefault(
@@ -96,7 +91,8 @@ public class MatchTabReader {
                 ))
                 .toList();
 
-        Page<InProgressMatch> resultPage = createPage(allInProgressMatches, page, size);
+        Page<InProgressMatch> resultPage =
+                createPage(allInProgressMatches, page, size);
 
         return new InProgressMatches(
                 resultPage.content(),
@@ -106,8 +102,13 @@ public class MatchTabReader {
     }
 
     @Transactional(readOnly = true)
-    public CompletedMatches getCompletedMatches(Long userId, int page, int size) {
-        List<MatchEntity> matches = matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public CompletedMatches getCompletedMatches(
+            Long userId,
+            int page,
+            int size
+    ) {
+        List<MatchEntity> matches =
+                matchRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         if (matches == null || matches.isEmpty()) {
             return new CompletedMatches(List.of(), 0, false);
@@ -119,7 +120,8 @@ public class MatchTabReader {
                         match -> match
                 ));
 
-        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
+        List<UserMissionEntity> userMissions =
+                userMissionRepository.findByUserId(userId);
 
         if (userMissions == null || userMissions.isEmpty()) {
             return new CompletedMatches(List.of(), 0, false);
@@ -142,8 +144,18 @@ public class MatchTabReader {
         }
 
         List<CompletedMatch> allCompletedMatches = results.stream()
-                .filter(result -> matchMap.containsKey(result.getMatchId()))
-                .filter(result -> missionSelectedMatchIds.contains(result.getMatchId()))
+                .filter(result ->
+                        matchMap.containsKey(result.getMatchId())
+                )
+                // 완료 목록은 MatchState.DONE인 매치만 포함한다.
+                .filter(result ->
+                        matchMap.get(result.getMatchId()).getState()
+                                == MatchState.DONE
+                )
+                // 실제 UserMission이 생성된 매치만 완료 목록에 포함한다.
+                .filter(result ->
+                        missionSelectedMatchIds.contains(result.getMatchId())
+                )
                 .map(result -> toCompletedMatch(
                         matchMap.get(result.getMatchId()),
                         result,
@@ -151,7 +163,8 @@ public class MatchTabReader {
                 ))
                 .toList();
 
-        Page<CompletedMatch> resultPage = createPage(allCompletedMatches, page, size);
+        Page<CompletedMatch> resultPage =
+                createPage(allCompletedMatches, page, size);
 
         return new CompletedMatches(
                 resultPage.content(),
@@ -165,7 +178,9 @@ public class MatchTabReader {
             List<MatchUpEntity> matchUps,
             MatchResultEntity matchResult
     ) {
-        int totalRound = calculateTotalRound(match.getInitialImageCount());
+        int totalRound =
+                calculateTotalRound(match.getInitialImageCount());
+
         int currentRound = calculateCurrentRound(
                 match.getInitialImageCount(),
                 totalRound,
@@ -187,25 +202,32 @@ public class MatchTabReader {
             MatchResultEntity result,
             UserMissionEntity userMission
     ) {
-        Long winnerImageId = result.getRepresentativeMatchImageId();
+        Long winnerImageId =
+                result.getRepresentativeMatchImageId();
+
         String winnerImageUri = null;
 
         try {
             if (winnerImageId != null) {
-                MatchImageEntity matchImage = matchImageRepository.findById(winnerImageId)
-                        .orElse(null);
+                MatchImageEntity matchImage =
+                        matchImageRepository.findById(winnerImageId)
+                                .orElse(null);
 
                 if (matchImage != null) {
-                    winnerImageUri = fileReader.getFile(matchImage.getFileId()).getUrl();
+                    winnerImageUri =
+                            fileReader.getFile(
+                                    matchImage.getFileId()
+                            ).getUrl();
                 }
             }
         } catch (Exception e) {
             winnerImageUri = null;
         }
 
-        LocalDate completedAt = result.getCompletedAt() == null
-                ? null
-                : result.getCompletedAt().toLocalDate();
+        LocalDate completedAt =
+                result.getCompletedAt() == null
+                        ? null
+                        : result.getCompletedAt().toLocalDate();
 
         return new CompletedMatch(
                 userMission == null ? null : userMission.getId(),
@@ -217,7 +239,11 @@ public class MatchTabReader {
         );
     }
 
-    private <T> Page<T> createPage(List<T> items, int page, int size) {
+    private <T> Page<T> createPage(
+            List<T> items,
+            int page,
+            int size
+    ) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.max(size, 1);
 
@@ -231,7 +257,8 @@ public class MatchTabReader {
             );
         }
 
-        int toIndex = Math.min(fromIndex + safeSize, items.size());
+        int toIndex =
+                Math.min(fromIndex + safeSize, items.size());
 
         return new Page<>(
                 items.subList(fromIndex, toIndex),
@@ -262,13 +289,16 @@ public class MatchTabReader {
         }
 
         int currentRoundNumber = matchUps.stream()
-                .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
+                .filter(matchUp ->
+                        matchUp.getState() == MatchUpState.NEED_VOTE
+                )
                 .map(MatchUpEntity::getRoundNumber)
                 .filter(roundNumber -> roundNumber > 0)
                 .min(Integer::compareTo)
                 .orElse(1);
 
-        currentRoundNumber = Math.max(currentRoundNumber, 1);
+        currentRoundNumber =
+                Math.max(currentRoundNumber, 1);
 
         return calculateDisplayRound(
                 initialImageCount,
@@ -286,12 +316,16 @@ public class MatchTabReader {
             return 0;
         }
 
-        int safeRoundNumber = Math.max(currentRoundNumber, 1);
+        int safeRoundNumber =
+                Math.max(currentRoundNumber, 1);
 
-        boolean hasPreliminaryRound = initialImageCount != totalRound;
+        boolean hasPreliminaryRound =
+                initialImageCount != totalRound;
 
         if (!hasPreliminaryRound) {
-            int divisor = 1 << (safeRoundNumber - 1);
+            int divisor =
+                    1 << (safeRoundNumber - 1);
+
             return totalRound / Math.max(divisor, 1);
         }
 
@@ -299,7 +333,9 @@ public class MatchTabReader {
             return totalRound;
         }
 
-        int divisor = 1 << (safeRoundNumber - 2);
+        int divisor =
+                1 << (safeRoundNumber - 2);
+
         return totalRound / Math.max(divisor, 1);
     }
 }
