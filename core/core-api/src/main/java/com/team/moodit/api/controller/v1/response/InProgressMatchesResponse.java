@@ -20,8 +20,7 @@ public record InProgressMatchesResponse(
                                 match.getTitle(),
                                 match.getCurrentRound(),
                                 match.getTotalRound(),
-                                match.getLastPlayedAt(),
-                                match.getResumeType()
+                                match.getLastPlayedAt()
                         ))
                         .toList(),
                 result.getTotalCount(),
@@ -35,8 +34,7 @@ public record InProgressMatchesResponse(
             String title,
             Integer currentRound,
             Integer totalRound,
-            LocalDateTime lastPlayedAt,
-            MatchResumeType resumeType
+            LocalDateTime lastPlayedAt
     ) {
     }
 }

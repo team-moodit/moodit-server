@@ -14,5 +14,4 @@ public class InProgressMatch {
     private final int currentRound;
     private final int totalRound;
     private final LocalDateTime lastPlayedAt;
-    private final MatchResumeType resumeType;
 }

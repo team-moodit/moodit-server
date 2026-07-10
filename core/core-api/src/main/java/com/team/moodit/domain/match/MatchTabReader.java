@@ -67,6 +67,20 @@ public class MatchTabReader {
         Map<Long, List<MatchUpEntity>> matchUpMap = matchUps.stream()
                 .collect(Collectors.groupingBy(MatchUpEntity::getMatchId));
 
+        List<MatchResultEntity> matchResults =
+                matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
+
+        if (matchResults == null) {
+            matchResults = List.of();
+        }
+
+        Map<Long, MatchResultEntity> matchResultMap = matchResults.stream()
+                .collect(Collectors.toMap(
+                        MatchResultEntity::getMatchId,
+                        result -> result,
+                        (first, second) -> first
+                ));
+
         List<InProgressMatch> allInProgressMatches = matches.stream()
                 .filter(match ->
                         match.getState() == MatchState.ING
@@ -74,7 +88,11 @@ public class MatchTabReader {
                 )
                 .map(match -> toInProgressMatch(
                         match,
-                        matchUpMap.getOrDefault(match.getId(), Collections.emptyList())
+                        matchUpMap.getOrDefault(
+                                match.getId(),
+                                Collections.emptyList()
+                        ),
+                        matchResultMap.get(match.getId())
                 ))
                 .toList();
 
@@ -144,7 +162,8 @@ public class MatchTabReader {
 
     private InProgressMatch toInProgressMatch(
             MatchEntity match,
-            List<MatchUpEntity> matchUps
+            List<MatchUpEntity> matchUps,
+            MatchResultEntity matchResult
     ) {
         int totalRound = calculateTotalRound(match.getInitialImageCount());
         int currentRound = calculateCurrentRound(
@@ -155,6 +174,7 @@ public class MatchTabReader {
 
         return new InProgressMatch(
                 match.getId(),
+                matchResult == null ? null : matchResult.getId(),
                 match.getTitle(),
                 currentRound,
                 totalRound,
