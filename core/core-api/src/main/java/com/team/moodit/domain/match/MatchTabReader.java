@@ -190,6 +190,7 @@ public class MatchTabReader {
         return new InProgressMatch(
                 match.getId(),
                 matchResult == null ? null : matchResult.getId(),
+                match.getState(),
                 match.getTitle(),
                 currentRound,
                 totalRound,

@@ -1,5 +1,6 @@
 package com.team.moodit.domain.match;
 
+import com.team.moodit.domain.enums.MatchState;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -8,8 +9,10 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class InProgressMatch {
+
     private final Long matchId;
     private final Long matchResultId;
+    private final MatchState matchState;
     private final String title;
     private final int currentRound;
     private final int totalRound;

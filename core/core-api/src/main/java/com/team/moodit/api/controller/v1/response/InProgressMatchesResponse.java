@@ -1,5 +1,6 @@
 package com.team.moodit.api.controller.v1.response;
 
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.match.InProgressMatches;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public record InProgressMatchesResponse(
                         .map(match -> new Content(
                                 match.getMatchId(),
                                 match.getMatchResultId(),
+                                match.getMatchState(),      // 추가
                                 match.getTitle(),
                                 match.getCurrentRound(),
                                 match.getTotalRound(),
@@ -31,6 +33,7 @@ public record InProgressMatchesResponse(
     public record Content(
             Long matchId,
             Long matchResultId,
+            MatchState matchState,          // 추가
             String title,
             Integer currentRound,
             Integer totalRound,
