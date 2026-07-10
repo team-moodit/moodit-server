@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PreferenceDetailType {
     BODY_FIT("신체적 특징", "신체와의 적합도"),
-    VIBE("추구미", "추구미"),
-    MATCHABLE("코디 용이성", "코디 용이성"),
+    VIBE("추구미", "추구미와의 적합도"),
+    MATCHABLE("코디 용이성", "소장템과의 적합도"),
     DESIGN("디자인", "디자인"),
     MOOD("분위기", "분위기"),
     COLOR("색감", "색감");
