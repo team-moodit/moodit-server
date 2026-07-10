@@ -7,6 +7,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MatchProgressInfo {
-    private final int totalImageCount;
-    private final String createdAt;
+    private int totalImageCount;
+    private String lastPlayedAt;
 }

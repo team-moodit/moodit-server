@@ -14,6 +14,7 @@ import com.team.moodit.support.file.FileReader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -52,6 +53,30 @@ public class MatchProgressReader {
         List<MatchUpEntity> matchUps =
                 matchUpRepository.findByMatchIdOrderByRoundNumberAscIdAsc(matchId);
 
+        if (matchUps == null || matchUps.isEmpty()) {
+            throw new ApiException(ErrorType.INVALID_REQUEST);
+        }
+
+        /*
+         * 실제 투표가 완료된 MatchUp 중 가장 최근 updatedAt을 마지막 진행일로 사용한다.
+         *
+         * 아직 한 번도 투표하지 않았다면 COMPLETED 상태가 없으므로
+         * 매치 생성일을 fallback 값으로 사용한다.
+         *
+         * SKIPPED는 사용자 투표가 아닌 자동 진출이므로 제외한다.
+         */
+        LocalDateTime lastPlayedAt = matchUps.stream()
+                .filter(matchUp -> matchUp.getState() == MatchUpState.COMPLETED)
+                .map(MatchUpEntity::getUpdatedAt)
+                .max(LocalDateTime::compareTo)
+                .orElse(match.getCreatedAt());
+
+        /*
+         * 아직 투표할 MatchUp이 있다면 가장 앞선 roundNumber를 사용한다.
+         *
+         * 모든 MatchUp이 완료되어 NEED_VOTE가 없다면,
+         * 예외 대신 가장 큰 roundNumber를 사용한다.
+         */
         int currentRoundNumber = matchUps.stream()
                 .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
                 .map(MatchUpEntity::getRoundNumber)
@@ -59,8 +84,9 @@ public class MatchProgressReader {
                 .orElseGet(() -> matchUps.stream()
                         .map(MatchUpEntity::getRoundNumber)
                         .max(Integer::compareTo)
-                        .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST)));
-            // 모든 매치업을 완료하면 NEED_VOTE가 없기 때문에 없는 경우에는 예외 대신 최대 라운드를 반환하도록 수정했습니다. ex 8강
+                        .orElseThrow(() ->
+                                new ApiException(ErrorType.INVALID_REQUEST)
+                        ));
 
         int currentRound = calculateCurrentRound(
                 selectedImages.size(),
@@ -69,8 +95,12 @@ public class MatchProgressReader {
         );
 
         long completedCount = matchUps.stream()
-                .filter(matchUp -> matchUp.getRoundNumber() == currentRoundNumber)
-                .filter(matchUp -> matchUp.getState() == MatchUpState.COMPLETED)
+                .filter(matchUp ->
+                        matchUp.getRoundNumber() == currentRoundNumber
+                )
+                .filter(matchUp ->
+                        matchUp.getState() == MatchUpState.COMPLETED
+                )
                 .count();
 
         int currentMatchOrder = (int) completedCount + 1;
@@ -78,11 +108,11 @@ public class MatchProgressReader {
         return new MatchProgressResult(
                 match.getTitle(),
                 totalRound,
-                currentRound, // 몇강
-                Math.min(currentMatchOrder, matchUps.size()), // 몇 번째 매치
+                currentRound,
+                Math.min(currentMatchOrder, matchUps.size()),
                 new MatchProgressInfo(
                         selectedImages.size(),
-                        match.getCreatedAt().format(DATE_FORMATTER)
+                        lastPlayedAt.format(DATE_FORMATTER)
                 ),
                 selectedImages
         );
@@ -109,13 +139,15 @@ public class MatchProgressReader {
         boolean hasPreliminaryRound = imageCount != totalRound;
 
         if (!hasPreliminaryRound) {
-            return totalRound / (int) Math.pow(2, safeRoundNumber - 1);
+            int divisor = 1 << (safeRoundNumber - 1);
+            return totalRound / Math.max(divisor, 1);
         }
 
         if (safeRoundNumber == 1) {
             return totalRound;
         }
 
-        return totalRound / (int) Math.pow(2, safeRoundNumber - 2);
+        int divisor = 1 << (safeRoundNumber - 2);
+        return totalRound / Math.max(divisor, 1);
     }
 }

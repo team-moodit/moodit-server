@@ -35,7 +35,7 @@ public record MatchProgressResponse(
         private static MatchInfo from(MatchProgressInfo matchProgressInfo) {
             return new MatchInfo(
                     matchProgressInfo.getTotalImageCount(),
-                    matchProgressInfo.getCreatedAt()
+                    matchProgressInfo.getLastPlayedAt()
             );
         }
     }
