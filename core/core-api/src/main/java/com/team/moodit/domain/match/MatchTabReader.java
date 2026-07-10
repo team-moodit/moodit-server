@@ -1,6 +1,5 @@
 package com.team.moodit.domain.match;
 
-import com.team.moodit.domain.enums.MatchResumeType;
 import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.enums.MatchUpState;
 import com.team.moodit.storage.db.core.MatchEntity;
@@ -49,6 +48,16 @@ public class MatchTabReader {
                 .map(MatchEntity::getId)
                 .toList();
 
+        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
+
+        if (userMissions == null) {
+            userMissions = List.of();
+        }
+
+        Set<Long> missionSelectedMatchIds = userMissions.stream()
+                .map(UserMissionEntity::getMatchId)
+                .collect(Collectors.toSet());
+
         List<MatchUpEntity> matchUps = matchUpRepository.findByMatchIdIn(matchIds);
 
         if (matchUps == null) {
@@ -58,26 +67,14 @@ public class MatchTabReader {
         Map<Long, List<MatchUpEntity>> matchUpMap = matchUps.stream()
                 .collect(Collectors.groupingBy(MatchUpEntity::getMatchId));
 
-        List<MatchResultEntity> results =
-                matchResultRepository.findByUserIdOrderByCompletedAtDesc(userId);
-
-        if (results == null) {
-            results = List.of();
-        }
-
-        Map<Long, MatchResultEntity> matchResultMap = results.stream()
-                .collect(Collectors.toMap(
-                        MatchResultEntity::getMatchId,
-                        result -> result,
-                        (first, second) -> first
-                ));
-
         List<InProgressMatch> allInProgressMatches = matches.stream()
-                .filter(match -> match.getState() == MatchState.ING)
+                .filter(match ->
+                        match.getState() == MatchState.ING
+                                || !missionSelectedMatchIds.contains(match.getId())
+                )
                 .map(match -> toInProgressMatch(
                         match,
-                        matchUpMap.getOrDefault(match.getId(), Collections.emptyList()),
-                        matchResultMap.get(match.getId())
+                        matchUpMap.getOrDefault(match.getId(), Collections.emptyList())
                 ))
                 .toList();
 
@@ -128,7 +125,6 @@ public class MatchTabReader {
 
         List<CompletedMatch> allCompletedMatches = results.stream()
                 .filter(result -> matchMap.containsKey(result.getMatchId()))
-                .filter(result -> matchMap.get(result.getMatchId()).getState() == MatchState.DONE)
                 .filter(result -> missionSelectedMatchIds.contains(result.getMatchId()))
                 .map(result -> toCompletedMatch(
                         matchMap.get(result.getMatchId()),
@@ -148,8 +144,7 @@ public class MatchTabReader {
 
     private InProgressMatch toInProgressMatch(
             MatchEntity match,
-            List<MatchUpEntity> matchUps,
-            MatchResultEntity matchResult
+            List<MatchUpEntity> matchUps
     ) {
         int totalRound = calculateTotalRound(match.getInitialImageCount());
         int currentRound = calculateCurrentRound(
@@ -158,21 +153,12 @@ public class MatchTabReader {
                 matchUps
         );
 
-        boolean hasNeedVote = matchUps.stream()
-                .anyMatch(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE);
-
-        MatchResumeType resumeType = hasNeedVote
-                ? MatchResumeType.MATCH_PROGRESS
-                : MatchResumeType.MISSION_CONFIRM;
-
         return new InProgressMatch(
                 match.getId(),
-                matchResult == null ? null : matchResult.getId(),
                 match.getTitle(),
                 currentRound,
                 totalRound,
-                match.getUpdatedAt(),
-                resumeType
+                match.getUpdatedAt()
         );
     }
 

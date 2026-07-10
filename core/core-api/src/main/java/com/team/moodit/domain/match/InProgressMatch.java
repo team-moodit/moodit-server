@@ -1,6 +1,5 @@
 package com.team.moodit.domain.match;
 
-import com.team.moodit.domain.enums.MatchResumeType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

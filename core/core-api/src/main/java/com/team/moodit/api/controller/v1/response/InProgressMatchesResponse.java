@@ -1,6 +1,5 @@
 package com.team.moodit.api.controller.v1.response;
 
-import com.team.moodit.domain.enums.MatchResumeType;
 import com.team.moodit.domain.match.InProgressMatches;
 
 import java.time.LocalDateTime;
