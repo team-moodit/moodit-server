@@ -64,6 +64,7 @@ record PreferenceReportResponse(
             PreferenceType type,
             PreferenceDetailType detailType,
             String title,
+            String insightTitle,
             long selectedCount,
             int percentage
     ) {
@@ -76,6 +77,7 @@ record PreferenceReportResponse(
                     criteria.getType(),
                     criteria.getDetailType(),
                     criteria.getTitle(),
+                    criteria.getDetailType() != null ? criteria.getDetailType().getInsightTitle() : "",
                     criteria.getSelectedCount(),
                     criteria.getPercentage()
             );
