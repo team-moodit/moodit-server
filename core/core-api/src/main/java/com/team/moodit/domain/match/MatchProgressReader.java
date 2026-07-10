@@ -30,12 +30,8 @@ public class MatchProgressReader {
     private final FileReader fileReader;
 
     public MatchProgressResult getMatchProgress(Long userId, Long matchId) {
-        MatchEntity match = matchRepository.findById(matchId)
+        MatchEntity match = matchRepository.findByIdAndUserId(matchId, userId)
                 .orElseThrow(() -> new ApiException(ErrorType.NOT_FOUND));
-
-        if (!match.getUserId().equals(userId)) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
 
         if (match.getState() == MatchState.DONE) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
@@ -60,7 +56,11 @@ public class MatchProgressReader {
                 .filter(matchUp -> matchUp.getState() == MatchUpState.NEED_VOTE)
                 .map(MatchUpEntity::getRoundNumber)
                 .min(Integer::compareTo)
-                .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST));
+                .orElseGet(() -> matchUps.stream()
+                        .map(MatchUpEntity::getRoundNumber)
+                        .max(Integer::compareTo)
+                        .orElseThrow(() -> new ApiException(ErrorType.INVALID_REQUEST)));
+            // 모든 매치업을 완료하면 NEED_VOTE가 없기 때문에 없는 경우에는 예외 대신 최대 라운드를 반환하도록 수정했습니다. ex 8강
 
         int currentRound = calculateCurrentRound(
                 selectedImages.size(),
@@ -78,8 +78,8 @@ public class MatchProgressReader {
         return new MatchProgressResult(
                 match.getTitle(),
                 totalRound,
-                currentRound,
-                currentMatchOrder,
+                currentRound, // 몇강
+                Math.min(currentMatchOrder, matchUps.size()), // 몇 번째 매치
                 new MatchProgressInfo(
                         selectedImages.size(),
                         match.getCreatedAt().format(DATE_FORMATTER)
