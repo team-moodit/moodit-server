@@ -23,3 +23,13 @@ storage:
     bucket: moodit
     access-key: dummy
     secret-key: dummy
+
+---
+spring.config.activate.on-profile: live
+
+storage:
+  s3:
+    endpoint: ${S3_ENDPOINT}
+    bucket: moodit
+    access-key: ${S3_ACCESS_KEY}
+    secret-key: ${s3_SECRET_KEY}
