@@ -60,17 +60,10 @@ public class MatchResultFinder {
                 ).toList();
     }
 
-    public MatchResult find(Long userId, Long matchResultId) {
-        MatchResultEntity matchResult = matchResultRepository.findById(matchResultId)
+    public MatchResult find(Long userId, Long matchId) {
+        MatchResultEntity matchResult = matchResultRepository.findByUserIdAndMatchId(userId, matchId)
                 .orElseThrow(() -> new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND));
-        if (!matchResult.getUserId().equals(userId)) {
-            throw new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND);
-        }
-
-        List<MatchPreferenceResultEntity> matchPreferenceResults = matchPreferenceResultRepository.findByMatchResultId(matchResult.getId());
-        if (matchPreferenceResults.isEmpty()) {
-            throw new ApiException(ErrorType.MATCH_RESULT_NOT_FOUND);
-        }
+        List<MatchPreferenceResultEntity> preferenceResults = matchPreferenceResultRepository.findByMatchResultId(matchResult.getId());
 
         return new MatchResult(
                 matchResult.getId(),
@@ -83,7 +76,7 @@ public class MatchResultFinder {
                         matchResult.getPreferenceResultType(),
                         matchResult.getPreferenceType(),
                         matchResult.getPreferenceDetailType(),
-                        matchPreferenceResults.stream().map(it ->
+                        preferenceResults.stream().map(it ->
                                 new PreferenceTypeScore(
                                         it.getPreferenceType(),
                                         it.getPreferenceDetailType(),
@@ -91,7 +84,7 @@ public class MatchResultFinder {
                                         it.getRank()
                                 )
                         ).toList(),
-                        matchPreferenceResults.stream().map(it ->
+                        preferenceResults.stream().map(it ->
                                 new PreferenceDetailTypeScore(
                                         it.getPreferenceType(),
                                         it.getPreferenceDetailType(),

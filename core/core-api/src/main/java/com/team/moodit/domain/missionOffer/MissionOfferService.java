@@ -1,7 +1,7 @@
 package com.team.moodit.domain.missionOffer;
 
-import com.team.moodit.domain.match.MatchResultFinder;
 import com.team.moodit.domain.match.MatchResult;
+import com.team.moodit.domain.match.MatchResultFinder;
 import com.team.moodit.support.auth.ApiUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,8 +14,8 @@ public class MissionOfferService {
     private final MissionOfferManager missionOfferManager;
     private final MatchResultFinder matchResultFinder;
 
-    public MissionOfferCreateResult getOrCreateOffer(ApiUser apiUser, Long matchResultId) {
-        MatchResult matchResult = matchResultFinder.find(apiUser.getId(), matchResultId);
+    public MissionOfferCreateResult getOrCreateOffer(ApiUser apiUser, Long matchId) {
+        MatchResult matchResult = matchResultFinder.find(apiUser.getId(), matchId);
         return missionOfferManager.getOrCreate(apiUser.getId(), matchResult);
     }
 

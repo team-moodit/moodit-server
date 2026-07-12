@@ -4,10 +4,10 @@ import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 
 public record CreateMissionOfferRequest(
-        Long matchResultId
+        Long matchId
 ) {
     public CreateMissionOfferRequest {
-        if (matchResultId == null) {
+        if (matchId == null) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
     }

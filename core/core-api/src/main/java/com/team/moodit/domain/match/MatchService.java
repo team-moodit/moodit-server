@@ -10,7 +10,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchService {
     private final MatchCreator matchCreator;
-    private final MatchResultReader matchResultReader;
     private final MatchImageReader matchImageReader;
     private final MatchUpReader matchUpReader;
     private final MatchResultFinder matchResultFinder;
@@ -27,8 +26,8 @@ public class MatchService {
         return matchResultFinder.find(matchIds);
     }
 
-    public MatchResult getMatchResult(ApiUser apiUser, Long matchId) {
-        return matchResultReader.getMatchResult(apiUser.getId(), matchId);
+    public MatchResult findMatchResult(ApiUser apiUser, Long matchId) {
+        return matchResultFinder.find(apiUser.getId(), matchId);
     }
 
     public List<MatchImage> getMatchImages(List<Long> imageIds) {
