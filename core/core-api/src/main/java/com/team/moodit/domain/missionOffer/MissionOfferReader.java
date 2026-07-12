@@ -1,13 +1,10 @@
 package com.team.moodit.domain.missionOffer;
 
-import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.domain.enums.PreferenceResultType;
 import com.team.moodit.storage.db.core.MissionOfferCandidateEntity;
 import com.team.moodit.storage.db.core.MissionOfferCandidateRepository;
 import com.team.moodit.storage.db.core.MissionOfferEntity;
 import com.team.moodit.storage.db.core.MissionOfferRepository;
-import com.team.moodit.storage.db.core.UserMissionEntity;
-import com.team.moodit.storage.db.core.UserMissionRepository;
 import com.team.moodit.support.error.ApiException;
 import com.team.moodit.support.error.ErrorType;
 import java.util.List;
@@ -20,7 +17,6 @@ import org.springframework.stereotype.Component;
 public class MissionOfferReader {
     private final MissionOfferRepository missionOfferRepository;
     private final MissionOfferCandidateRepository missionOfferCandidateRepository;
-    private final UserMissionRepository userMissionRepository;
 
     public Optional<MissionOfferCreateResult> findCreateResultByUserIdAndMatchResultId(
             Long userId,
@@ -28,16 +24,11 @@ public class MissionOfferReader {
             PreferenceResultType preferenceResultType
     ) {
         return missionOfferRepository.findByUserIdAndMatchResultId(userId, matchResultId)
-                .map(offerEntity -> {
-                    MissionOffer offer = toMissionOffer(offerEntity);
-
-                    Long assignedMissionId = userMissionRepository
-                            .findByMissionOfferIdAndStatus(offer.getId(), EntityStatus.ACTIVE)
-                            .map(UserMissionEntity::getId)
-                            .orElse(null);
-
-                    return MissionOfferCreateResult.of(offer, preferenceResultType, assignedMissionId);
-                });
+                .map(this::toMissionOffer)
+                .map(offer -> new MissionOfferCreateResult(
+                        offer,
+                        preferenceResultType
+                ));
     }
 
     private MissionOffer toMissionOffer(MissionOfferEntity offer) {

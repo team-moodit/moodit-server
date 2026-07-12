@@ -54,10 +54,9 @@ public class MissionOfferManager {
                     missionTemplates
             );
 
-            return MissionOfferCreateResult.of(
+            return new MissionOfferCreateResult(
                     missionOffer,
-                    matchResult.getPreferenceResult().getResultType(),
-                    null
+                    matchResult.getPreferenceResult().getResultType()
             );
         } catch (DataIntegrityViolationException e) {
             log.info(
