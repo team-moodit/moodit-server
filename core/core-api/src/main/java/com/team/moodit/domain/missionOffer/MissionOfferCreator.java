@@ -21,56 +21,28 @@ public class MissionOfferCreator {
     private final MissionOfferCandidateRepository missionOfferCandidateRepository;
 
     @Transactional
-    public MissionOffer createSelectionOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
-        if (missionTemplates.size() < 2) {
-            throw new ApiException(ErrorType.INVALID_REQUEST);
-        }
-
-        return createOffer(
-                userId,
-                matchResult,
-                missionTemplates,
-                MissionOfferState.NEEDS_SELECTION
-        );
-    }
-
-    @Transactional
-    public MissionOffer createSingleCandidateOffer(
-            Long userId,
-            MatchResult matchResult,
-            MissionTemplate missionTemplate
-    ) {
-        return createOffer(
-                userId,
-                matchResult,
-                List.of(missionTemplate),
-                MissionOfferState.NEEDS_SELECTION
-        );
-    }
-
-    private MissionOffer createOffer(
-            Long userId,
-            MatchResult matchResult,
-            List<MissionTemplate> missionTemplates,
-            MissionOfferState state
-    ) {
+    public MissionOffer createOffer(Long userId, MatchResult matchResult, List<MissionTemplate> missionTemplates) {
         if (missionTemplates.isEmpty()) {
             throw new ApiException(ErrorType.INVALID_REQUEST);
         }
 
         MissionOfferEntity offer = missionOfferRepository.save(
-                new MissionOfferEntity(matchResult.getId(), userId, state)
+                new MissionOfferEntity(
+                        matchResult.getId(),
+                        userId,
+                        MissionOfferState.NEEDS_SELECTION
+                )
         );
 
         List<MissionOfferCandidateEntity> savedCandidates = missionOfferCandidateRepository.saveAll(
-                missionTemplates.stream()
-                        .map(it -> new MissionOfferCandidateEntity(
+                missionTemplates.stream().map(it ->
+                        new MissionOfferCandidateEntity(
                                 offer.getId(),
                                 it.getId(),
                                 it.getTitle(),
                                 it.getDisplayOrder()
-                        ))
-                        .toList()
+                        )
+                ).toList()
         );
 
         return new MissionOffer(
