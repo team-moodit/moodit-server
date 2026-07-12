@@ -16,11 +16,6 @@ public class MissionOffer {
     private List<MissionCandidate> candidates;
     private MissionOfferState state;
 
-    public MissionCandidate getOnlyCandidate() {
-        if (candidates.size() != 1) throw new ApiException(ErrorType.INVALID_REQUEST);
-        return candidates.getFirst();
-    }
-
     public MissionCandidate getCandidate(Long candidateId) {
         return candidates.stream()
                 .filter(it -> it.getId().equals(candidateId))
