@@ -15,7 +15,6 @@ public interface MatchResultRepository extends JpaRepository<MatchResultEntity, 
     List<MatchResultEntity> findByUserIdOrderByCompletedAtDesc(Long userId);
     Optional<MatchResultEntity> findByUserIdAndMatchId(Long userId, Long matchId);
     List<MatchResultEntity> findByMatchIdIn(List<Long> matchIds);
-    long countByUserId(Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM MatchResultEntity m WHERE m.userId = :userId AND m.matchId = :matchId")

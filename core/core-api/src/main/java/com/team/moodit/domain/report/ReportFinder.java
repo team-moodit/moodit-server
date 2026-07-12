@@ -1,11 +1,13 @@
 package com.team.moodit.domain.report;
 
 import com.team.moodit.domain.enums.EntityStatus;
+import com.team.moodit.domain.enums.MatchState;
 import com.team.moodit.domain.enums.PreferenceDetailType;
 import com.team.moodit.domain.enums.PreferenceType;
 import com.team.moodit.domain.enums.UserMissionState;
 import com.team.moodit.storage.db.core.MatchChoiceRepository;
-import com.team.moodit.storage.db.core.MatchResultRepository;
+import com.team.moodit.storage.db.core.MatchEntity;
+import com.team.moodit.storage.db.core.MatchRepository;
 import com.team.moodit.storage.db.core.PreferenceDetailVoteCountProjection;
 import com.team.moodit.storage.db.core.PreferenceVoteCountProjection;
 import com.team.moodit.storage.db.core.UserMissionRepository;
@@ -42,12 +44,12 @@ public class ReportFinder {
             )
     );
 
-    private final MatchResultRepository matchResultRepository;
     private final MatchChoiceRepository matchChoiceRepository;
     private final UserMissionRepository userMissionRepository;
+    private final MatchRepository matchRepository;
 
     public UserTasteReport find(Long userId) {
-        long totalMatchCount = matchResultRepository.countByUserId(userId);
+        List<MatchEntity> targetMatches = matchRepository.findByIdAndState(userId, MatchState.DONE);
         long reviewedMissionCount = userMissionRepository.countByUserIdAndStateAndStatus(
                 userId,
                 UserMissionState.REVIEWED,
@@ -58,14 +60,14 @@ public class ReportFinder {
         PreferenceCriterionShare topPreference = findSingleTop(preferenceShares);
         PreferenceReport preferenceReport = createPreferenceReport(
                 userId,
-                totalMatchCount,
+                targetMatches.size(),
                 preferenceShares,
                 topPreference
         );
 
         return new UserTasteReport(
                 new AnalysisRecordSummary(
-                        totalMatchCount,
+                        targetMatches.size(),
                         reviewedMissionCount
                 ),
                 preferenceReport
