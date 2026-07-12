@@ -10,7 +10,7 @@ public interface MatchRepository extends JpaRepository<MatchEntity, Long> {
 
     List<MatchEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    List<MatchEntity> findByIdAndState(Long id, MatchState state);
+    List<MatchEntity> findByUserIdAndState(Long id, MatchState state);
 
     Optional<MatchEntity> findByIdAndUserId(Long id, Long userId);
 }

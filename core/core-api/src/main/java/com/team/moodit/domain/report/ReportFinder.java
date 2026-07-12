@@ -49,7 +49,7 @@ public class ReportFinder {
     private final MatchRepository matchRepository;
 
     public UserTasteReport find(Long userId) {
-        List<MatchEntity> targetMatches = matchRepository.findByIdAndState(userId, MatchState.DONE);
+        List<MatchEntity> targetMatches = matchRepository.findByUserIdAndState(userId, MatchState.DONE);
         long reviewedMissionCount = userMissionRepository.countByUserIdAndStateAndStatus(
                 userId,
                 UserMissionState.REVIEWED,
