@@ -16,5 +16,7 @@ public class InProgressMatch {
     private final String title;
     private final int currentRound;
     private final int totalRound;
+    private final int currentMatchProgress;
+    private final int finalMatchProgress;
     private final LocalDateTime lastPlayedAt;
 }

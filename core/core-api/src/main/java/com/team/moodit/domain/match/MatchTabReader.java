@@ -177,14 +177,41 @@ public class MatchTabReader {
             List<MatchUpEntity> matchUps,
             MatchResultEntity matchResult
     ) {
-        int totalRound =
-                calculateTotalRound(match.getInitialImageCount());
+        int initialImageCount = match.getInitialImageCount();
+
+        int totalRound = calculateTotalRound(initialImageCount);
 
         int currentRound = calculateCurrentRound(
-                match.getInitialImageCount(),
+                initialImageCount,
                 totalRound,
                 matchUps
         );
+        // 실제 사용자가 투표 완료한 경기 수
+        // 부전승(SKIPPED)은 투표한 경기가 아니므로 제외
+        long completedMatchCount = matchUps.stream()
+                .filter(matchUp ->
+                        matchUp.getState() == MatchUpState.COMPLETED
+                )
+                .count();
+
+        /*
+         * 예선 포함 전체 실제 경기 수
+         *
+         * 8장  -> 7경기
+         * 10장 -> 예선 2경기 + 본선 7경기 = 9경기
+         * 15장 -> 예선 7경기 + 본선 7경기 = 14경기
+         * 16장 -> 15경기
+         */
+        int finalMatchProgress = Math.max(initialImageCount - 1, 0);
+
+        // 현재 진행할 경기 번호
+        int currentMatchProgress = finalMatchProgress == 0
+                ? 0
+                : Math.min(
+                (int) completedMatchCount + 1,
+                finalMatchProgress
+        );
+
 
         return new InProgressMatch(
                 match.getId(),
@@ -193,6 +220,8 @@ public class MatchTabReader {
                 match.getTitle(),
                 currentRound,
                 totalRound,
+                currentMatchProgress,
+                finalMatchProgress,
                 match.getUpdatedAt()
         );
     }

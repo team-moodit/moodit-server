@@ -22,6 +22,8 @@ public record InProgressMatchesResponse(
                                 match.getTitle(),
                                 match.getCurrentRound(),
                                 match.getTotalRound(),
+                                match.getCurrentMatchProgress(),   // 추가
+                                match.getFinalMatchProgress(),     // 추가
                                 match.getLastPlayedAt()
                         ))
                         .toList(),
@@ -37,6 +39,8 @@ public record InProgressMatchesResponse(
             String title,
             Integer currentRound,
             Integer totalRound,
+            Integer currentMatchProgress,   // 추가
+            Integer finalMatchProgress,     // 추가
             LocalDateTime lastPlayedAt
     ) {
     }
