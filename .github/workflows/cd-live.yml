@@ -1,6 +1,6 @@
 on:
   push:
-    branches: 'main'
+    branches: 'live'
 
 jobs:
   docker:
@@ -23,7 +23,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/moodit-api-dev:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/moodit-api-live:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -42,7 +42,7 @@ jobs:
           script: |
             docker logout
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            cd /opt/docker/moodit-api-dev && \
+            cd /opt/docker/moodit-api-live && \
             docker compose pull && \
             docker compose up -d && \
             docker image prune -f

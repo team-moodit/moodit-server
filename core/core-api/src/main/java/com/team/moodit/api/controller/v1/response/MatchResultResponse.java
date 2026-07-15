@@ -22,7 +22,7 @@ public record MatchResultResponse(
         PreferenceType preferenceType = result.getPreferenceResult().getPreferenceType();
 
         return new MatchResultResponse(
-                result.getMatchId(),
+                result.getId(),
                 result.getTitle(),
                 matchRepresentativeImageFile.getUrl(),
                 result.getPreferenceResult().getResultType(),

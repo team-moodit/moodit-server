@@ -1,5 +1,6 @@
 package com.team.moodit.domain.user;
 
+import com.team.moodit.client.kakao.KakaoClient;
 import com.team.moodit.domain.enums.EntityStatus;
 import com.team.moodit.storage.db.core.UserAuthIdentityEntity;
 import com.team.moodit.storage.db.core.UserAuthIdentityRepository;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserWithdrawalProcessor implements UserWithdrawalPostProcessor {
     private final UserRepository userRepository;
     private final UserAuthIdentityRepository userAuthIdentityRepository;
+    private final KakaoClient kakaoClient;
 
     @Override
     @Transactional
@@ -30,6 +32,9 @@ public class UserWithdrawalProcessor implements UserWithdrawalPostProcessor {
 
         authIdentity.delete();
         user.delete();
+
+        kakaoClient.unlinkAccount(authIdentity.getProviderUserId());
+
         log.info("[UserWithdrawalProcessor] 탈퇴 처리 완료 userId: {}", userId);
     }
 }

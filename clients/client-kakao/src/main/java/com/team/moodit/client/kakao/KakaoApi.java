@@ -12,4 +12,11 @@ interface KakaoApi {
             @RequestHeader("Authorization") String accessToken,
             @RequestParam("property_keys") String propertyKey
     );
+
+    @PostExchange("/v1/user/unlink")
+    void unlinkAccount(
+            @RequestHeader("Authorization") String adminKey,
+            @RequestParam("target_id_type") String targetIdType,
+            @RequestParam("target_id") Long targetId
+    );
 }

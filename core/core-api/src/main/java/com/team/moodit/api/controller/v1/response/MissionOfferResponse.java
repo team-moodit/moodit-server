@@ -14,7 +14,6 @@ public record MissionOfferResponse(
         PreferenceResultType preferenceResultType,
         List<MissionOfferItemResponse> items,
         MissionOfferState state,
-        Long assignedMissionId,
         MatchResultResponse matchResult
 ) {
     public static MissionOfferResponse of(
@@ -34,7 +33,6 @@ public record MissionOfferResponse(
                                 )
                         ).toList(),
                 result.getMissionOffer().getState(),
-                result.getAssignedMissionId(),
                 MatchResultResponse.of(
                         matchResult,
                         matchRepresentativeImageFile
